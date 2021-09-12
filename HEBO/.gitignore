@@ -1,0 +1,18 @@
+# vim 
+*.swp
+ref/
+debug.log
+
+# python
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage*
+.idea/
+
+build/
+dist/
+*.egg-info/
+htmlcov/
+worksapce/

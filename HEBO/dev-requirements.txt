@@ -1,0 +1,6 @@
+pytest>=6.0.2
+Sphinx>=3.2.1
+nbsphinx
+recommonmark
+sphinx_rtd_theme
+notebook
