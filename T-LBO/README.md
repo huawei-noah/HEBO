@@ -13,6 +13,9 @@ The provided code allows to re-run the experiments presented in the paper, inclu
     - Chemical Design
 - [scripts](./weighted_retraining/scripts/robust_opt/) to run LSBO under fully supervised and semi-supervised settings.
 
+# Contributors 
+
+<strong> Antoine Grosnit and Rasul Tutunov and Alexandre Max Maraval and Ryan-Rhys Griffiths and Alexander I. Cowen-Rivers and Lin Yang and Lin Zhu and Wenlong Lyu and Zhitang Chen and Jun Wang and Jan Peters and Haitham Bou-Ammar </strong>
 
 ## Installation 
 
@@ -189,6 +192,9 @@ and **ST-LBO**.
 
 ## Cite Us
 
+Grosnit, Antoine, et al. "High-Dimensional Bayesian Optimisation with Variational Autoencoders and Deep Metric Learning." arXiv preprint arXiv:2106.03609 (2021).
+
+## BibTex
 ```
 # BitbTex
 @misc{grosnit2021highdimensional,
@@ -201,7 +207,7 @@ and **ST-LBO**.
 }
 ```
 
-## Credits
+## Acknowledgements
 - Thanks to the authors of the [`Sample-Efficient Optimization in the Latent Space of
 Deep Generative Models via Weighted Retraining`](https://github.com/cambridge-mlg/weighted-retraining)
   for providing their implementations of high-dimensional BO based on weighted-retraining VAE,

@@ -1,22 +1,22 @@
 # Bayesian Optimisation Research
 
 This directory contains official implementations for Bayesian optimisation works developped by Huawei R&D, Noah's Ark Lab. 
-- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](https://github.com/huawei-noah/noah-research/tree/master/BO/HEBO) 
-- [T-LBO](https://github.com/huawei-noah/noah-research/tree/master/BO/T-LBO)
-- [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/noah-research/tree/CompBO/BO/HEBO/CompBO)
+- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](https://github.com/huawei-noah/HEBO/tree/master/HEBO) 
+- [T-LBO](https://github.com/huawei-noah/HEBO/tree/master/T-LBO)
+- [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/HEBO/tree/master/CompBO)
 
 Further instructions are provided in the README 
 files associated to each project.
 
-## [HEBO](https://github.com/huawei-noah/noah-research/tree/master/BO/HEBO)
-<img src="https://github.com/huawei-noah/noah-research/blob/master/BO/HEBO/hebo.png" alt="drawing" width="400"/>
+## [HEBO](https://github.com/huawei-noah/HEBO/tree/master/HEBO)
+<img src="https://github.com/huawei-noah/HEBO/blob/master/HEBO/hebo.png" alt="drawing" width="400"/>
 
 Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong> winning submission </strong> to the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard). 
 
-## [T-LBO](https://github.com/huawei-noah/noah-research/tree/master/BO/T-LBO)
+## [T-LBO](https://github.com/huawei-noah/HEBO/tree/master/T-LBO)
 <p float="center">
-  <img src="https://github.com/huawei-noah/noah-research/blob/master/BO/T-LBO/figures/LSBO.png" width="400" />
-  <img src="https://github.com/huawei-noah/noah-research/blob/master/BO/T-LBO/figures/magnets.png" width="400" /> 
+  <img src="https://github.com/huawei-noah/HEBO/tree/master/T-LBO/figures/LSBO.png" width="400" />
+  <img src="https://github.com/huawei-noah/HEBO/tree/master/T-LBO/figures/magnets.png" width="400" /> 
 </p>
 
 Codebase associated to: [High-Dimensional Bayesian Optimisation withVariational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
@@ -30,9 +30,9 @@ we present state-of-the-art results on real-world high-dimensional black-box opt
 It is the hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional Bayesian optimisation.
 
 
-## [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/noah-research/tree/CompBO/BO/HEBO/CompBO)
+## [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/HEBO/tree/master/CompBO)
 
-<div style="text-align:center"><img src="https://github.com/huawei-noah/noah-research/blob/CompBO/BO/HEBO/CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
+<div style="text-align:center"><img src="https://github.com/huawei-noah/HEBO/tree/master/CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
 
 
 Codebase associated to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://arxiv.org/abs/2012.08240)
@@ -46,3 +46,6 @@ advantages of the compositional approach to acquisition function maximisation ac
 tasks as well as tasks from Bayesmark. Given the generality of the acquisition function maximisation subroutine, we posit that the adoption of
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
+
+##### Codebase Contributors 
+<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
