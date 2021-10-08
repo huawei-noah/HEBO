@@ -1,22 +1,25 @@
 # Bayesian Optimisation Research
 
 This directory contains official implementations for Bayesian optimisation works developped by Huawei R&D, Noah's Ark Lab. 
-- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](https://github.com/huawei-noah/noah-research/tree/master/BO/HEBO) 
-- [T-LBO](https://github.com/huawei-noah/noah-research/tree/master/BO/T-LBO)
-- [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/noah-research/tree/CompBO/BO/HEBO/CompBO)
+- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO) 
+- [T-LBO](./T-LBO)
+- [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 
 Further instructions are provided in the README 
 files associated to each project.
 
-## [HEBO](https://github.com/huawei-noah/noah-research/tree/master/BO/HEBO)
-<img src="https://github.com/huawei-noah/noah-research/blob/master/BO/HEBO/hebo.png" alt="drawing" width="400"/>
+## [HEBO](./HEBO)
+<img src="./HEBO/hebo.png" alt="drawing" width="400"/>
 
 Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong> winning submission </strong> to the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard). 
 
-## [T-LBO](https://github.com/huawei-noah/noah-research/tree/master/BO/T-LBO)
+##### Contributors
+<strong> Alexander I. Cowen-Rivers, Wenlong Lyu, Zhi Wang, Antoine Grosnit, Rasul Tutunov, Hao Jianye, Jun Wang, Haitham Bou Ammar. </strong>
+
+## [T-LBO](./T-LBO)
 <p float="center">
-  <img src="https://github.com/huawei-noah/noah-research/blob/master/BO/T-LBO/figures/LSBO.png" width="400" />
-  <img src="https://github.com/huawei-noah/noah-research/blob/master/BO/T-LBO/figures/magnets.png" width="400" /> 
+  <img src="./T-LBO/figures/LSBO.png" width="400" />
+  <img src="./T-LBO/figures/magnets.png" width="400" /> 
 </p>
 
 Codebase associated to: [High-Dimensional Bayesian Optimisation withVariational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
@@ -29,13 +32,15 @@ As a theoretical contribution, we present a proof of vanishing regret for our me
 we present state-of-the-art results on real-world high-dimensional black-box optimisation problems including property-guided molecule generation.
 It is the hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional Bayesian optimisation.
 
+##### Contributors
+<strong> Antoine Grosnit, Rasul Tutunov, Alexandre Max Maraval, Ryan-Rhys Griffiths, Alexander I. Cowen-Rivers, Lin Yang, Lin Zhu, Wenlong Lyu, Zhitang Chen, Jun Wang, Jan Peters, Haitham Bou-Ammar. </strong> 
 
-## [Bayesian Optimisation with Compositional Optimisers](https://github.com/huawei-noah/noah-research/tree/CompBO/BO/HEBO/CompBO)
+## [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 
-<div style="text-align:center"><img src="https://github.com/huawei-noah/noah-research/blob/CompBO/BO/HEBO/CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
+<div style="text-align:center"><img src="./CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
 
 
-Codebase associated to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://arxiv.org/abs/2012.08240)
+Codebase associated to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://www.jmlr.org/papers/v22/20-1422.html)
 ##### Abstract
 Bayesian optimisation presents a sample-efficient methodology for global optimisation. Within this framework, a crucial performance-determining
 subroutine is the maximisation of the acquisition function, a task complicated by the fact that acquisition functions tend to be non-convex and
@@ -46,3 +51,6 @@ advantages of the compositional approach to acquisition function maximisation ac
 tasks as well as tasks from Bayesmark. Given the generality of the acquisition function maximisation subroutine, we posit that the adoption of
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
+
+##### Contributors
+<strong> Antoine Grosnit, Alexander I. Cowen-Rivers, Rasul Tutunov, Ryan-Rhys Griffiths, Jun Wang, Haitham Bou-Ammar. </strong>
