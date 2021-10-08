@@ -13,9 +13,6 @@ files associated to each project.
 
 Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong> winning submission </strong> to the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard). 
 
-##### Contributors
-<strong> Alexander I. Cowen-Rivers, Wenlong Lyu, Zhi Wang, Antoine Grosnit, Rasul Tutunov, Hao Jianye, Jun Wang, Haitham Bou Ammar. </strong>
-
 ## [T-LBO](./T-LBO)
 <p float="center">
   <img src="./T-LBO/figures/LSBO.png" width="400" />
@@ -32,8 +29,6 @@ As a theoretical contribution, we present a proof of vanishing regret for our me
 we present state-of-the-art results on real-world high-dimensional black-box optimisation problems including property-guided molecule generation.
 It is the hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional Bayesian optimisation.
 
-##### Contributors
-<strong> Antoine Grosnit, Rasul Tutunov, Alexandre Max Maraval, Ryan-Rhys Griffiths, Alexander I. Cowen-Rivers, Lin Yang, Lin Zhu, Wenlong Lyu, Zhitang Chen, Jun Wang, Jan Peters, Haitham Bou-Ammar. </strong> 
 
 ## [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 
@@ -52,5 +47,5 @@ tasks as well as tasks from Bayesmark. Given the generality of the acquisition f
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
 
-##### Contributors
-<strong> Antoine Grosnit, Alexander I. Cowen-Rivers, Rasul Tutunov, Ryan-Rhys Griffiths, Jun Wang, Haitham Bou-Ammar. </strong>
+##### Codebase Contributors 
+<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>

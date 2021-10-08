@@ -12,7 +12,7 @@ Summary             |  Ablation
 
 # Contributors 
 
-<strong> Alexander I. Cowen-Rivers, Wenlong Lyu, Zhi Wang, Antoine Grosnit, Rasul Tutunov, Hao Jianye, Jun Wang, Haitham Bou Ammar. </strong>
+<strong> Alexander I. Cowen-Rivers, Wenlong Lyu, Rasul Tutunov, Zhi Wang, Antoine Grosnit, Ryan Rhys Griffiths, Alexandre Max Maraval, Hao Jianye, Jun Wang, Jan Peters, Haitham Bou Ammar </strong>
 
 ## Installation
 
