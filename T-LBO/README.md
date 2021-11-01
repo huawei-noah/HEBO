@@ -13,7 +13,7 @@ The provided code allows to re-run the experiments presented in the paper, inclu
     - Chemical Design
 - [scripts](./weighted_retraining/scripts/robust_opt/) to run LSBO under fully supervised and semi-supervised settings.
 
-# Contributors 
+## Contributors 
 
 <strong> Antoine Grosnit and Rasul Tutunov and Alexandre Max Maraval and Ryan-Rhys Griffiths and Alexander I. Cowen-Rivers and Lin Yang and Lin Zhu and Wenlong Lyu and Zhitang Chen and Jun Wang and Jan Peters and Haitham Bou-Ammar </strong>
 
