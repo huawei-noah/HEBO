@@ -173,19 +173,18 @@ been carried out on several seeds.
 
 |  |Nb. Function evaluations |Penalized logP (top-3)|
 | --- | --- | --- |
-| T-LBO-3 | 7750 | 38.57 / 34.83 / 34.63|
-| T-LBO-2 | 3450 | 34.83 / 31.1 / 29.21|
-| T-LBO-1 | 2300 | 24.06 / 22.84 / 21.26|
+| T-LBO | 7750 | 38.57 / 34.83 / 34.63|
+| T-LBO | 3450 | 34.83 / 31.1 / 29.21|
+| T-LBO | 2300 | 24.06 / 22.84 / 21.26|
 
 #### Optimisation of penalised logP
 ![molecule-opt](./figures/mol-logP-opt.png)
 We optimised the penalised water-octanol partition coefficient (logP) objective of molecules from the ZINC250K dataset
-and compared seval optimisation algorithms, showing that the highest logP scores are obtained with our methods **T-LBO** 
-and **ST-LBO**.
+and compared seval optimisation algorithms, showing that the highest logP scores are obtained with our methods **T-LBO**.
 
 #### Molecule visualisation
 ![molecule_semi_supervised](./figures/molecules_full.png)
-**ST-LBO** – Starting with observation of **only 1% of labelled data points** in *Zinc250K*
+**T-LBO** – Starting with observation of **only 3% of labelled data points** in *Zinc250K*
  the best molecule initially available (displayed on the top-left corner) has a penalised logP score of 4.09.
   Under semi-supervised setup, our method manages to find a molecule with score **29.14** after only 
   six retrainings of the **JTVAE with triplet loss** (bottom right molecule).
