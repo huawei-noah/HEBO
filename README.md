@@ -47,5 +47,7 @@ tasks as well as tasks from Bayesmark. Given the generality of the acquisition f
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
 
-##### Codebase Contributors 
+---
+  
+### Codebase Contributors 
 <strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
