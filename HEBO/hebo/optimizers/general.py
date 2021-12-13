@@ -46,6 +46,8 @@ class GeneralBO(AbstractOptimizer):
         self.c_kappa     = c_kappa
         self.use_noise   = use_noise
         self.model       = None
+        self.evo_pop     = 100
+        self.evo_iters   = 200
         assert model_dict.get(model_name) is not None
         if num_obj + num_constr > 1:
             assert model_dict.get(model_name).support_multi_output
@@ -71,7 +73,7 @@ class GeneralBO(AbstractOptimizer):
                   kappa = self.kappa,
                   c_kappa = self.c_kappa,
                   use_noise = self.use_noise)
-            opt     = EvolutionOpt(self.space, acq, pop = 100, iters = 200)
+            opt     = EvolutionOpt(self.space, acq, pop = self.evo_pop, iters = self.evo_iters)
             suggest = opt.optimize()
             with torch.no_grad():
                 py, ps2 = self.model.predict(*self.space.transform(suggest))
@@ -110,3 +112,11 @@ class GeneralBO(AbstractOptimizer):
 
     def get_pf(self, y : np.ndarray) -> pd.DataFrame:
         pass
+
+    @property
+    def best_x(self):
+        raise NotImplementedError('Not implemented for multi-objective algorithm')
+
+    @property
+    def best_y(self):
+        raise NotImplementedError('Not implemented for multi-objective algorithm')

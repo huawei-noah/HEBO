@@ -128,7 +128,7 @@ class GP(BaseModel):
             var_ = pred.variance.reshape(-1, self.num_out)
         mu  = self.yscaler.inverse_transform(mu_)
         var = var_ * self.yscaler.std**2
-        return mu, var
+        return mu, var.clamp(min = torch.finfo(var.dtype).eps)
 
     def sample_y(self, Xc, Xe, n_samples = 1) -> FloatTensor:
         """
@@ -151,7 +151,7 @@ class GP(BaseModel):
         if self.num_out == 1:
             return (self.gp.likelihood.noise * self.yscaler.std**2).view(self.num_out).detach()
         else:
-            return (self.gp.likelihood.noise_covar.noise * self.yscaler.std**2).view(self.num_out).detach()
+            return (self.gp.likelihood.task_noises * self.yscaler.std**2).view(self.num_out).detach()
 
 class GPyTorchModel(gpytorch.models.ExactGP):
     def __init__(self, 

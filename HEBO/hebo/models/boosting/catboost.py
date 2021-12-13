@@ -18,21 +18,25 @@ from ..util import filter_nan
 class CatBoost(BaseModel):
     def __init__(self, num_cont, num_enum, num_out, **conf):
         super().__init__(num_cont, num_enum, num_out, **conf)
-        self.iterations         = self.conf.get('iterations', 100)   # maximum number of trees
-        self.learning_rate      = self.conf.get('learning_rate', 0.2)
+        self.num_epochs         = self.conf.get('num_epochs', 100)   # maximum number of trees
+        self.lr                 = self.conf.get('lr', 0.2)
         self.depth              = self.conf.get('depth', 10)        # recommended [1, 10]
         self.loss_function      = self.conf.get('loss_function', 'RMSEWithUncertainty')
         self.posterior_sampling = self.conf.get('posterior_sampling', True)
         self.verbose            = self.conf.get('verbose', False)
         self.random_seed        = self.conf.get('random_seed', 42)
         self.num_ensembles      = self.conf.get('num_ensembles', 10)
-        self.model              = CatBoostRegressor(iterations=self.iterations,
-                                                    learning_rate=self.learning_rate,
-                                                    depth=self.depth,
-                                                    loss_function=self.loss_function,
-                                                    posterior_sampling=self.posterior_sampling,
-                                                    verbose=self.verbose,
-                                                    random_seed=self.random_seed)
+        if self.num_epochs < 2 * self.num_ensembles:
+            self.num_epochs = self.num_ensembles * 2
+
+        self.model = CatBoostRegressor(iterations=self.num_epochs,
+                learning_rate=self.lr,
+                depth=self.depth,
+                loss_function=self.loss_function,
+                posterior_sampling=self.posterior_sampling,
+                verbose=self.verbose,
+                random_seed=self.random_seed,
+                allow_writing_files=False)
 
     def xtrans(self, Xc: FloatTensor, Xe: LongTensor) -> FeaturesData:
         num_feature_data    = Xc.numpy().astype(np.float32) if self.num_cont != 0 else None

@@ -82,6 +82,7 @@ def test_grad():
     model = nn.Sequential(
             scaler0, 
             scaler1, 
+            scaler2, 
             nn.Linear(3, 32), 
             nn.ReLU(), 
             nn.Linear(32, 1))

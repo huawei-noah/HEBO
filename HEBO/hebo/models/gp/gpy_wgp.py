@@ -7,6 +7,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+import warnings
+warnings.filterwarnings('ignore', category = RuntimeWarning)
+
 from ..base_model import BaseModel
 from ..layers import EmbTransform, OneHotTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
@@ -22,8 +25,6 @@ from torch import Tensor, FloatTensor, LongTensor
 import logging
 logging.disable(logging.WARNING)
 
-import warnings
-warnings.filterwarnings('ignore', category = RuntimeWarning)
 
 class GPyGP(BaseModel):
     """
@@ -80,7 +81,7 @@ class GPyGP(BaseModel):
 
         k1  = GPy.kern.Linear(X.shape[1],   ARD = False)
         k2  = GPy.kern.Matern32(X.shape[1], ARD = True)
-        k2.lengthscale = np.std(X, axis = 0)
+        k2.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
         k2.variance    = 0.5
         k2.variance.set_prior(GPy.priors.Gamma(0.5, 1), warning = False)
         kern = k1 + k2
@@ -94,15 +95,15 @@ class GPyGP(BaseModel):
             self.gp = GPy.models.InputWarpedGP(X, y, kern, warping_function = warp_f)
         self.gp.likelihood.variance.set_prior(GPy.priors.LogGaussian(-4.63, 0.5), warning = False)
 
-        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = 10)
+        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = 10, robust = True)
         return self
 
     def predict(self, Xc : FloatTensor, Xe : LongTensor) -> (FloatTensor, FloatTensor):
         Xall    = self.trans(Xc, Xe)
         py, ps2 = self.gp.predict(Xall)
         mu      = self.yscaler.inverse_transform(FloatTensor(py).view(-1, 1))
-        var     = (self.yscaler.std**2 * FloatTensor(ps2).view(-1, 1)).clamp(min = 1e-6)
-        return mu, var
+        var     = self.yscaler.std**2 * FloatTensor(ps2).view(-1, 1)
+        return mu, var.clamp(torch.finfo(var.dtype).eps)
 
     def sample_f(self):
         raise NotImplementedError('Thompson sampling is not supported for GP, use `sample_y` instead')

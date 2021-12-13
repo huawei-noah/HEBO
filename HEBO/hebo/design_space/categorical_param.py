@@ -13,8 +13,7 @@ from .param import Parameter
 class CategoricalPara(Parameter):
     def __init__(self, param):
         super().__init__(param)
-        self.categories = np.array(list(param['categories']))
-        assert(self.categories.ndim == 1)
+        self.categories = list(param['categories'])
         try:
             self._categories_dict = {k:v for v, k in enumerate(self.categories)}
         except TypeError: # there are unhashable types
@@ -36,7 +35,7 @@ class CategoricalPara(Parameter):
         return ret.astype(float)
 
     def inverse_transform(self, x):
-        return self.categories[x.round().astype(int)]
+        return np.array([self.categories[x_] for x_ in x.round().astype(int)])
 
     @property
     def is_numeric(self):
@@ -57,3 +56,7 @@ class CategoricalPara(Parameter):
     @property
     def opt_ub(self):
         return self.ub
+
+    @property
+    def num_uniqs(self):
+        return len(self.categories)

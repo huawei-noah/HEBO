@@ -13,12 +13,10 @@ import pytest
 from pytest import approx
 
 import torch
-import numpy as np
 from torch import FloatTensor
-from sklearn.metrics import r2_score
 
-from hebo.models.base_model import BaseModel
-from hebo.models.model_factory import get_model, model_dict
+from hebo.models.model_factory import get_model, model_dict, get_model_class
+from .util import check_prediction
 
 def rand_dataset(num_out : int) -> (FloatTensor, FloatTensor):
     X = torch.randn(10, 2)
@@ -40,11 +38,9 @@ def rand_dataset_with_enum(num_out : int) -> (FloatTensor, FloatTensor):
 def gather_mo_models():
     model_list = []
     for name in model_dict:
-        try:
-            model = get_model(name, 2, 0, 2)
+        cls = get_model_class(name)
+        if cls.support_multi_output:
             model_list.append(name)
-        except AssertionError as e:
-            assert str(e) == "Model only support single-output"
     return model_list       
 
 @pytest.fixture(params = gather_mo_models())
@@ -66,10 +62,7 @@ def test_fit(model_name, num_out):
     model.fit(X, None, y)
     with torch.no_grad():
         py, ps2 = model.predict(X, None)
-        ps      = ps2.sqrt()
-        assert(r2_score(y.numpy(), py.numpy()) > 0.5)
-        assert (py + 3 * ps > y).sum() > 0.9 * y.numel()
-        assert (py - 3 * ps < y).sum() > 0.9 * y.numel()
+        check_prediction(y, py, ps2)
 
 @pytest.mark.parametrize('num_out', [1, 2], ids = ['single-out', 'multi-out'])
 def test_fit_with_enum(model_name, num_out):
@@ -81,30 +74,28 @@ def test_fit_with_enum(model_name, num_out):
     model.fit(X, Xe, y)
     with torch.no_grad():
         py, ps2 = model.predict(X, Xe)
-        ps      = ps2.sqrt()
-        assert(r2_score(y.numpy(), py.numpy()) > 0.5)
-        assert (py + 3 * ps > y).sum() > 0.9 * y.numel()
-        assert (py - 3 * ps < y).sum() > 0.9 * y.numel()
+        check_prediction(y, py, ps2)
 
 @pytest.mark.parametrize('num_out', [1, 2], ids = ['single-out', 'multi-out'])
 def test_grad(model_name, num_out):
     model = get_model(model_name, 2, 0, num_out, num_epochs = 2)
-    X, y  = rand_dataset(num_out)
-    model.fit(X, None, y)
-    X.requires_grad = True
-    py, ps2 = model.predict(X, None)
-    ps      = ps2.sqrt()
-    y = (py + ps).sum()
-    y.backward()
-    assert(X.grad.shape == X.shape)
+    if model.support_grad:
+        X, y  = rand_dataset(num_out)
+        model.fit(X, None, y)
+        X.requires_grad = True
+        py, ps2 = model.predict(X, None)
+        ps      = ps2.sqrt()
+        y = (py + ps).sum()
+        y.backward()
+        assert(X.grad.shape == X.shape)
 
-    delta = 0.001
-    Xdelta = X.detach().clone()
-    Xdelta[0, 0] += delta
-    py, ps2 = model.predict(Xdelta, None)
-    ydelta  = (py + ps2.sqrt()).sum()
-    grad_delta = ((ydelta - y) / delta).detach()
-    assert(grad_delta.numpy() == approx(X.grad[0, 0].numpy(), abs = 0.2))
+        delta = 0.001
+        Xdelta = X.detach().clone()
+        Xdelta[0, 0] += delta
+        py, ps2 = model.predict(Xdelta, None)
+        ydelta  = (py + ps2.sqrt()).sum()
+        grad_delta = ((ydelta - y) / delta).detach()
+        assert(grad_delta.numpy() == approx(X.grad[0, 0].numpy(), abs = 0.2))
 
 @pytest.mark.parametrize('num_out', [1, 2], ids = ['single-out', 'multi-out'])
 def test_sample(model_name, num_out):

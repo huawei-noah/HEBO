@@ -10,15 +10,7 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 
-import pytest
-from pytest import approx
-
-from hebo.design_space.design_space      import DesignSpace
-from hebo.design_space.numeric_param     import NumericPara
-from hebo.design_space.integer_param     import IntegerPara
-from hebo.design_space.pow_param         import PowPara
-from hebo.design_space.categorical_param import CategoricalPara
-from hebo.design_space.bool_param        import BoolPara
+from hebo.design_space.design_space import DesignSpace
 
 def test_design_space():
     space = DesignSpace().parse([
@@ -42,6 +34,7 @@ def test_design_space():
     x, xe   = space.transform(samp)
     x_, xe_ = space.transform(space.inverse_transform(x, xe))
     assert (x - x_).abs().max() < 1e-4
+    assert (xe == xe_).all()
 
     assert (space.opt_lb <= space.opt_ub).all()
 
@@ -63,7 +56,7 @@ def test_design_space():
     assert space.paras['x6'].is_discrete_after_transform
     assert space.paras['x7'].is_discrete_after_transform
     
-    for name, para in space.paras.items():
+    for _, para in space.paras.items():
         assert para.is_discrete == (type(para.sample(1).tolist()[0]) != float)
 
         if para.is_discrete_after_transform:

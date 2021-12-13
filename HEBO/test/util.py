@@ -7,4 +7,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from . import abstract_optimizer, bo, hebo, util, general, hebo_embedding, noisy_opt
+import numpy as np
+from torch import FloatTensor
+
+def check_prediction(y_true : FloatTensor, py_pred : FloatTensor, ps2_pred : FloatTensor = None) -> bool:
+    y  = y_true.numpy().reshape(-1)
+    py = py_pred.numpy().reshape(-1)
+    assert y.shape == py.shape
+    assert np.isfinite(py).all()
+    if ps2_pred is not None:
+        assert (ps2_pred.numpy() > 0).all()

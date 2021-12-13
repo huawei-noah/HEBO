@@ -7,13 +7,15 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-import sys, os
+import sys, os, platform
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 import pytest
 import torch
 
 from hebo.models.nn.deep_ensemble import BaseNet, DeepEnsemble
-from sklearn.metrics import r2_score
+from hebo.models.nn.fe_deep_ensemble import FeDeepEnsemble
+from hebo.models.nn.gumbel_linear import GumbelDeepEnsemble
+from .util import check_prediction
 
 @pytest.mark.parametrize('num_cont',  [0, 1])
 @pytest.mark.parametrize('num_enum', [0, 1])
@@ -37,8 +39,8 @@ def test_basenet(num_cont, num_enum, num_out, output_noise, rand_prior, num_laye
         crit = torch.nn.MSELoss()
         mse1 = crit(y, py[:, :net.num_out]).item()
         
-        opt = torch.optim.Adam(net.parameters(), lr = 1e-3)
-        for i in range(5):
+        opt = torch.optim.Adam(net.parameters(), lr = 1e-5)
+        for _ in range(10):
             py   = net(xc, xe)
             loss = crit(y, py[:, :net.num_out])
             opt.zero_grad()
@@ -50,24 +52,28 @@ def test_basenet(num_cont, num_enum, num_out, output_noise, rand_prior, num_laye
 @pytest.mark.parametrize('output_noise', [True, False], ids = ['nll', 'mse'])
 @pytest.mark.parametrize('rand_prior',   [True, False], ids = ['with_prior', 'no_prior'])
 @pytest.mark.parametrize('num_processes', [1, 5], ids = ['seq', 'para'])
-def test_deep_ens(output_noise, rand_prior, num_processes):
+@pytest.mark.parametrize('model_cls',    [DeepEnsemble, FeDeepEnsemble, GumbelDeepEnsemble])
+def test_deep_ens(output_noise, rand_prior, num_processes, model_cls):
+    if platform.system() == 'Linux' and num_processes > 1:
+        pytest.skip('Skip multiprocessing test in Linux')
     xc = torch.randn(16, 1)
     y  = xc ** 2
-    model = DeepEnsemble(1, 0, 1, 
+    model = model_cls(1, 0, 1, 
             output_noise  = output_noise,
             rand_prior    = rand_prior,
             num_processes = num_processes,
-            l1            = 0., 
-            num_epoch     = 16)
+            l1            = 0.,
+            num_epochs    = 1)
     model.fit(xc, None, y)
+    assert len(model.models) == model.num_ensembles
     with torch.no_grad():
-        py, _ = model.predict(xc, None)
-        assert(r2_score(y.numpy(), py.numpy()) > 0.5)
+        py, ps2 = model.predict(xc, None)
+        check_prediction(y, py, ps2)
 
 def test_verbose(capsys):
     X = torch.randn(10, 3)
     y = (X**2).sum(dim = 1).view(-1, 1) + 0.01 * torch.randn(10, 1)
-    model = DeepEnsemble(3, 0, 1, num_epochs = 10, verbose = True)
+    model = DeepEnsemble(3, 0, 1, num_epochs = 1, verbose = True)
     model.fit(X, None, y)
 
     out, err = capsys.readouterr()
@@ -75,7 +81,7 @@ def test_verbose(capsys):
     assert('loss'   in out)
     assert(err == '')
 
-    model = DeepEnsemble(3, 0, 1, num_epochs = 10, verbose = False)
+    model = DeepEnsemble(3, 0, 1, num_epochs = 1, verbose = False)
     model.fit(X, None, y)
 
     out, err = capsys.readouterr()

@@ -56,15 +56,18 @@ class ToyExampleMO(Acquisition):
         o2 = ((x-1)**2).sum(dim = 1).view(-1, 1)
         return torch.cat([o1, o2], dim = 1)
 
-def test_opt():
+@pytest.mark.parametrize('constr_v', [1.0, 100.0], ids = ['feasible', 'infeasible'])
+@pytest.mark.parametrize('sobol_init', [True, False], ids = ['sobol', 'rand'])
+def test_opt(constr_v, sobol_init):
     space = DesignSpace().parse([
         {'name' : 'x1', 'type' : 'num', 'lb' : -3.0, 'ub' : 3.0}
         ])
-    acq   = ToyExample()
-    opt   = EvolutionOpt(space, acq, pop = 10)
+    acq   = ToyExample(constr_v = constr_v)
+    opt   = EvolutionOpt(space, acq, pop = 10, sobol_init = sobol_init)
     rec   = opt.optimize(initial_suggest = space.sample(3))
     x, xe = space.transform(rec)
-    assert(approx(1.0, 1e-3) == acq(x, xe)[:, 0].squeeze().item())
+    if constr_v < 100:
+        assert(approx(1.0, 1e-2) == acq(x, xe)[:, 0].squeeze().item())
 
 def test_opt_fix():
     space = DesignSpace().parse([

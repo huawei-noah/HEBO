@@ -8,8 +8,6 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import torch
-import numpy as p
-
 from hebo.acquisitions.acq import GeneralAcq
 
 class DummyModel:
@@ -22,7 +20,7 @@ class DummyModel:
     def noise(self) -> torch.FloatTensor:
         return torch.zeros(self.num_out)
 
-    def predict(self, x, xe):
+    def predict(self, x, _):
         num_data = x.shape[0]
         py       = torch.zeros(num_data, self.num_out)
         ps2      = torch.ones(num_data, self.num_out)

@@ -22,8 +22,9 @@ from torch import Tensor, FloatTensor, LongTensor
 from copy import deepcopy
 
 from ..base_model import BaseModel
-from ..layers import EmbTransform
+from ..layers import EmbTransform, OneHotTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
+from ..util import construct_hidden
 
 class DeepEnsemble(BaseModel):
     support_ts           = True
@@ -32,21 +33,22 @@ class DeepEnsemble(BaseModel):
     support_warm_start   = True
     def __init__(self, num_cont, num_enum, num_out, **conf):
         super().__init__(num_cont, num_enum, num_out, **conf)
-        self.bootstrap     = conf.get('bootstrap',     False)
-        self.rand_prior    = conf.get('rand_prior',    False)
-        self.output_noise  = conf.get('output_noise',  True)
-        self.num_ensembles = conf.get('num_ensembles', 5)
-        self.num_process   = conf.get('num_processes', 1)
-        self.num_epochs    = conf.get('num_epochs',    500)
-        self.print_every   = conf.get('print_every',   50)
+        self.bootstrap     = self.conf.setdefault('bootstrap',     False)
+        self.rand_prior    = self.conf.setdefault('rand_prior',    False)
+        self.output_noise  = self.conf.setdefault('output_noise',  False)
+        self.num_ensembles = self.conf.setdefault('num_ensembles', 5)
+        self.num_process   = self.conf.setdefault('num_processes', 1)
+        self.num_epochs    = self.conf.setdefault('num_epochs',    500)
+        self.print_every   = self.conf.setdefault('print_every',   50)
 
-        self.num_layers    = conf.get('num_layers',    1)
-        self.num_hiddens   = conf.get('num_hiddens',   128)
-        self.l1            = conf.get('l1',            1e-3)
-        self.batch_size    = conf.get('batch_size',    32)
-        self.lr            = conf.get('lr',            5e-3)
-        self.adv_eps       = conf.get('adv_eps',       0.)
-        self.verbose       = conf.get('verbose',       False)
+        self.num_layers    = self.conf.setdefault('num_layers',    1)
+        self.num_hiddens   = self.conf.setdefault('num_hiddens',   128)
+        self.l1            = self.conf.setdefault('l1',            1e-3)
+        self.batch_size    = self.conf.setdefault('batch_size',    32)
+        self.lr            = self.conf.setdefault('lr',            5e-3)
+        self.adv_eps       = self.conf.setdefault('adv_eps',       0.)
+        self.verbose       = self.conf.setdefault('verbose',       False)
+        self.basenet_cls   = self.conf.setdefault('basenet_cls',   BaseNet)
         assert self.num_ensembles > 0
 
         self.xscaler = TorchMinMaxScaler((-1, 1))
@@ -66,7 +68,7 @@ class DeepEnsemble(BaseModel):
     def noise(self) -> FloatTensor:
         return self.noise_est
 
-    def fit(self, Xc_ : FloatTensor, Xe_ : LongTensor, y_ : FloatTensor):
+    def fit(self, Xc_ : FloatTensor, Xe_ : LongTensor, y_ : FloatTensor, **fitting_conf):
         valid = torch.isfinite(y_).any(dim = 1)
         Xc    = Xc_[valid] if Xc_ is not None else None
         Xe    = Xe_[valid] if Xe_ is not None else None
@@ -146,20 +148,14 @@ class DeepEnsemble(BaseModel):
         loss   = 0.5 * (target[mask] - mu)**2 / sigma2 + 0.5 * torch.log(sigma2)
         return torch.mean(loss)
 
-    def fit_one(self, Xc, Xe, y, idx):
+    def fit_one(self, Xc, Xe, y, idx, **fitting_conf):
         torch.seed()
         dataset   = TensorDataset(Xc, Xe, y)
-        loader    = DataLoader(dataset, batch_size = self.batch_size, shuffle = True)
+        loader    = DataLoader(dataset, batch_size = self.batch_size, shuffle = True, drop_last = y.shape[0] > self.batch_size)
         if self.models is not None and len(self.models) == self.num_ensembles:
             model = deepcopy(self.models[idx])
         else:
-            model = BaseNet(self.num_cont, self.num_enum, self.num_out,
-                    noise_lb     = 1e-4,
-                    num_uniqs    = None if self.num_enum == 0 else self.conf['num_uniqs'], 
-                    num_layers   = self.num_layers,
-                    num_hiddens  = self.num_hiddens,
-                    output_noise = self.output_noise,
-                    rand_prior   = self.rand_prior)
+            model = self.basenet_cls(self.num_cont, self.num_enum, self.num_out, **self.conf)
         opt       = torch.optim.Adam(model.parameters(), lr = self.lr)
         model.train()
         for epoch in range(self.num_epochs):
@@ -197,17 +193,24 @@ class BaseNet(nn.Module):
         self.eff_dim      = num_cont
         if self.num_enum > 0:
             assert 'num_uniqs' in conf, "num_uniqs not in algorithm configuration"
-            self.emb_trans  = EmbTransform(conf['num_uniqs'])
-            self.eff_dim   += self.emb_trans.num_out
+            num_uniqs  = conf['num_uniqs']
+            enum_trans = conf.get('enum_trans', 'embedding')
+            if enum_trans == 'embedding':
+                self.enum_layer = EmbTransform(num_uniqs)
+            elif enum_trans == 'onehot':
+                self.enum_layer = OneHotTransform(num_uniqs)
+            else:
+                raise RuntimeError(f'Unknown enum processing type {enum_trans}, can only be [embedding|onehot]')
+            self.eff_dim += self.enum_layer.num_out
 
-        self.hidden = self.construct_hidden()
+        self.hidden = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens)
         self.mu     = nn.Linear(self.num_hiddens, self.num_out)
         if self.output_noise:
             self.sigma2 = nn.Sequential(
                 nn.Linear(self.num_hiddens, self.num_out), 
                 nn.Softplus())
         if self.rand_prior: # Randomized Prior Functions for Deep Reinforcement Learning, Ian Osband
-            self.prior_net = self.construct_hidden()
+            self.prior_net = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens)
             self.prior_net.add_module('prior_net_out', nn.Linear(self.num_hiddens, self.num_out))
         for n, p in self.named_parameters():
             if "bias" in n:
@@ -215,17 +218,10 @@ class BaseNet(nn.Module):
             else:
                 nn.init.xavier_uniform_(p, gain = nn.init.calculate_gain('relu'))
 
-    def construct_hidden(self):
-        layers = [nn.Linear(self.eff_dim, self.num_hiddens), nn.ReLU()]
-        for i in range(self.num_layers - 1):
-            layers.append(nn.Linear(self.num_hiddens, self.num_hiddens))
-            layers.append(nn.ReLU())
-        return nn.Sequential(*layers)
-
     def xtrans(self, Xc : FloatTensor, Xe : LongTensor) -> FloatTensor:
         Xall     = Xc.clone() if self.num_cont > 0 else torch.zeros(Xe.shape[0], 0)
         if self.num_enum > 0:
-            Xall = torch.cat([Xall, self.emb_trans(Xe)], dim = 1)
+            Xall = torch.cat([Xall, self.enum_layer(Xe)], dim = 1)
         return Xall
 
     def forward(self, Xc : FloatTensor, Xe : LongTensor) -> FloatTensor:

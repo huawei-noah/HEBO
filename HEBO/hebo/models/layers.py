@@ -21,6 +21,10 @@ class EmbTransform(nn.Module):
         self.emb = nn.ModuleList([])
         for num_uniq, emb_size in zip(num_uniqs, self.emb_sizes):
             self.emb.append(nn.Embedding(num_uniq, emb_size))
+
+    @property
+    def num_out_list(self) -> [int]:
+        return self.emb_sizes
     
     @property
     def num_out(self)->int:
@@ -33,6 +37,10 @@ class OneHotTransform(nn.Module):
     def __init__(self, num_uniqs):
         super().__init__()
         self.num_uniqs = num_uniqs
+
+    @property
+    def num_out_list(self) -> [int]:
+        return self.num_uniqs
 
     @property
     def num_out(self)->int:

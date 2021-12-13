@@ -13,7 +13,14 @@ from .gp.gpy_wgp import GPyGP
 from .gp.gpy_mlp import GPyMLPGP
 from .rf.rf import RF
 from .nn.deep_ensemble import DeepEnsemble
-from .boosting.catboost import CatBoost
+from .nn.eac.masked_deep_ensemble import MaskedDeepEnsemble
+from .nn.fe_deep_ensemble import FeDeepEnsemble
+from .nn.gumbel_linear import GumbelDeepEnsemble
+try:
+    from .boosting.catboost import CatBoost
+    has_catboost = True
+except ImportError:
+    has_catboost = False
 
 model_dict = {
         'gp'  : GP,
@@ -21,8 +28,13 @@ model_dict = {
         'gpy_mlp' : GPyMLPGP, 
         'rf'  : RF,
         'deep_ensemble' : DeepEnsemble,
-        'catboost': CatBoost
+        'masked_deep_ensemble' : MaskedDeepEnsemble,
+        'fe_deep_ensemble': FeDeepEnsemble, 
+        'gumbel': GumbelDeepEnsemble, 
         }
+if has_catboost:
+    model_dict['catboost'] = CatBoost
+
 
 def get_model(model_name : str, *params, **conf) -> BaseModel:
     assert model_name in model_dict, "model name %s not in model_dict"

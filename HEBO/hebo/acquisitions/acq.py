@@ -54,9 +54,9 @@ class SingleObjectiveAcq(Acquisition):
         return 0
 
 class LCB(SingleObjectiveAcq):
-    def __init__(self, model : BaseModel, kappa = 3.0, **conf):
+    def __init__(self, model : BaseModel, **conf):
         super().__init__(model, **conf)
-        self.kappa = kappa
+        self.kappa = conf.get('kappa', 3.0)
         assert(model.num_out == 1)
     
     def eval(self, x : Tensor, xe : Tensor) -> Tensor:
@@ -150,7 +150,7 @@ class MACE(Acquisition):
         with torch.no_grad():
             py, ps2   = self.model.predict(x, xe)
             noise     = np.sqrt(2.0) * self.model.noise.sqrt()
-            ps        = ps2.sqrt()
+            ps        = ps2.sqrt().clamp(min = torch.finfo(ps2.dtype).eps)
             lcb       = (py + noise * torch.randn(py.shape)) - self.kappa * ps
             normed    = ((self.tau - self.eps - py - noise * torch.randn(py.shape)) / ps)
             dist      = Normal(0., 1.)
@@ -169,6 +169,26 @@ class MACE(Acquisition):
             out[:, 1][~use_app] = -1 * EI[~use_app].log().reshape(-1)
             out[:, 2][~use_app] = -1 * PI[~use_app].log().reshape(-1)
             return out
+
+class NoisyAcq(Acquisition):
+    def __init__(self, model, num_obj, num_constr):
+        super().__init__(model)
+        self._num_obj    = num_obj
+        self._num_constr = num_constr
+
+    @property
+    def num_obj(self) -> int:
+        return self._num_obj
+
+    @property
+    def num_constr(self) -> int:
+        return self._num_constr
+
+    def eval(self, x : torch.FloatTensor, xe : torch.LongTensor) -> torch.FloatTensor:
+        with torch.no_grad():
+            py, ps2 = self.model.predict(x, xe)
+            y_samp  = py + ps2.sqrt() * torch.randn(py.shape)
+            return y_samp
 
 class GeneralAcq(Acquisition):
     def __init__(self, model, num_obj, num_constr, **conf):
@@ -213,7 +233,7 @@ class GeneralAcq(Acquisition):
         """
         with torch.no_grad():
             py, ps2 = self.model.predict(x, xe)
-            ps      = ps2.sqrt()
+            ps      = ps2.sqrt().clamp(min = torch.finfo(ps2.dtype).eps)
             if self.use_noise:
                 noise  = self.model.noise.sqrt()
                 py    += noise * torch.randn(py.shape)

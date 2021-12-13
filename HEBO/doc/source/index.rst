@@ -20,13 +20,13 @@ Quick start
     import numpy  as np
 
     from hebo.design_space.design_space import DesignSpace
-    from hebo.optimizers.mace import MACEBO
+    from hebo.optimizers.hebo import HEBO
 
     def obj(params : pd.DataFrame) -> np.ndarray:
         return ((params.values - 0.37)**2).sum(axis = 1).reshape(-1, 1)
             
     space = DesignSpace().parse([{'name' : 'x', 'type' : 'num', 'lb' : -3, 'ub' : 3}])
-    opt   = MACEBO(space)
+    opt   = HEBO(space)
     for i in range(5):
         rec = opt.suggest(n_suggestions = 4)
         opt.observe(rec, obj(rec))

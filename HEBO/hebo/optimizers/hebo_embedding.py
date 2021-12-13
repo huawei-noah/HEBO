@@ -140,3 +140,11 @@ class HEBO_Embedding(AbstractOptimizer):
 
     def observe(self, X, y):
         self.mace.observe(X, y)
+
+    @property
+    def best_x(self)->pd.DataFrame:
+        return self.mace.best_x
+
+    @property
+    def best_y(self)->float:
+        return self.mace.best_y

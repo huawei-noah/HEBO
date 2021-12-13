@@ -1,3 +1,12 @@
+# Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the MIT license.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the MIT License for more details.
+
 import torch
 import torch.nn as nn
 import pandas as pd
@@ -34,6 +43,30 @@ class AbstractBenchmark(ABC):
     @abstractmethod
     def __call__(self, para : pd.DataFrame) -> np.ndarray:
         pass
+
+class WhiteNoise(AbstractBenchmark):
+    def __init__(self, dim):
+        """
+        eff_dim = 2
+        """
+        super().__init__(dim)
+        self.eff_dim = 2
+    
+    def __call__(self, _params : pd.DataFrame) -> np.ndarray:
+        return np.random.randn(_params.shape[0], 1)
+
+class SynHDBench(AbstractBenchmark):
+    def __init__(self, dim):
+        """
+        eff_dim = 2
+        """
+        super().__init__(dim)
+        self.eff_dim = 2
+    
+    def __call__(self, _params : pd.DataFrame) -> np.ndarray:
+        eff_dim = self.eff_dim
+        params  = _params * 3.5 # XXX: scale [-1, 1] to [-3.5, 3.5]
+        return - (((params.values[:,0:eff_dim]).sum(axis = 1) - 0.1)**2 * np.abs( np.sin(params.values[:,0:eff_dim]).sum(axis = 1)/(np.cos(params.values[:,0:eff_dim]+2).sum(axis = 1)+ 3) )).reshape(-1, 1)
 
 class PymooDummy(AbstractBenchmark):
     def __init__(self, dim, prob, bounds : tuple = None):
@@ -102,8 +135,11 @@ class AckleyOffsetRotation(PymooDummy):
     def __init__(self, dim = 100, rank = None):
         super().__init__(dim, prob = get_problem("ackley", n_var=dim, a=20, b=1/5, c=2 * np.pi))
         self.offset  = self.lb + (self.ub - self.lb) * np.random.rand(self.dim)
-        self.r       = special_ortho_group.rvs(dim)
-        self.r      *= np.random.randn(dim)
+        if rank is None:
+            rank = dim
+        r       = np.random.randn(dim, rank)
+        self.r  = np.matmul(r, r.T)
+        self.r *= np.random.randn(dim)
     
     def __call__(self, para):
         x = self.scaler.inverse_transform(para[self.space.numeric_names]) - self.offset

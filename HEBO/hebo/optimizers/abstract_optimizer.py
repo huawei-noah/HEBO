@@ -22,6 +22,7 @@ class AbstractOptimizer(ABC):
     def __init__(self, space : DesignSpace):
         self.space = space
 
+    @abstractmethod
     def suggest(self, n_suggestions = 1, fix_input : dict = None):
         """
         Perform optimisation and give recommendation using data observed so far
@@ -34,8 +35,19 @@ class AbstractOptimizer(ABC):
         """
         pass
 
+    @abstractmethod
     def observe(self, x : pd.DataFrame, y : np.ndarray):
         """
         Observe new data
         """
+        pass
+
+    @property
+    @abstractmethod
+    def best_x(self) -> pd.DataFrame:
+        pass
+
+    @property
+    @abstractmethod
+    def best_y(self) -> float:
         pass

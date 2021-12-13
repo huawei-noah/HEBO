@@ -11,17 +11,15 @@ import numpy  as np
 import pandas as pd
 import torch
 from torch.quasirandom import SobolEngine
-from pymoo.algorithms.so_genetic_algorithm import GA
-from pymoo.algorithms.nsga2 import NSGA2
-from pymoo.factory import get_problem, get_mutation, get_crossover
+from pymoo.factory import get_problem, get_mutation, get_crossover, get_algorithm
 from pymoo.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
 from pymoo.optimize import minimize
-from pymoo.model.problem import Problem
-from pymoo.configuration import Configuration
+from pymoo.core.problem import Problem
+from pymoo.config import Config
+Config.show_compile_hint = False
+
 from ..design_space.design_space import DesignSpace
 from ..acquisitions.acq import Acquisition
-Configuration.show_compile_hint = False
-from pymoo.factory import get_algorithm
 
 class BOProblem(Problem):
     def __init__(self,
@@ -38,13 +36,13 @@ class BOProblem(Problem):
 
     def _evaluate(self, x : np.ndarray, out : dict, *args, **kwargs):
         num_x = x.shape[0]
-        xcont = torch.from_numpy(x[:, :self.space.num_numeric].astype(float))
-        xenum = torch.from_numpy(x[:, self.space.num_numeric:].astype(float))
-        df_x  = self.space.inverse_transform(xcont, xenum)
+        xcont = torch.FloatTensor(x[:, :self.space.num_numeric].astype(float))
+        xenum = torch.FloatTensor(x[:, self.space.num_numeric:].astype(float)).round().long()
         if self.fix is not None: # invalidate fixed input, replace with fixed values
+            df_x = self.space.inverse_transform(xcont, xenum)
             for k, v in self.fix.items():
                 df_x[k] = v
-        xcont, xenum = self.space.transform(df_x)
+            xcont, xenum = self.space.transform(df_x)
 
         with torch.no_grad():
             acq_eval = self.acq(xcont, xenum).numpy().reshape(num_x, self.acq.num_obj + self.acq.num_constr)
@@ -65,19 +63,26 @@ class EvolutionOpt:
         self.pop        = conf.get('pop', 100)
         self.iter       = conf.get('iters',500)
         self.verbose    = conf.get('verbose', False)
+        self.repair     = conf.get('repair', None)
+        self.sobol_init = conf.get('sobol_init', True)
         assert(self.acq.num_obj > 0)
 
         if self.es is None:
             self.es = 'nsga2' if self.acq.num_obj > 1 else 'ga'
 
     def get_init_pop(self, initial_suggest : pd.DataFrame = None) -> np.ndarray:
-        # init_pop = self.space.sample(self.pop)
-        self.eng   = SobolEngine(self.space.num_paras, scramble = True)
-        sobol_samp = self.eng.draw(self.pop)
-        sobol_samp = sobol_samp * (self.space.opt_ub - self.space.opt_lb) + self.space.opt_lb
-        x          = sobol_samp[:, :self.space.num_numeric]
-        xe         = sobol_samp[:, self.space.num_numeric:]
-        init_pop   = self.space.inverse_transform(x, xe)
+        if not self.sobol_init:
+            init_pop = self.space.sample(self.pop)
+        else:
+            self.eng   = SobolEngine(self.space.num_paras, scramble = True)
+            sobol_samp = self.eng.draw(self.pop)
+            sobol_samp = sobol_samp * (self.space.opt_ub - self.space.opt_lb) + self.space.opt_lb
+            x          = sobol_samp[:, :self.space.num_numeric]
+            xe         = sobol_samp[:, self.space.num_numeric:].round().long()
+            for i, n in enumerate(self.space.numeric_names):
+                if self.space.paras[n].is_discrete_after_transform:
+                    x[:, i] = x[:, i].round()
+            init_pop = self.space.inverse_transform(x, xe)
         if initial_suggest is not None:
             init_pop = pd.concat([initial_suggest, init_pop], axis = 0).head(self.pop)
         x, xe = self.space.transform(init_pop)
@@ -111,22 +116,23 @@ class EvolutionOpt:
         })
         return crossover
 
-    def optimize(self, initial_suggest : pd.DataFrame = None, fix_input : dict = None) -> pd.DataFrame:
+    def optimize(self, initial_suggest : pd.DataFrame = None, fix_input : dict = None, return_pop = False) -> pd.DataFrame:
         lb        = self.space.opt_lb.numpy()
         ub        = self.space.opt_ub.numpy()
         prob      = BOProblem(lb, ub, self.acq, self.space, fix_input)
         init_pop  = self.get_init_pop(initial_suggest)
         mutation  = self.get_mutation()
         crossover = self.get_crossover()
-        algo      = get_algorithm(self.es, pop_size = self.pop, sampling = init_pop, mutation = mutation, crossover = crossover)
+        algo      = get_algorithm(self.es, pop_size = self.pop, sampling = init_pop, mutation = mutation, crossover = crossover, repair = self.repair)
         res       = minimize(prob, algo, ('n_gen', self.iter), verbose = self.verbose)
-        if res.X is not None:
+        if res.X is not None and not return_pop:
             opt_x = res.X.reshape(-1, len(lb)).astype(float)
         else:
             opt_x = np.array([p.X for p in res.pop]).astype(float)
-            if self.acq.num_obj == 1:
+            if self.acq.num_obj == 1 and not return_pop:
                 opt_x = opt_x[[np.random.choice(opt_x.shape[0])]]
         
+        self.res  = res
         opt_xcont = torch.from_numpy(opt_x[:, :self.space.num_numeric])
         opt_xenum = torch.from_numpy(opt_x[:, self.space.num_numeric:])
         df_opt    = self.space.inverse_transform(opt_xcont, opt_xenum)

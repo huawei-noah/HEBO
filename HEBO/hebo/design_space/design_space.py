@@ -99,15 +99,12 @@ class DesignSpace:
         output: pandas dataframe
         """
         with torch.no_grad():
-            df_num = pd.DataFrame(columns = self.numeric_names)
-            df_cat = pd.DataFrame(columns = self.enum_names)
+            inv_dict = {}
             for i, name in enumerate(self.numeric_names):
-                df_num[name] = self.paras[name].inverse_transform(x.detach().numpy()[:, i])
+                inv_dict[name] = self.paras[name].inverse_transform(x.detach().double().numpy()[:, i])
             for i, name in enumerate(self.enum_names):
-                df_cat[name] = self.paras[name].inverse_transform(xe.detach().numpy()[:, i])
-            df = pd.concat([df_num, df_cat], axis = 1)
-            df = df[self.para_names]
-            return df
+                inv_dict[name] = self.paras[name].inverse_transform(xe.detach().numpy()[:, i])
+            return pd.DataFrame(inv_dict)
 
     @property
     def opt_lb(self):
@@ -120,3 +117,6 @@ class DesignSpace:
         ub_numeric = [self.paras[p].opt_ub for p in self.numeric_names]
         ub_enum    = [self.paras[p].opt_ub for p in self.enum_names]
         return torch.tensor(ub_numeric + ub_enum)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

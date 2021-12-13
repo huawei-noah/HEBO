@@ -10,7 +10,6 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import cross_val_predict, KFold
-from sklearn.metrics import get_scorer, make_scorer
 from typing import Callable
 
 from hebo.design_space.design_space import DesignSpace
@@ -26,9 +25,10 @@ def sklearn_tuner(
         y : np.ndarray,
         metric : Callable, 
         greater_is_better : bool = True, 
-        n_splits = 5,
+        cv       = None,
         max_iter = 16, 
-        report   = False
+        report   = False,
+        hebo_cfg = None, 
         ) -> (dict, pd.DataFrame):
     """Tuning sklearn estimator
 
@@ -39,7 +39,7 @@ def sklearn_tuner(
     X, y: data used to for cross-valiation
     metrics: metric function in sklearn.metrics
     greater_is_better: whether a larger metric value is better
-    n_splits: split data into `n_splits` parts for cross validation
+    cv: the 'cv' parameter in `cross_val_predict`
     max_iter: number of trials
 
     Returns:
@@ -56,7 +56,7 @@ def sklearn_tuner(
 
     space_cfg = [
             {'name' : 'max_depth',        'type' : 'int', 'lb' : 1, 'ub' : 20},
-            {'name' : 'min_samples_leaf', 'type' : 'num', 'lb' : 1e-4, 'ub' : 0.5},
+            {'name' : 'min_samples_leaf', 'type' : 'pow', 'lb' : 1e-4, 'ub' : 0.5},
             {'name' : 'max_features',     'type' : 'cat', 'categories' : ['auto', 'sqrt', 'log2']},
             {'name' : 'bootstrap',        'type' : 'bool'},
             {'name' : 'min_impurity_decrease', 'type' : 'pow', 'lb' : 1e-4, 'ub' : 1.0},
@@ -64,21 +64,24 @@ def sklearn_tuner(
     X, y   = load_boston(return_X_y = True)
     result = sklearn_tuner(RandomForestRegressor, space_cfg, X, y, metric = r2_score, max_iter = 16)
     """
+    if hebo_cfg is None:
+        hebo_cfg = {}
     space = DesignSpace().parse(space_config)
-    opt   = HEBO(space)
+    opt   = HEBO(space, **hebo_cfg)
+    if cv is None:
+        cv = KFold(n_splits = 5, shuffle = True, random_state = 42)
     for i in range(max_iter):
         rec     = opt.suggest()
         model   = model_class(**rec.iloc[0].to_dict())
-        pred    = cross_val_predict(model, X, y, cv = KFold(n_splits = n_splits, shuffle = True))
+        pred    = cross_val_predict(model, X, y, cv = cv)
         score_v = metric(y, pred)
         sign    = -1. if greater_is_better else 1.0
         opt.observe(rec, np.array([sign * score_v]))
-        print('Iter %d, best metric: %g' % (i, sign * opt.y.min()))
+        print('Iter %d, best metric: %g' % (i, sign * opt.y.min()), flush = True)
     best_id   = np.argmin(opt.y.reshape(-1))
     best_hyp  = opt.X.iloc[best_id]
     df_report = opt.X.copy()
     df_report['metric'] = sign * opt.y
     if report:
         return best_hyp.to_dict(), df_report
-    else:
-        return best_hyp.to_dict()
+    return best_hyp.to_dict()

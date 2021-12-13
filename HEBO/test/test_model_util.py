@@ -9,10 +9,8 @@
 
 import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
-import pytest
 import numpy as np
 import torch
-import torch.nn as nn
 from hebo.models.util import filter_nan
 
 def test_filter():
@@ -21,9 +19,11 @@ def test_filter():
     y[0]    = np.nan
     y[1, 1] = np.nan
 
-    xf, xef, yf = filter_nan(x, None, y)
-    assert(yf.shape[0] == 9)
+    xf, _, yf = filter_nan(x, None, y)
+    assert yf.shape[0] == 9
+    assert (xf == x[1:]).all()
 
     xf, xef, yf = filter_nan(x, None, y, keep_rule = 'all')
-    assert(yf.shape[0] == 8)
-    assert(torch.isfinite(yf).all())
+    assert (xf == x[2:]).all()
+    assert yf.shape[0] == 8
+    assert torch.isfinite(yf).all()

@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import torch
-from torch import FloatTensor, LongTensor
+from torch import nn, FloatTensor, LongTensor
 
 def filter_nan(x : FloatTensor, xe : LongTensor, y : FloatTensor, keep_rule = 'any') -> (FloatTensor, LongTensor, FloatTensor):
     assert x  is None or torch.isfinite(x).all()
@@ -23,3 +23,10 @@ def filter_nan(x : FloatTensor, xe : LongTensor, y : FloatTensor, keep_rule = 'a
     xe_filtered = xe[valid_id] if xe is not None else None
     y_filtered  = y[valid_id]
     return x_filtered, xe_filtered, y_filtered
+
+def construct_hidden(dim, num_layers, num_hiddens) -> nn.Module:
+    layers = [nn.Linear(dim, num_hiddens), nn.ReLU()]
+    for i in range(num_layers - 1):
+        layers.append(nn.Linear(num_hiddens, num_hiddens))
+        layers.append(nn.ReLU())
+    return nn.Sequential(*layers)

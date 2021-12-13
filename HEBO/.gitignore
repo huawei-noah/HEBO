@@ -8,7 +8,6 @@ debug.log
 __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
-.coverage*
 .idea/
 
 build/
@@ -16,3 +15,6 @@ dist/
 *.egg-info/
 htmlcov/
 worksapce/
+
+# catboost
+catboost_info/
