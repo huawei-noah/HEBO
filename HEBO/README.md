@@ -22,7 +22,7 @@ python setup.py develop
 
 ## Documentation
 
-Online documentation can be seen [here](hebo.readthedocs.io)
+Online documentation can be seen [here](https://hebo.readthedocs.io/en/latest/)
 
 ## Demo
 
