@@ -22,5 +22,7 @@ setuptools.setup(
         packages    = setuptools.find_packages(),
         description = 'Heteroscedastic evolutionary bayesian optimisation',
         long_description = long_description,
+        long_description_content_type = 'text/markdown', 
         install_requires = required,
+        url = 'https://github.com/huawei-noah/HEBO/tree/master/HEBO', 
         )

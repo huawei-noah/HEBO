@@ -8,7 +8,7 @@ Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and 
 
 Summary             |  Ablation
 :-------------------------:|:-------------------------:
-[Results]( https://github.com/huawei-noah/noah-research/blob/master/HEBO/summary_plot2.pdf) | [Results](https://github.com/huawei-noah/noah-research/blob/master/HEBO/summary_ablation2.pdf)
+[Results](https://github.com/huawei-noah/HEBO/blob/master/HEBO/summary_plot2.pdf) | [Results](https://github.com/huawei-noah/HEBO/blob/master/HEBO/summary_ablation2.pdf)
 
 # Contributors 
 
