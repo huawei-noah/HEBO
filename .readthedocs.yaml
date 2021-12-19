@@ -1,0 +1,9 @@
+version: 2
+
+sphinx:
+    configuration: HEBO/doc/source/conf.py
+
+
+python:
+    install:
+    - requirements: HEBO/dev-requirements.txt
