@@ -18,7 +18,7 @@ with open('requirements.txt', 'r') as f:
 
 setuptools.setup(
         name        = 'HEBO',
-        version     = '0.3.1', # also needs to be changed in hebo/__init__.py
+        version     = '0.3.2', # also needs to be changed in hebo/__init__.py
         packages    = setuptools.find_packages(),
         description = 'Heteroscedastic evolutionary bayesian optimisation',
         long_description = long_description,

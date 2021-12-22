@@ -74,8 +74,10 @@ Features
    design_space.ipynb
    optimisation
    sklearn_tuner
+
    mo_constrained.ipynb
    alebo_demo.ipynb
+   pymoo_evolution
    custom
 
 .. Indices and tables

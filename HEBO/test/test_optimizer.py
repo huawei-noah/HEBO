@@ -18,6 +18,7 @@ import pandas as pd
 from hebo.optimizers.noisy_opt import NoisyOpt
 from hebo.optimizers.hebo import HEBO
 from hebo.optimizers.bo import BO
+from hebo.optimizers.vcbo import VCBO
 from hebo.optimizers.general import GeneralBO
 from hebo.optimizers.hebo_contextual import HEBO_VectorContextual
 from hebo.optimizers.cmaes import CMAES
@@ -51,6 +52,16 @@ def test_opt(model_name, opt_cls):
         if opt.y.shape[0] > 11:
             break
 
+def test_vcbo():
+    space = DesignSpace().parse([
+        {'name' : 'x0', 'type' : 'num', 'lb' : -3, 'ub' : 7},
+        ])
+    opt = VCBO(space, rand_sample = 8)
+    for i in range(11):
+        num_suggest = 8 if opt.support_parallel_opt else 1
+        rec = opt.suggest(n_suggestions = num_suggest)
+        if len(opt.Y) > 11:
+            break
 
 @pytest.mark.parametrize('start_from_mu', [True, False])
 def test_cmaes(start_from_mu):
