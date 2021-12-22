@@ -24,6 +24,14 @@ python setup.py develop
 
 Online documentation can be seen [here](https://hebo.readthedocs.io/en/latest/)
 
+You can also build the documentation by your self
+
+```bash
+pip install -r dev-requirements.txt
+cd doc
+make html
+```
+
 ## Demo
 
 ```python
@@ -62,15 +70,6 @@ space_cfg = [
 X, y   = load_boston(return_X_y = True)
 result = sklearn_tuner(RandomForestRegressor, space_cfg, X, y, metric = r2_score, max_iter = 16)
 ```
-
-## Documentation
-
-```bash
-cd doc
-make html
-```
-
-You can view the compiled documentation in `doc/build/html/index.html`.
 
 ## Test
 
