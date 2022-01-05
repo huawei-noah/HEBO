@@ -72,7 +72,11 @@ def sklearn_tuner(
         cv = KFold(n_splits = 5, shuffle = True, random_state = 42)
     for i in range(max_iter):
         rec     = opt.suggest()
-        model   = model_class(**rec.iloc[0].to_dict())
+        hyp     = rec.iloc[0].to_dict()
+        for k in hyp:
+            if space.paras[k].is_numeric and space.paras[k].is_discrete:
+                hyp[k] = int(hyp[k])
+        model   = model_class(**hyp)
         pred    = cross_val_predict(model, X, y, cv = cv)
         score_v = metric(y, pred)
         sign    = -1. if greater_is_better else 1.0
