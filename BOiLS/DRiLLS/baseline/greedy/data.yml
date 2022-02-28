@@ -1,0 +1,38 @@
+# Copyright (c) 2019, SCALE Lab, Brown University
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+
+# ========================================================================
+# This file holds parameters for running a greedy algorithm that optimizes
+# a logic synthesis flow using ABC
+
+# path of the design file in one of the accepted formats by ABC
+design_file: my-design.blif
+
+# the directory to hold the output of the iterations
+output_dir: result
+
+mapping:
+  clock_period: 150   # in pico seconds
+  library_file: tech.lib
+
+# the number of iterations for the greedy optimization
+iterations: 100
+
+# add more optimization to the toolbox
+optimizations:
+  - rewrite
+  - rewrite -z
+  - refactor
+  - refactor -z
+  - resub
+  - resub -z
+  - balance
+
+# when the greedy algorithm get stuck, it applies one of the below post-mapping commands
+post_mapping_commands:
+- dnsize -D 150
+- upsize -D 150
+- buffer

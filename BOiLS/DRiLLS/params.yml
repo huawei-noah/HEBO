@@ -1,0 +1,40 @@
+# Copyright (c) 2019, SCALE Lab, Brown University
+# All rights reserved.
+
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+
+# ======================================================================
+# This file holds parameters for running a DRiLLS agent for training and
+# inference. It sets up the RL environment along with the logic synthesis
+# environment to train the RL agent. 
+
+# change this to the abc binary path if the command is not recognized system-wide
+abc_binary: yosys-abc
+yosys_binary: yosys
+
+# standard cell library mapping
+mapping:
+  clock_period: None   # in pico seconds
+  library_file: asap7.lib
+
+# FPGA mapping - exlusive with the above
+fpga_mapping:
+  levels: 100
+  lut_inputs: 4
+
+# add more optimization to the toolbox
+optimizations:
+  - rewrite
+  - rewrite -z
+  - refactor
+  - refactor -z
+  - resub
+  - resub -z
+  - balance
+
+# when the greedy algorithm get stuck, it applies one of the below post-mapping commands
+post_mapping_commands:
+  - dnsize -D 150
+  - upsize -D 150
+  - buffer
