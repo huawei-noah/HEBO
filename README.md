@@ -3,6 +3,7 @@
 This directory contains official implementations for Bayesian optimisation works developped by Huawei R&D, Noah's Ark Lab. 
 - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO) 
 - [T-LBO](./T-LBO)
+- [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
 - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 
 Further instructions are provided in the README 
@@ -29,6 +30,26 @@ As a theoretical contribution, we present a proof of vanishing regret for our me
 we present state-of-the-art results on real-world high-dimensional black-box optimisation problems including property-guided molecule generation.
 It is the hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional Bayesian optimisation.
 
+## [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+<p align="center">
+    <img src="./BOiLS/results/sample-eff-1.png" alt="drawing" width="500"/>
+</p>
+
+Codebase associated to: [BOiLS: Bayesian Optimisation for Logic Synthesis](https://arxiv.org/abs/2111.06178) accepted 
+at **DATE22** conference.
+
+##### Abstract
+Optimising the quality-of-results (QoR) of circuits during logic synthesis is a formidable challenge necessitating
+the exploration of exponentially sized search spaces. While expert-designed operations aid in uncovering effective 
+sequences, the increase in complexity of logic circuits favours automated procedures. Inspired by the successes of 
+machine learning, researchers adapted deep learning and reinforcement learning to logic synthesis applications. However
+successful, those techniques suffer from high sample complexities preventing widespread adoption. To enable efficient 
+and scalable solutions, we propose BOiLS, the first algorithm adapting modern Bayesian optimisation to navigate the 
+space of synthesis operations. BOiLS requires no human intervention and effectively trades-off exploration versus 
+exploitation through novel Gaussian process kernels and trust-region constrained acquisitions. 
+In a set of experiments on EPFL benchmarks, we demonstrate BOiLS's superior performance compared to state-of-the-art 
+in terms of both sample efficiency and QoR values.
+
 
 ## [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 
@@ -36,6 +57,7 @@ It is the hope that the results presented in this paper can act as a guiding pri
 
 
 Codebase associated to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://www.jmlr.org/papers/v22/20-1422.html)
+ accepted at **JMLR**.
 ##### Abstract
 Bayesian optimisation presents a sample-efficient methodology for global optimisation. Within this framework, a crucial performance-determining
 subroutine is the maximisation of the acquisition function, a task complicated by the fact that acquisition functions tend to be non-convex and
