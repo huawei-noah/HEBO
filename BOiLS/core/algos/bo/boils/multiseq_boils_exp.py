@@ -80,7 +80,7 @@ def obj_min_improvements(ratio_1, ratio_2):
 
 
 class MultiseqBoilsExp(MultiseqEADExp):
-    """ Class associated to COMBO to solve QoR minimization: https://arxiv.org/pdf/1902.00448.pdf """
+    """ Class associated to BOiLS to solve QoR minimization: https://arxiv.org/abs/2111.06178 """
 
     color = 'cyan'
 

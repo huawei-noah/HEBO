@@ -81,7 +81,7 @@ def obj_min_improvements(ratio_1, ratio_2):
 
 
 class MultiHeboExp(MultiEADExp):
-    """ Class associated to COMBO to solve QoR minimization: https://arxiv.org/pdf/1902.00448.pdf """
+    """ Class associated to HEBO to solve QoR minimization """
 
     color = 'purple'
 
