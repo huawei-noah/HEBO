@@ -72,8 +72,8 @@ def main(designs_group_id: str, seq_length: int, mapping: str, action_space_id: 
         overwrite: Overwrite existing experiment
         objective: which objective to optimize ('lut', 'level', 'both')
         device: gpu device id
-        kernel_type: type of kernel to use for the surrogate model of casmopolitan (default is `transformed_overlap`)
-        failtol: failure tolerance factor for casmopolitan
+        kernel_type: type of kernel to use for the surrogate model of BOiLS (default is `transformed_overlap`)
+        failtol: failure tolerance factor for BOiLS
         length_init_discrete_factor: length_init_discrete=seq_length * length_init_discrete_factor
     """
     if device >= 0:
@@ -136,7 +136,7 @@ def main(designs_group_id: str, seq_length: int, mapping: str, action_space_id: 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=True,
-                                     description='Performs logic synthesis optimization using CASMOPOLITAN')
+                                     description='Performs logic synthesis optimization using BOiLS')
     parser = add_common_args(parser)
     parser.add_argument("--n_parallel", type=int, default=1, help="number of threads to compute the stats")
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     parser.add_argument("--n_initial", type=int, default=20, help="Number of initial random points to evaluate")
     parser.add_argument("--standardise", action='store_true', help="whether to standardise the ys for the GP fit")
     parser.add_argument("--ard", action='store_true', help="whether to use ard")
-    parser.add_argument("--failtol", type=float, help="Casmopolitan failure tolerance", required=True)
+    parser.add_argument("--failtol", type=float, help="BOiLS failure tolerance", required=True)
     parser.add_argument("--length_init_discrete_factor", type=float,
                         help="length_init_discrete=seq_length * length_init_discrete_factor", required=True)
     parser.add_argument("--acq", type=str,
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                         help="which objective should be optimized")
     parser.add_argument("--kernel_type", type=str,
                         choices=('transformed_overlap', 's-bert-matern52', 's-bert-rbf', 'ssk'),
-                        default=None, help="type of kernel to use for the surrogate model of casmopolitan "
+                        default=None, help="type of kernel to use for the surrogate model of BOiLS "
                                            "(default is `transformed_overlap`)")
     parser.add_argument("--embedder_path", type=str, default=None, help="Dimensionality of embedding")
     parser.add_argument("--name_embed", action='store_true', help="Whether to use operators'names")
