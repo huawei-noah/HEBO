@@ -18,9 +18,6 @@ seq_length=60
 seq_to_test='[6,0,2,6,0,1,6,3,1,6,6,0,2,6,0,1,6,3,1,6,6,0,2,6,0,1,6,3,1,6,6,0,2,6,0,1,6,3,1,6,6,0,2,6,0,1,6,3,1,6,6,0,2,6,0,1,6,3,1,6]'
 seq_origin=resyn2_6
 
-#seq_to_test='[4,7,0,0,2,9,10,10,9,10]'
-#seq_origin=casmo_1
-
 overwrite=0
 if (( overwrite == 0 )); then overwrite=''; else overwrite='--overwrite'; fi
 

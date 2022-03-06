@@ -114,7 +114,7 @@ def main(designs_group_id: str, seq_length: int, mapping: str, action_space_id: 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=True,
-                                     description='Performs logic synthesis optimization using CASMOPOLITAN')
+                                     description='Performs logic synthesis optimization using HEBO')
     parser = add_common_args(parser)
     parser.add_argument("--n_parallel", type=int, default=1, help="number of threads to compute the stats")
 

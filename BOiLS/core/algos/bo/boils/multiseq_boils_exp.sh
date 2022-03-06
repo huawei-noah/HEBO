@@ -18,7 +18,7 @@ n_parallel=1 # Number of sequences to evaluate in parallel (since we don't do ba
 
 objective='both'
 
-# --- Casmopolitan setup ---
+# --- BO setup ---
 
 n_total_evals=200 # Number of acquisitions in total (number of sequences that we will evaluate)
 n_initial=20      # Number of initial random sequences to evaluate to build the first surrogate model

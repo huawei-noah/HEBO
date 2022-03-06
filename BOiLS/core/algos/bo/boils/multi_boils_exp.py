@@ -113,7 +113,7 @@ class MultiBoilsExp(MultiEADExp):
             ard: whether to enable automatic relevance determination
             acq: choice of the acquisition function.
             objective: quantity to optimize, either lut, level, both or min_improvements
-            failtol: failure tolerance factor for casmopolitan
+            failtol: failure tolerance factor for BOiLS
             length_init_discrete_factor: length_init_discrete=seq_length * length_init_discrete_factor
             input_transformation: input embedding
             kernel_type: id of the kernel to use to build surrogate models
@@ -475,7 +475,7 @@ def multi_boils_exp_get_obj(sequence: List[int], design_file: str, ref_1: float,
     if sequence_id not in seq_to_func_dic:
         valid = True
         try:
-            log(f"{n_evals}. Evaluate {sequence_id}", header=f"Casmo. -- {get_design_name(design_file)} ({seed})")
+            log(f"{n_evals}. Evaluate {sequence_id}", header=f"BOiLS. -- {get_design_name(design_file)} ({seed})")
             obj_1, obj_2, extra_info = get_design_prop(seq=sequence, design_file=design_file, mapping=mapping,
                                                        library_file=library_file, abc_binary=abc_binary,
                                                        use_yosys=use_yosys,
