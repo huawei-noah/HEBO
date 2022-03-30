@@ -1,13 +1,16 @@
-# Bayesian Optimisation Research
+# Bayesian Optimisation & Reinforcement Learning Research
 
-This directory contains official implementations for Bayesian optimisation works developped by Huawei R&D, Noah's Ark Lab. 
+This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developped by Huawei, Noah's Ark Lab. 
 - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO) 
 - [T-LBO](./T-LBO)
 - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
 - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+- [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
 
 Further instructions are provided in the README 
 files associated to each project.
+
+# Bayesian Optimisation Research 
 
 ## [HEBO](./HEBO)
 <img src="./HEBO/hebo.png" alt="drawing" width="400"/>
@@ -68,8 +71,18 @@ advantages of the compositional approach to acquisition function maximisation ac
 tasks as well as tasks from Bayesmark. Given the generality of the acquisition function maximisation subroutine, we posit that the adoption of
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
-
----
+----
   
+# Reinforcement Learning Research
+## [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
+Codebase associated to: [SAUTE RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf).
+ 
+##### Abstract
+Satisfying safety constraints almost surely (or with probability one) can be critical for deployment of Reinforcement Learning (RL) in real-life applications. For example, plane landing and take-off should ideally occur with probability one. We address the problem by introducing Safety Augmented (Saute) Markov Decision Processes (MDPs), where the safety constraints are eliminated by augmenting them into the state-space and reshaping the objective. We show that Saute MDP satisfies the Bellman equation and moves us closer to solving Safe RL with constraints satisfied almost surely. We argue that Saute MDP allows to view Safe RL problem from a different perspective enabling new features. For instance, our approach has a plug-and-play nature, i.e., any RL algorithm can be "sauteed". Additionally, state augmentation allows for policy generalization across safety constraints. We finally show that Saute RL algorithms can outperform their state-of-the-art counterparts when constraint satisfaction is of high importance.
+  
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Codebase Contributors 
-<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
+<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Aivar Sootla, Taher Jafferjee, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
+
+  
