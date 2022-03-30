@@ -1,13 +1,16 @@
-# Bayesian Optimisation Research
+# Bayesian Optimisation & Reinforcement Learning Research
 
-This directory contains official implementations for Bayesian optimisation works developped by Huawei R&D, Noah's Ark Lab. 
+This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developped by Huawei, Noah's Ark Lab. 
 - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO) 
 - [T-LBO](./T-LBO)
 - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
 - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+- [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./sauteerl)
 
 Further instructions are provided in the README 
 files associated to each project.
+
+# Bayesian Optimisation Research 
 
 ## [HEBO](./HEBO)
 <img src="./HEBO/hebo.png" alt="drawing" width="400"/>
@@ -68,9 +71,10 @@ advantages of the compositional approach to acquisition function maximisation ac
 tasks as well as tasks from Bayesmark. Given the generality of the acquisition function maximisation subroutine, we posit that the adoption of
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
-
----
-## [Safe Reinforcement Learning](./sauteerl)
+----
+  
+# Reinforcement Learning Research
+## [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./sauteerl)
 Codebase associated to: [SAUTE RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf).
  
 ##### Abstract
