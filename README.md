@@ -5,7 +5,7 @@ This directory contains official implementations for Bayesian optimisation & Rei
 - [T-LBO](./T-LBO)
 - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
 - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-- [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./sauteerl)
+- [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
 
 Further instructions are provided in the README 
 files associated to each project.
@@ -74,7 +74,7 @@ being applied.
 ----
   
 # Reinforcement Learning Research
-## [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./sauteerl)
+## [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
 Codebase associated to: [SAUTE RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf).
  
 ##### Abstract
