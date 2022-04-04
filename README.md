@@ -71,7 +71,7 @@ advantages of the compositional approach to acquisition function maximisation ac
 tasks as well as tasks from Bayesmark. Given the generality of the acquisition function maximisation subroutine, we posit that the adoption of
 compositional optimisers has the potential to yield performance improvements across all domains in which Bayesian optimisation is currently 
 being applied.
-----
+
   
 # Reinforcement Learning Research
 ## [SAUTE RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
