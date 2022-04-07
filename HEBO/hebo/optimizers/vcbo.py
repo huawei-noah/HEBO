@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 
 from pymoo.factory import get_sampling, get_crossover, get_mutation, get_algorithm
 from pymoo.operators.mixed_variable_operator import MixedVariableSampling, MixedVariableMutation, MixedVariableCrossover
-from pymoo.core.problem import Problem
+from pymoo.core.problem import ElementwiseProblem
 from pymoo.optimize import minimize
 
 import torch
@@ -25,7 +25,7 @@ from hebo.models.model_factory import get_model, model_dict
 from hebo.optimizers.abstract_optimizer import AbstractOptimizer
 
 
-class MyProblem_gplocal(Problem):
+class MyProblem_gplocal(ElementwiseProblem):
     def __init__(self, gp_model, y_min, local_info, var_num=10, kappa=1.5, xi=1e-4,
                  lb=np.array([-1]*10), ub=np.array([1]*10), noise_level=0.0):
         self.gp_model = gp_model
@@ -37,7 +37,7 @@ class MyProblem_gplocal(Problem):
         self.lb = lb
         self.ub = ub
         self.noise_level = noise_level
-        super().__init__(n_var=self.var_num, n_obj=1, n_constr=4, xl=self.lb, xu=self.ub, elementwise_evaluation=True)
+        super().__init__(n_var=self.var_num, n_obj=1, n_constr=4, xl=self.lb, xu=self.ub)
 
     def _evaluate(self, x, out, *args, **kwargs):
         with torch.no_grad():
