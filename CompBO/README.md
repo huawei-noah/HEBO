@@ -1,7 +1,7 @@
 # Bayesian Optimisation with Compositional Optimisers 
 
 Bayesian optimisation codebase developed by Huawei R&D, Noah's Ark Lab (London), for
-[Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](fake_link) experimental section.
+[Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://jmlr.org/papers/v22/20-1422.html) experimental section.
 
 <div style="text-align:center"><img src="./image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
 
