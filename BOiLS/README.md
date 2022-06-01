@@ -1,7 +1,7 @@
 # BOiLS: Bayesian Optimisation for Logic Synthesis
 
 Logic synthesis oriented Bayesian optimsation library developped by _Huawei Noah's Ark lab_. Developped to carry out 
-the experiments reported in [BOiLS: Bayesian Optimisation for Logic Synthesis](https://arxiv.org/pdf/2111.06178.pdf), 
+the experiments reported in [BOiLS: Bayesian Optimisation for Logic Synthesis](https://ieeexplore.ieee.org/document/9774632), 
 accepted at DATE22 conference.
 
 <p align="center">
@@ -118,13 +118,27 @@ mv COMBO-master/ COMBO
 
 ## BibTex
 ```
-@misc{grosnit2021BOiLS,
-      title={BOiLS: Bayesian Optimisation for Logic Synthesis},
-      author={Antoine Grosnit, Cedric Malherbe, Rasul Tutunov, Xingchen Wan, Jun Wang, Haitham Bou-Ammar},
-      year={2021},
-      eprint={2106.03609},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{DBLP:conf/date/GrosnitMTWWB22,
+  author    = {Antoine Grosnit and
+               C{\'{e}}dric Malherbe and
+               Rasul Tutunov and
+               Xingchen Wan and
+               Jun Wang and
+               Haitham Bou{-}Ammar},
+  editor    = {Cristiana Bolchini and
+               Ingrid Verbauwhede and
+               Ioana Vatajelu},
+  title     = {BOiLS: Bayesian Optimisation for Logic Synthesis},
+  booktitle = {2022 Design, Automation {\&} Test in Europe Conference {\&}
+               Exhibition, {DATE} 2022, Antwerp, Belgium, March 14-23, 2022},
+  pages     = {1193--1196},
+  publisher = {{IEEE}},
+  year      = {2022},
+  url       = {https://doi.org/10.23919/DATE54114.2022.9774632},
+  doi       = {10.23919/DATE54114.2022.9774632},
+  timestamp = {Wed, 25 May 2022 22:56:20 +0200},
+  biburl    = {https://dblp.org/rec/conf/date/GrosnitMTWWB22.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 ```
 
