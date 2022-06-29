@@ -114,9 +114,9 @@ mv COMBO-master/ COMBO
 
 ## Cite Us
 
-**Grosnit, Antoine, et al. "Bayesian Optimisation for Logic Synthesis" arXiv preprint arXiv:2111.06178 (2021).**
+**Grosnit, Antoine, et al. "Bayesian Optimisation for Logic Synthesis", DATE (2022).**
 
-## BibTex
+#### BibTex
 ```
 @inproceedings{DBLP:conf/date/GrosnitMTWWB22,
   author    = {Antoine Grosnit and
