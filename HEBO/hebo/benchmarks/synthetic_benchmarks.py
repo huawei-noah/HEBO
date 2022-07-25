@@ -82,6 +82,9 @@ class PymooDummy(AbstractBenchmark):
         self.ub[:self.eff_dim] = ub
         self.scaler = BenchParamScaler(self.lb, self.ub)
         self.best_y = self.prob.ideal_point()
+        self.pareto_front = self.prob.pareto_front() - self.prob.ideal_point()
+        if not np.isfinite(self.best_y).all():
+            self.best_y = 0.
     
     def __call__(self, para : pd.DataFrame) -> np.ndarray:
         x = self.scaler.inverse_transform(para[self.space.numeric_names].values)[:, :self.eff_dim]

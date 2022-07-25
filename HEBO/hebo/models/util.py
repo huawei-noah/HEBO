@@ -24,9 +24,9 @@ def filter_nan(x : FloatTensor, xe : LongTensor, y : FloatTensor, keep_rule = 'a
     y_filtered  = y[valid_id]
     return x_filtered, xe_filtered, y_filtered
 
-def construct_hidden(dim, num_layers, num_hiddens) -> nn.Module:
-    layers = [nn.Linear(dim, num_hiddens), nn.ReLU()]
+def construct_hidden(dim, num_layers, num_hiddens, act = nn.ReLU()) -> nn.Module:
+    layers = [nn.Linear(dim, num_hiddens), act]
     for i in range(num_layers - 1):
         layers.append(nn.Linear(num_hiddens, num_hiddens))
-        layers.append(nn.ReLU())
+        layers.append(act)
     return nn.Sequential(*layers)

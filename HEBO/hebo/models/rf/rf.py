@@ -53,5 +53,4 @@ class RF(BaseModel):
         for estimator in self.rf.estimators_:
             preds.append(estimator.predict(X).reshape([-1,1]))
         var = np.var(np.concatenate(preds, axis=1), axis=1)
-        return torch.FloatTensor(mean.reshape([-1,1])), torch.FloatTensor(var.reshape([-1,1]))
-
+        return torch.FloatTensor(mean.reshape([-1,1])), torch.FloatTensor(var.reshape([-1,1])) + self.noise

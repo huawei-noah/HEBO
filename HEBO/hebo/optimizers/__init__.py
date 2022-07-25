@@ -7,4 +7,4 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from . import abstract_optimizer, bo, hebo, util, general, hebo_embedding, noisy_opt
+from . import abstract_optimizer, bo, hebo, util, general, hebo_embedding, noisy_opt, evolution

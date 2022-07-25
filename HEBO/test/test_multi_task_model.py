@@ -15,7 +15,7 @@ from pytest import approx
 import torch
 from torch import FloatTensor
 
-from hebo.models.model_factory import get_model, model_dict, get_model_class
+from hebo.models.model_factory import get_model, model_names, get_model_class
 from .util import check_prediction
 
 def rand_dataset(num_out : int) -> (FloatTensor, FloatTensor):
@@ -37,7 +37,7 @@ def rand_dataset_with_enum(num_out : int) -> (FloatTensor, FloatTensor):
 
 def gather_mo_models():
     model_list = []
-    for name in model_dict:
+    for name in model_names + ['multi_task']:
         cls = get_model_class(name)
         if cls.support_multi_output:
             model_list.append(name)

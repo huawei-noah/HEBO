@@ -10,7 +10,17 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 
+import pytest
+
 from hebo.design_space.design_space import DesignSpace
+
+def test_duplicated_param():
+    with pytest.raises(AssertionError):
+        space = DesignSpace().parse([
+            {'name' : 'x' ,  'type' : 'num',  'lb' : -3, 'ub' : 3}, 
+            {'name' : 'x' ,  'type' : 'int',  'lb' : -3, 'ub' : 3}, 
+        ])
+
 
 def test_design_space():
     space = DesignSpace().parse([

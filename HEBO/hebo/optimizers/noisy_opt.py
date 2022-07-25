@@ -14,7 +14,6 @@ import pandas as pd
 import torch
 from copy import deepcopy
 from torch.quasirandom import SobolEngine
-from sklearn.preprocessing import power_transform
 
 from hebo.design_space.design_space import DesignSpace
 from hebo.models.model_factory import get_model
@@ -42,21 +41,9 @@ class NoisyOpt(HEBO):
             return sample
         else:
             X, Xe = self.space.transform(self.X)
-            try:
-                if self.y.min() <= 0:
-                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method = 'yeo-johnson'))
-                else:
-                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method = 'box-cox'))
-                    if y.std() < 0.5:
-                        y = torch.FloatTensor(power_transform(self.y / self.y.std(), method = 'yeo-johnson'))
-                if y.std() < 0.5:
-                    raise RuntimeError('Power transformation failed')
-                model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1, **self.model_config)
-                model.fit(X, Xe, y)
-            except:
-                y     = torch.FloatTensor(self.y).clone()
-                model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1, **self.model_config)
-                model.fit(X, Xe, y)
+            y     = torch.FloatTensor(self.y).clone()
+            model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1, **self.model_config)
+            model.fit(X, Xe, y)
 
             best_id = self.get_best_id(fix_input)
             best_x  = self.X.iloc[[best_id]]

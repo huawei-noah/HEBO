@@ -29,6 +29,7 @@ def sklearn_tuner(
         max_iter = 16, 
         report   = False,
         hebo_cfg = None, 
+        verbose  = True, 
         ) -> (dict, pd.DataFrame):
     """Tuning sklearn estimator
 
@@ -81,7 +82,8 @@ def sklearn_tuner(
         score_v = metric(y, pred)
         sign    = -1. if greater_is_better else 1.0
         opt.observe(rec, np.array([sign * score_v]))
-        print('Iter %d, best metric: %g' % (i, sign * opt.y.min()), flush = True)
+        if verbose:
+            print('Iter %d, best metric: %g' % (i, sign * opt.y.min()), flush = True)
     best_id   = np.argmin(opt.y.reshape(-1))
     best_hyp  = opt.X.iloc[best_id]
     df_report = opt.X.copy()

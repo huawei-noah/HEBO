@@ -46,9 +46,9 @@ class Evolution(AbstractOptimizer):
 
     def __init__(self, 
             space      : DesignSpace,
-            num_obj    : int,
-            num_constr : int,
-            algo       : str  = None,
+            num_obj    : int  = 1,
+            num_constr : int  = 0, # NOTE: single-objective unconstrained optimization by default
+            algo       : str  = 'nsga2',
             verbose    : bool = False,
             **algo_conf
             ):
@@ -66,8 +66,9 @@ class Evolution(AbstractOptimizer):
         ub = self.space.opt_ub.numpy()
         self.prob = DummyProb(lb, ub, self.num_obj, self.num_constr)
         self.algo.setup(self.prob, ('n_gen', np.inf), verbose = verbose)
+        self.n_observation = 0
 
-    def suggest(self, n_suggestion = None, fix_input : dict = None):
+    def suggest(self, n_suggestions = None, fix_input : dict = None):
         self.pop = self.algo.ask()
         pop_x    = torch.from_numpy(self.pop.get('X').astype(float)).float()
         x        = pop_x[:, :self.space.num_numeric]
@@ -93,9 +94,12 @@ class Evolution(AbstractOptimizer):
         else:
             self.algo.evaluator.eval(self.prob, self.pop, F = obj)
         self.algo.tell(infills = self.pop)
+        self.n_observation += rec.shape[0]
 
     @property
     def best_x(self) -> pd.DataFrame:
+        if self.n_observation == 0:
+            raise RuntimeError('No data has been observed')
         opt = torch.from_numpy(self.algo.opt.get('X')).float()
         x   = opt[:, :self.space.num_numeric]
         xe  = opt[:, self.space.num_numeric:].round().long()
@@ -103,6 +107,8 @@ class Evolution(AbstractOptimizer):
 
     @property
     def best_y(self) -> np.ndarray:
+        if self.n_observation == 0:
+            raise RuntimeError('No data has been observed')
         opt    = self.algo.opt
         best_y = opt.get('F')
         if self.num_constr > 0:

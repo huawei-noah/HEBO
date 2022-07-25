@@ -75,7 +75,7 @@ class BaseModel(ABC):
         # Thompson sampling
         raise NotImplementedError("Thompson sampling is not supported")
 
-    def sample_y(self, Xc : FloatTensor, Xe : LongTensor, n_samples : int) -> FloatTensor:
+    def sample_y(self, Xc : FloatTensor, Xe : LongTensor, n_samples : int = 1) -> FloatTensor:
         py, ps2 = self.predict(Xc, Xe)
         ps      = ps2.sqrt()
         samp    = torch.zeros(n_samples, py.shape[0], self.num_out)

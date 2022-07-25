@@ -61,6 +61,7 @@ class DesignSpace:
             else:
                 self.numeric_names.append(param.name)
         self.para_names = self.numeric_names + self.enum_names
+        assert len(self.para_names) == len(set(self.para_names)), "There are duplicated parameter names"
         return self
 
     def register_para_type(self, type_name, para_class):
@@ -117,6 +118,3 @@ class DesignSpace:
         ub_numeric = [self.paras[p].opt_ub for p in self.numeric_names]
         ub_enum    = [self.paras[p].opt_ub for p in self.enum_names]
         return torch.tensor(ub_numeric + ub_enum)
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__

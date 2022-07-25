@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 
 from hebo.design_space.design_space import DesignSpace
-from hebo.models.model_factory import get_model, model_dict
+from hebo.models.model_factory import get_model, get_model_class
 from hebo.acquisitions.acq import GeneralAcq
 from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
 
@@ -27,7 +27,7 @@ class GeneralBO(AbstractOptimizer):
             num_obj:     int   = 1,
             num_constr:  int   = 0,
             rand_sample: int   = None,
-            model_name:  str   = 'deep_ensemble',
+            model_name:  str   = 'multi_task',
             model_conf:  dict  = None,
             kappa:       float = 2.,
             c_kappa:     float = 0.,
@@ -48,9 +48,8 @@ class GeneralBO(AbstractOptimizer):
         self.model       = None
         self.evo_pop     = 100
         self.evo_iters   = 200
-        assert model_dict.get(model_name) is not None
         if num_obj + num_constr > 1:
-            assert model_dict.get(model_name).support_multi_output
+            assert get_model_class(model_name).support_multi_output
 
     def suggest(self, n_suggestions = 1, fix_input = None):
         if self.X.shape[0] < self.rand_sample:

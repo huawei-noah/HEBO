@@ -16,9 +16,19 @@ Summary             |  Ablation
 
 ## Installation
 
+You can install HEBO from pypi by
+
 ```bash
-python setup.py develop
+pip install HEBO
 ```
+
+You can also build from source code to obtain our latest update:
+
+```bash
+cd HEBO
+pip install -e .
+```
+
 
 ## Documentation
 

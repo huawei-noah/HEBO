@@ -35,7 +35,7 @@ class DeepEnsemble(BaseModel):
         super().__init__(num_cont, num_enum, num_out, **conf)
         self.bootstrap     = self.conf.setdefault('bootstrap',     False)
         self.rand_prior    = self.conf.setdefault('rand_prior',    False)
-        self.output_noise  = self.conf.setdefault('output_noise',  False)
+        self.output_noise  = self.conf.setdefault('output_noise',  True)
         self.num_ensembles = self.conf.setdefault('num_ensembles', 5)
         self.num_process   = self.conf.setdefault('num_processes', 1)
         self.num_epochs    = self.conf.setdefault('num_epochs',    500)
@@ -177,6 +177,7 @@ class DeepEnsemble(BaseModel):
             if epoch % self.print_every == 0:
                 if self.verbose:
                     print("Epoch %d, %s loss = %g" % (epoch, self.loss_name, epoch_loss / Xc.shape[0]), flush = True)
+        model.eval()
         return model
 
 class BaseNet(nn.Module):
@@ -190,6 +191,7 @@ class BaseNet(nn.Module):
         self.num_hiddens  = conf.get('num_hiddens', 128) # number of hidden units
         self.output_noise = conf.get('output_noise', True)
         self.rand_prior   = conf.get('rand_prior', False)
+        self.act          = conf.get('act', nn.ReLU())
         self.eff_dim      = num_cont
         if self.num_enum > 0:
             assert 'num_uniqs' in conf, "num_uniqs not in algorithm configuration"
@@ -203,14 +205,14 @@ class BaseNet(nn.Module):
                 raise RuntimeError(f'Unknown enum processing type {enum_trans}, can only be [embedding|onehot]')
             self.eff_dim += self.enum_layer.num_out
 
-        self.hidden = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens)
+        self.hidden = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens, act = self.act)
         self.mu     = nn.Linear(self.num_hiddens, self.num_out)
         if self.output_noise:
             self.sigma2 = nn.Sequential(
                 nn.Linear(self.num_hiddens, self.num_out), 
                 nn.Softplus())
         if self.rand_prior: # Randomized Prior Functions for Deep Reinforcement Learning, Ian Osband
-            self.prior_net = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens)
+            self.prior_net = construct_hidden(self.eff_dim, self.num_layers, self.num_hiddens, act = self.act)
             self.prior_net.add_module('prior_net_out', nn.Linear(self.num_hiddens, self.num_out))
         for n, p in self.named_parameters():
             if "bias" in n:

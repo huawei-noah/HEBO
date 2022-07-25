@@ -147,19 +147,16 @@ class EmbeddingAlignmentCells(nn.Module):
                 break
 
     def _check_share_weights(self) -> bool:
-        subspaces = {}
+        configs = []
         for stage in self.stages:
-            configs = []
-            for config in self.space.para_config:
-                if stage == config['name'].split('#')[-1]:
-                    config_ = deepcopy(config)
-                    config_['name'] = config_['name'].replace(stage, 'Stage')
-                    configs.append(config_)
-            configs = sorted(configs, key=lambda x: x['name'])
-            subspaces[stage] = DesignSpace().parse(configs)
-        is_same = [subspaces[stage] == subspaces[self.stages[0]]
-                   for stage in self.stages]
-        return len(set(is_same)) == 1
+            config  = []
+            for para_config in self.space.para_config:
+                if stage == para_config['name'].split('#')[-1]:
+                    _config = deepcopy(para_config)
+                    _config['name'] = _config['name'].replace(stage, 'Stage')
+                    config.append(_config)
+            configs.append(sorted(config, key=lambda x: x['name']))
+        return configs[1:] == configs[:-1]
 
     @property
     def subspaces(self) -> dict:

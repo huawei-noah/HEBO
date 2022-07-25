@@ -15,13 +15,6 @@ import torch
 from pytest import approx
 from hebo.models.gp.gp import GP
 
-def test_noise_free():
-    X = torch.randn(10, 3)
-    y = (X**2).sum(dim = 1).view(-1, 1) + 0.01 * torch.randn(10, 1)
-    model = GP(3, 0, 1, noise_free = True, num_epochs = 10)
-    model.fit(X, None, y)
-    assert(approx(model.noise.item()) == 1.1 * model.noise_lb * model.yscaler.std**2)
-
 @pytest.mark.xfail
 def test_pred_likeli():
     X = torch.randn(10, 3)

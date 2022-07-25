@@ -11,6 +11,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from copy import deepcopy
 from torch.distributions import RelaxedOneHotCategorical
 from torch.utils.data import DataLoader, TensorDataset
 

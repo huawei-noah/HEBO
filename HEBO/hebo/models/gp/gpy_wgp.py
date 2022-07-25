@@ -23,8 +23,6 @@ import numpy as np
 from torch import Tensor, FloatTensor, LongTensor
 
 import logging
-logging.disable(logging.WARNING)
-
 
 class GPyGP(BaseModel):
     """
@@ -35,17 +33,24 @@ class GPyGP(BaseModel):
     """
     def __init__(self, num_cont, num_enum, num_out, **conf):
         super().__init__(num_cont, num_enum, num_out, **conf)
+        total_dim = num_cont
         if num_enum > 0:
             self.one_hot = OneHotTransform(self.conf['num_uniqs'])
-        self.xscaler    = TorchMinMaxScaler((-1, 1))
-        self.yscaler    = TorchStandardScaler()
-        self.verbose    = self.conf.get('verbose', False)
-        self.num_epochs = self.conf.get('num_epochs', 200)
-        self.warp       = self.conf.get('warp', True)
-        self.space      = self.conf.get('space') # DesignSpace
+            total_dim += self.one_hot.num_out
+        self.xscaler      = TorchMinMaxScaler((-1, 1))
+        self.yscaler      = TorchStandardScaler()
+        self.verbose      = self.conf.get('verbose', False)
+        self.num_epochs   = self.conf.get('num_epochs', 200)
+        self.warp         = self.conf.get('warp', True)
+        self.space        = self.conf.get('space') # DesignSpace
+        self.num_restarts = self.conf.get('num_restarts', 10)
         if self.space is None and self.warp:
             warnings.warn('Space not provided, set warp to False')
             self.warp = False
+        if self.warp:
+            for i in range(total_dim):
+                logging.getLogger(f'a{i}').disabled = True
+                logging.getLogger(f'b{i}').disabled = True
 
     def fit_scaler(self, Xc : FloatTensor, y : FloatTensor):
         if Xc is not None and Xc.shape[1] > 0:
@@ -95,7 +100,7 @@ class GPyGP(BaseModel):
             self.gp = GPy.models.InputWarpedGP(X, y, kern, warping_function = warp_f)
         self.gp.likelihood.variance.set_prior(GPy.priors.LogGaussian(-4.63, 0.5), warning = False)
 
-        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = 10, robust = True)
+        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = self.num_restarts, robust = True)
         return self
 
     def predict(self, Xc : FloatTensor, Xe : LongTensor) -> (FloatTensor, FloatTensor):

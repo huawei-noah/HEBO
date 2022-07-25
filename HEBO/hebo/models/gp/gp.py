@@ -7,42 +7,44 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import gpytorch
-import pickle
 
+from copy import deepcopy
 from torch import Tensor, FloatTensor, LongTensor
-from pathlib import Path
-from gpytorch.priors  import GammaPrior
 from gpytorch.priors.torch_priors import LogNormalPrior
-from gpytorch.kernels import ScaleKernel, RBFKernel, MaternKernel, MultitaskKernel
-from gpytorch.likelihoods import GaussianLikelihood, MultitaskGaussianLikelihood
-from gpytorch.means import ConstantMean, ZeroMean, MultitaskMean
-from gpytorch.distributions import MultivariateNormal, MultitaskMultivariateNormal
-from gpytorch.constraints import Interval, GreaterThan
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from gpytorch.kernels import ScaleKernel, MaternKernel, ProductKernel
+from gpytorch.likelihoods import GaussianLikelihood
+from gpytorch.means import ConstantMean
+from gpytorch.distributions import MultivariateNormal
+from gpytorch.constraints import GreaterThan
 
 from ..util import filter_nan
 from ..base_model import BaseModel
 from ..layers import EmbTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
+from ..nn.sgld import pSGLD
+
+from .gp_util import DummyFeatureExtractor, default_kern
 
 class GP(BaseModel):
     support_grad = True
-    support_multi_output = True
     def __init__(self, num_cont, num_enum, num_out, **conf):
         super().__init__(num_cont, num_enum, num_out, **conf)
-        self.lr           = conf.get('lr', 3e-2)
-        self.num_epochs   = conf.get('num_epochs', 100)
-        self.verbose = conf.get('verbose', False)
-        self.print_every  = conf.get('print_every', 10)
-        self.noise_free   = conf.get('noise_free', False)
-        self.pred_likeli  = conf.get('pred_likeli', True)
-        self.noise_lb     = conf.get('noise_lb', 1e-5)
-        self.xscaler      = TorchMinMaxScaler((-1, 1))
-        self.yscaler      = TorchStandardScaler()
+        self.lr          = conf.get('lr', 3e-2)
+        self.num_epochs  = conf.get('num_epochs', 100)
+        self.verbose     = conf.get('verbose', False)
+        self.print_every = conf.get('print_every', 10)
+        self.pred_likeli = conf.get('pred_likeli', True)
+        self.noise_lb    = conf.get('noise_lb', 1e-5)
+        self.optimizer   = conf.get('optimizer', 'psgld')
+        self.noise_guess = conf.get('noise_guess', 0.01)
+        self.ard_kernel  = conf.get('ard_kernel', True)
+        self.xscaler     = TorchMinMaxScaler((-1, 1))
+        self.yscaler     = TorchStandardScaler()
 
     def fit_scaler(self, Xc : Tensor, Xe : Tensor, y : Tensor):
         if Xc is not None and Xc.shape[1] > 0:
@@ -80,30 +82,21 @@ class GP(BaseModel):
         self.y  = y
 
         n_constr = GreaterThan(self.noise_lb)
-        n_prior  = LogNormalPrior(-4.63, 0.5)
-        if self.num_out == 1:
-            self.lik = GaussianLikelihood(noise_constraint = n_constr, noise_prior = n_prior)
-        else:
-            self.lik = MultitaskGaussianLikelihood(num_tasks = self.num_out, noise_constraint = n_constr, noise_prior = n_prior)
-        self.gp = GPyTorchModel(self.Xc, self.Xe, self.y, self.lik, **self.conf)
+        n_prior  = LogNormalPrior(np.log(self.noise_guess), 0.5)
+        self.lik = GaussianLikelihood(noise_constraint = n_constr, noise_prior = n_prior)
+        self.gp  = GPyTorchModel(self.Xc, self.Xe, self.y, self.lik, **self.conf)
 
-        if self.num_out == 1: # XXX: only tuned for single-output BO
-            if self.num_cont > 0:
-                self.gp.kern.outputscale = self.y.var()
-                lscales = self.gp.kern.base_kernel.lengthscale.detach().clone().view(1, -1)
-                for i in range(self.num_cont):
-                    lscales[0, i] = torch.pdist(self.Xc[:, i].view(-1, 1)).median().clamp(min = 0.02)
-                self.gp.kern.base_kernel.lengthscale = lscales
-            if self.noise_free:
-                self.gp.likelihood.noise  = self.noise_lb * 1.1
-                self.gp.likelihood.raw_noise.requires_grad = False
-            else:
-                self.gp.likelihood.noise  = max(1e-2, self.noise_lb)
+        self.gp.likelihood.noise  = max(1e-2, self.noise_lb)
 
         self.gp.train()
         self.lik.train()
 
-        opt = torch.optim.LBFGS(self.gp.parameters(), lr = self.lr, max_iter = 5, line_search_fn = 'strong_wolfe')
+        if self.optimizer.lower() == 'lbfgs':
+            opt = torch.optim.LBFGS(self.gp.parameters(), lr = self.lr, max_iter = 5, line_search_fn = 'strong_wolfe')
+        elif self.optimizer == 'psgld':
+            opt = pSGLD(self.gp.parameters(), lr = self.lr, factor = 1. / y.shape[0], pretrain_step = self.num_epochs // 10)
+        else:
+            opt = torch.optim.Adam(self.gp.parameters(), lr = self.lr)
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.lik, self.gp)
         for epoch in range(self.num_epochs):
             def closure():
@@ -148,10 +141,7 @@ class GP(BaseModel):
 
     @property
     def noise(self):
-        if self.num_out == 1:
-            return (self.gp.likelihood.noise * self.yscaler.std**2).view(self.num_out).detach()
-        else:
-            return (self.gp.likelihood.task_noises * self.yscaler.std**2).view(self.num_out).detach()
+        return (self.gp.likelihood.noise * self.yscaler.std**2).view(self.num_out).detach()
 
 class GPyTorchModel(gpytorch.models.ExactGP):
     def __init__(self, 
@@ -161,28 +151,12 @@ class GPyTorchModel(gpytorch.models.ExactGP):
             lik : GaussianLikelihood, 
             **conf):
         super().__init__((x, xe), y.squeeze(), lik)
-        mean     = conf.get('mean', ConstantMean())
-        kern     = conf.get('kern', ScaleKernel(MaternKernel(nu = 1.5, ard_num_dims = x.shape[1]), outputscale_prior = GammaPrior(0.5, 0.5)))
-        kern_emb = conf.get('kern_emb', MaternKernel(nu = 2.5))
-
-        self.multi_task = y.shape[1] > 1
-        self.mean  = mean if not self.multi_task else MultitaskMean(mean, num_tasks = y.shape[1])
-        if x.shape[1] > 0:
-            self.kern = kern if not self.multi_task else MultitaskKernel(kern, num_tasks = y.shape[1])
-        if xe.shape[1] > 0:
-            assert 'num_uniqs' in conf
-            num_uniqs = conf['num_uniqs']
-            emb_sizes = conf.get('emb_sizes', None)
-            self.emb_trans = EmbTransform(num_uniqs, emb_sizes = emb_sizes)
-            self.kern_emb  = kern_emb if not self.multi_task else MultitaskKernel(kern_emb, num_tasks = y.shape[1])
+        self.fe   = deepcopy(conf.get('fe',   DummyFeatureExtractor(x.shape[1], xe.shape[1], conf.get('num_uniqs'), conf.get('emb_sizes'))))
+        self.mean = deepcopy(conf.get('mean', ConstantMean()))
+        self.cov  = deepcopy(conf.get('kern', default_kern(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'))))
 
     def forward(self, x, xe):
-        m = self.mean(x)
-        if x.shape[1] > 0:
-            K = self.kern(x)
-            if xe.shape[1] > 0:
-                x_emb  = self.emb_trans(xe)
-                K     *= self.kern_emb(x_emb)
-        else:
-            K = self.kern_emb(self.emb_trans(xe))
-        return MultivariateNormal(m, K) if not self.multi_task else MultitaskMultivariateNormal(m, K)
+        x_all = self.fe(x, xe)
+        m     = self.mean(x_all)
+        K     = self.cov(x_all)
+        return MultivariateNormal(m, K)

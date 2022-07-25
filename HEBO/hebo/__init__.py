@@ -14,4 +14,4 @@ from . import models
 from . import optimizers
 from . import sklearn_tuner
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"

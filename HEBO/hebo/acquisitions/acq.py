@@ -186,8 +186,7 @@ class NoisyAcq(Acquisition):
 
     def eval(self, x : torch.FloatTensor, xe : torch.LongTensor) -> torch.FloatTensor:
         with torch.no_grad():
-            py, ps2 = self.model.predict(x, xe)
-            y_samp  = py + ps2.sqrt() * torch.randn(py.shape)
+            y_samp = self.model.sample_y(x, xe).reshape(-1, self.num_obj + self.num_constr)
             return y_samp
 
 class GeneralAcq(Acquisition):

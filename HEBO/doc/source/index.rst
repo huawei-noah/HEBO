@@ -75,10 +75,12 @@ Features
    optimisation
    sklearn_tuner
 
+   model_cmp
    mo_constrained.ipynb
    alebo_demo.ipynb
    pymoo_evolution
    custom
+   sgmcmc
 
 .. Indices and tables
 .. ==================

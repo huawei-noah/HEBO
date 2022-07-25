@@ -37,6 +37,7 @@ class GPyMLPGP(BaseModel):
         self.yscaler    = TorchStandardScaler()
         self.verbose    = self.conf.get('verbose', False)
         self.num_epochs = self.conf.get('num_epochs', 200)
+        self.num_restarts = self.conf.get('num_restarts', 10)
 
     def fit_scaler(self, Xc : FloatTensor, y : FloatTensor):
         if Xc is not None and Xc.shape[1] > 0:
@@ -71,10 +72,10 @@ class GPyMLPGP(BaseModel):
         self.gp.kern.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
         self.gp.likelihood.variance = 1e-2 * np.var(y)
 
-        self.gp.kern.variance.set_prior(GPy.priors.Gamma(0.5, 0.5))
-        self.gp.likelihood.variance.set_prior(GPy.priors.LogGaussian(-4.63, 0.5))
+        self.gp.kern.variance.set_prior(GPy.priors.Gamma(0.5, 0.5), warning = False)
+        self.gp.likelihood.variance.set_prior(GPy.priors.LogGaussian(-4.63, 0.5), warning = False)
 
-        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = 10, robust = True)
+        self.gp.optimize_restarts(max_iters = self.num_epochs, verbose = self.verbose, num_restarts = self.num_restarts, robust = True)
         if self.verbose:
             print(self.gp.likelihood.variance, flush = True)
             print(self.gp.likelihood.variance[0], flush = True)
