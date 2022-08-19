@@ -2,9 +2,17 @@
 
 ## About 
 
-Satisfying safety constraints almost surely (or with probability one) can be critical for deployment of Reinforcement Learning (RL) in real-life applications. For example, plane landing and take-off should ideally occur with probability one. We address the problem by introducing Safety Augmented (Saute&#769;) Markov Decision Processes (MDPs), where the safety constraints are eliminated by augmenting them into the state-space and reshaping the objective. We show that Saute&#769; MDP satisfies the Bellman equation and moves us closer to solving Safe RL with constraints satisfied almost surely. We argue that Saute&#769; MDP allows to view Safe RL problem from a different perspective enabling new features. For instance, our approach has a plug-and-play nature, i.e., any RL algorithm can be "saute&#769;ed". Additionally, state augmentation allows for policy generalization across safety constraints. In our experiments, we show that Saute&#769; RL algorithms outperforms their state-of-the-art counterparts when constraint satisfaction is of high importance. 
+Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
+ is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in 
+ safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is 
+ nonnegative if and only if the constraint is satisfied. The value of this state also serves as a distance toward 
+ constraint violation, while its initial value indicates the available safety budget. This idea allows us to derive 
+ policies for scheduling the safety budget during training. We call our approach Simmer (Safe policy IMproveMEnt for 
+ RL) to reflect the careful nature of these schedules. We apply this idea to two safe RL problems: RL with constraints 
+ imposed on an average cost, and RL with constraints imposed on a cost with probability one. Our experiments suggest 
+ that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
+  stabilize training and improve the performance of safe RL with average constraints.
 
-We further consider the problem of safety during training. Recall, that the value of the safety state also serves as a distance toward constraint violation, while its initial value indicates the available safety budget. This idea allows us to derive policies for scheduling the safety budget during training. We call this approach Simmer (Safe policy IMproveMEnt for RL) to reflect the careful nature of these schedules. We apply this idea to two safe RL problems: RL with constraints imposed on an average cost, and RL with constraints imposed on a cost with probability one. Our experiments suggest that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can stabilize training and improve the performance of safe RL with average constraints. 
 
 ## Installation 
 
