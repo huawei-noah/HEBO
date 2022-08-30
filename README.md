@@ -8,7 +8,7 @@ Huawei, Noah's Ark Lab.
   - [T-LBO](./T-LBO)
   - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-  - [AntBO](./AntBO)
+  - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 - Reinforcement Learning Research
   - [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
   - [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
@@ -92,7 +92,7 @@ comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given t
 function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
 performance improvements across all domains in which Bayesian optimisation is currently being applied.
 
-## [AntBO](./AntBO)
+## [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 
 ![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
 
