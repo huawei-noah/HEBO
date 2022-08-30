@@ -3,12 +3,15 @@
 This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developped by
 Huawei, Noah's Ark Lab.
 
-- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
-- [T-LBO](./T-LBO)
-- [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
-- [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-- [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
-- [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
+- Bayesian Optimisation Research
+  - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
+  - [T-LBO](./T-LBO)
+  - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+  - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+  - [AntBO](./AntBO)
+- Reinforcement Learning Research
+  - [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
+  - [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -88,6 +91,30 @@ advantages of the compositional approach to acquisition function maximisation ac
 comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given the generality of the acquisition
 function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
 performance improvements across all domains in which Bayesian optimisation is currently being applied.
+
+## [AntBO](./AntBO)
+
+![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
+
+Codebase associated to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://arxiv.org/abs/2201.12570).
+
+##### Abstract
+
+Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3 
+region located at the tip of variable chains of an antibody dominates antigen-binding specificity. Therefore, it is a
+priority to design optimal antigen-specific CDRH3 regions to develop therapeutic antibodies to combat harmful pathogens.
+However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence 
+exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian 
+Optimisation framework enabling efficient in silico design of the CDRH3 region. Ideally, antibodies should bind to
+their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that 
+restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software 
+suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico 
+in an unconstrained fashion. The results across 188 antigens demonstrate the benefit of AntBO in designing CDRH3 regions
+with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform 
+the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm 
+baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no 
+domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for 
+in vitro experimentation.
 
 # Reinforcement Learning Research
 

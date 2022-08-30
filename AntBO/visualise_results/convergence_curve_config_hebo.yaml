@@ -1,0 +1,47 @@
+antigens:
+  - 1ADQ_A
+  - 1FBI_X
+  - 1H0D_C
+  - 1NSN_S
+  - 1OB1_C
+  - 1WEJ_F
+  - 2YPV_A
+  - 3RAJ_A
+  - 3VRL_C
+  - 2DD8_S
+methods:
+  BO_global_transformed_overlap:
+    kernel_name: transformed_overlap
+    label: HEBOC (w/o NI)
+    line_color: gray
+  BO_glocal_transformed_overlap:
+    kernel_name: transformed_overlap
+    label: HEBOC (w/o Tr)
+    line_color: purple
+  BO_blocal_transformed_overlap:
+    kernel_name: transformed_overlap
+    label: HEBOC
+    line_color: blue
+  BO_transformed_overlap:
+    kernel_name: transformed_overlap
+    label: CASMO
+    line_color: red
+  GA:
+    kernel_name: GA
+    label: Genetic Algorithm
+    line_color: green
+  RS:
+    kernel_name: RS
+    label: Random Search
+    line_color: orange
+  RealData:
+    label: Human Wet Lab Best Score
+    line_color: yellow
+num_std: 1
+random_seeds:
+- 42
+- 43
+- 44
+results_dir: './results/'  # Put path where you fetch the results '/ABS/PATH/TO/results/'
+save_dir: './plots/'  # Put path where plots should be saved /ABS/PATH/TO/plots
+sequence_length: 11

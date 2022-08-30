@@ -1,0 +1,47 @@
+gpu_id: 3
+seed: 42
+test_every: 1
+save_every: 5
+epochs: 100
+test_epoch: 10
+
+cuda: True
+problem: classification
+
+data:
+  seq_len: ???
+  batch_size: 64
+  nm_data_seq: ???
+  nm_gen_seq: 250
+  normalise: True
+  path: './data'
+  target: 1ADQ
+  filename: _top_70000_corpus.csv
+
+
+model:
+  nm_filters: 400
+  seq_len: 43
+  kernel_size: 3
+  stride: 1
+  drop_p: 0.2
+  pool_size: 2
+  pool_stride: 1
+  affine: 300
+  vocab_size: 21
+
+seq2seq:
+  vocab_size: 20
+  embedding_dim: 256
+  rnn_units: 1024
+  padding_idx: 20
+
+optim:
+  lr: 0.0075
+  step_size: 200
+  gamma: 0.1
+  beta1: 0.5
+  beta2: 0.999
+
+model_path: '/models'
+results_path: '/results'
