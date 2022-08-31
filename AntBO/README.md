@@ -16,7 +16,7 @@ The code has been tested on  `Ubuntu 18.04.4 LTS` with `python 3.9.7`
 #### Conda environment
 
 ```bash
-conda env create -f enviroment.yaml 
+conda env create -f environment.yaml 
 conda activate DGM
 ```
 
