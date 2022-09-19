@@ -1,6 +1,6 @@
 acq: ei
 ard: True
-n_init: 5
+n_init: 20
 max_iters: 200
 min_cuda: 10
 device: 'cuda'
