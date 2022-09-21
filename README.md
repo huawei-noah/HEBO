@@ -169,7 +169,10 @@ Safe exploration is a challenging and important problem in model-free reinforcem
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Codebase Contributors 
-<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Aivar Sootla, Taher Jafferjee, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
+## Codebase Contributors 
+### Current contributors
+<strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu. </strong>
 
+### Alumni contributors
+<strong> Alexander I. Cowen-Rivers, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang. </strong>
   
