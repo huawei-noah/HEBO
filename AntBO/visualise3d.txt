@@ -1,0 +1,55 @@
+To visualise the 3D structure using Absolut follow the following steps.
+
+1. Create a 2 columns <name>.txt file and place the sequences like below:
+
+0	HICAGFWHMPI
+10	TDKTHPEVYTR
+20	HYGMFLLPVGL
+30	HGHMFFLHVIL
+40	HFGMFELYVIL
+50	HFVMFFLYVAL
+60	HFVMPLLVLML
+70	HFVMFYLVLML
+80	HFTMFFLVLML
+90	HFTMCFLVLML
+100	FFIMFFLQLIL
+110	FFIMFFLVLCL
+120	FFIMFPLVLIF
+130	PFIMFFLVLTL
+140	FFIMFLLVLFL
+150	FFIMFLLHLYL
+160	CFIMFLLVLTL
+170	FFIFFLSVLWL
+180	FFIFFLLFTIL
+190	FFIFFVLFLIL
+197	FFYFYLLFLIL
+
+
+2. On commandline run:
+
+	repertoire <antigen> "C:/Users/pprobert/Desktop/Antbo/antboList.txt"
+
+replace <antigen> by the antigen name. For e.g., in case of 1ADQ_A: replace <antigen> by 1ADQ_A.
+The output is saved in a text file name <antigen>FinalBindings_Process_1_Of_1.txt
+
+
+3. To visualise the binding
+
+	visualize <antigen> "C:/Users/pprobert/Desktop/Antbo/1ADQ_AFinalBindings_Process_1_Of_1.txt"
+
+The output is the name of the structures (and the two ways to name each structure from each end).
+
+BLLDRDRRLR	128997	2	<=>	BDUDDRDRUU	132966		(70b, 190b)
+BULRRURDRD	124769	1	<=>	DURURDRRLD	133024		(150)
+LLLSLUSSUU	128933	1	<=>	UDDSSDLSLL	137060		(10)
+LRRDURUUDU	128932	4	<=>	BDUDDRDURR	132966		(40, 70a, 120, 190a)
+RRURSUUSLD	124837	9	<=>	BDRSUUSLUL	132966		(0, 20, 50, 80, 90, 110, 130, 160, 180)
+SUULSLSLLU	124772	1	<=>	UDLLSLSLDD	124837		(30a)
+UDLLSLSDLL	124837	1	<=>	DDDLSDSDDL	128869		(30b)
+ULSDDLRRSU	124772	1	<=>	BDSRRLUUSL	132966		(100)
+ULUUSLUUSD	124837	4	<=>	BDSUURSUUR	132966		(60a, 140, 170, 197)
+
+Note: Above is an example of <antigen>=1ADQ_A, and on the right column we manually added sequence ID of each of the structure.
+
+
+4. Export images from Absolut openGL window by moving between structures using (D/Q) and typing 'p' to print as a picture.
