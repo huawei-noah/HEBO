@@ -115,6 +115,13 @@ or rely on the [convergence curve plotting script](./visualise_results/plot_conv
 python ./visualise_results/plot_convergence_curve.py --config ./visualise_results/convergence_curve_config.yaml
 ```
 
+## Absolut 3D Visualisation
+
+Follow the instructions in visualise3d.txt
+
+
+
+
 ## Cite us
 ```bibtex
 @misc{https://doi.org/10.48550/arxiv.2201.12570,
