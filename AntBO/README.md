@@ -35,7 +35,7 @@ aria2c -i ../urls.txt --auto-file-renaming=false --continue=true
 
 ## Demo
 
-To run AntBO (as well as the other baselines COMBO, Genetic Algorithm, 
+To run AntBO (as well as other baselines, Genetic Algorithm, 
 and Random Search), the user needs to specify a `config.yaml` file containing the parameters of the run ([a default 
 config file](./bo/config.yaml) is also provided).
 
