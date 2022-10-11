@@ -12,6 +12,7 @@ Huawei, Noah's Ark Lab.
 - Reinforcement Learning Research
   - [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
   - [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
+  - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -167,11 +168,31 @@ Safe exploration is a challenging and important problem in model-free reinforcem
  that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
   stabilize training and improve the performance of safe RL with average constraints.
 
+## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+
+Code associdated to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842) accepted
+at **NeurIPS22** conference..
+
+#### Abstract
+Model-based offline reinforcement learning (RL) aims to find highly rewarding policy, by leveraging a previously
+collected static dataset and a dynamics model. While learned through reuse of static dataset, the dynamics model's
+generalization ability hopefully promotes policy learning if properly utilized. To that end, several works propose to
+quantify the uncertainty of predicted dynamics, and explicitly apply it to penalize reward. However, as the dynamics and
+the reward are  intrinsically different factors in context of MDP, characterizing the impact of dynamics uncertainty
+through reward penalty may incur unexpected tradeoff between model utilization and risk avoidance. In this work, we
+instead maintain a belief distribution over dynamics, and evaluate/optimize policy through biased sampling from the
+belief. The sampling procedure, biased towards pessimism, is derived based on an alternating Markov game formulation
+of offline RL. We formally show that the biased sampling naturally induces an updated dynamics belief with
+policy-dependent reweighting factor, termed \emph{Pessimism-Modulated Dynamics Belief}. To improve policy, we devise an
+iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
+condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
+results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Codebase Contributors 
 
-<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu.
+<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo.
 
 <strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
   
