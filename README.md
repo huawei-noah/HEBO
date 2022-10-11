@@ -171,7 +171,7 @@ Safe exploration is a challenging and important problem in model-free reinforcem
 ## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Code associdated to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842) accepted
-at **NeurIPS22** conference..
+at **NeurIPS22** conference.
 
 #### Abstract
 Model-based offline reinforcement learning (RL) aims to find highly rewarding policy, by leveraging a previously
@@ -183,7 +183,7 @@ through reward penalty may incur unexpected tradeoff between model utilization a
 instead maintain a belief distribution over dynamics, and evaluate/optimize policy through biased sampling from the
 belief. The sampling procedure, biased towards pessimism, is derived based on an alternating Markov game formulation
 of offline RL. We formally show that the biased sampling naturally induces an updated dynamics belief with
-policy-dependent reweighting factor, termed \emph{Pessimism-Modulated Dynamics Belief}. To improve policy, we devise an
+policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief*. To improve policy, we devise an
 iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
 condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
 results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
