@@ -490,10 +490,11 @@ def run_sac_algo(
     local_steps_per_epoch = steps_per_epoch // num_procs()
     local_batch_size = batch_size // num_procs()
     epoch_start_time = time.time()
-    training_rewards = deque([0], maxlen=n_train_episodes)  
-    training_costs = deque([0], maxlen=n_train_episodes)  
     df = pd.DataFrame()
     assert max_ep_len <= local_steps_per_epoch, "Episode length should be smaller or equal to local steps per epoch"
+
+    training_rewards = deque([0], maxlen= steps_per_epoch // max_ep_len)
+    training_costs = deque([0], maxlen= steps_per_epoch // max_ep_len) 
 
     for t in range(total_steps // num_procs()):
         """
@@ -540,7 +541,7 @@ def run_sac_algo(
             else:                
                 logger.store(EpRet=ep_ret, EpCost=ep_cost, EpLen=ep_len, EpGoals=ep_goals)
                 training_rewards.extend([ep_ret])
-            training_costs.extend([ep_cost]) 
+            training_costs.extend([ep_cost])  
             o, r, d, ep_ret, ep_cost, ep_len, ep_goals = env.reset(), 0, False, 0, 0, 0, 0
 
         if t > 0 and t % train_frequency == 0:
@@ -574,15 +575,26 @@ def run_sac_algo(
             # Save model
             if (checkpoint_frequency and (epoch % checkpoint_frequency == 0)) or (epoch == epochs-1):
                 logger.save_state({'env': env}, epoch)
-                df = df.append(pd.DataFrame({
-                        "episode_return": training_rewards, 
-                        "episode_cost": training_costs,
-                        "accumulated_cost": cumulative_cost,
-                        "cost_rate": cost_rate,
-                        "epoch": epoch,
-                        "run": np.arange(len(training_rewards))
-                    }))            
-                df.to_csv(os.path.join(logger.output_dir, "train_results.csv"))
+            if  len(training_rewards) == 1:
+                cur_df = pd.DataFrame({
+                            "episode_return": training_rewards[0], 
+                            "episode_cost": training_costs[0], 
+                            "accumulated_cost": cumulative_cost,
+                            "cost_rate": cost_rate,
+                            "epoch": epoch,
+                            "run": 0
+                        }, index=[epoch])
+            else:
+                cur_df = pd.DataFrame({
+                            "episode_return": training_rewards, 
+                            "episode_cost": training_costs, 
+                            "accumulated_cost": cumulative_cost,
+                            "cost_rate": cost_rate,
+                            "epoch": epoch,
+                            "run": np.arange(len(training_rewards))
+                        })
+            df = df.append(cur_df)            
+            df.to_csv(os.path.join(logger.output_dir, "train_results.csv"))
 
             # Test the performance of the deterministic version of the agent.
             test_start_time = time.time()

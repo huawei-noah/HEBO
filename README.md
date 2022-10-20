@@ -3,12 +3,15 @@
 This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developped by
 Huawei, Noah's Ark Lab.
 
-- [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
-- [T-LBO](./T-LBO)
-- [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
-- [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-- [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
-- [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
+- Bayesian Optimisation Research
+  - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
+  - [T-LBO](./T-LBO)
+  - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+  - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+  - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
+- Reinforcement Learning Research
+  - [Sauté RL: and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
+  - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -89,29 +92,37 @@ comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given t
 function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
 performance improvements across all domains in which Bayesian optimisation is currently being applied.
 
-# Reinforcement Learning Research
+## [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 
-## [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE/)
+![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
 
-### Saute&#769;ing a safe environment
-
-Safety state augmentation (saute&#769;ing) is done in a straightforward manner. Assume a safe environment is defined in
-a class `MySafeEnv`. The saute&#769;ed environment is defined using a decorator `saute_env`, which contains all the
-required definitions. Custom and overloaded functions can be defined in the class body.
-
-```python
-from envs.common.saute_env import saute_env
-
-
-@saute_env
-class MySautedEnv(MySafeEnv):
-    """New sauteed class."""    
-```
-
-Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf).
-.
+Codebase associated to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://arxiv.org/abs/2201.12570).
 
 ##### Abstract
+
+Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3 
+region located at the tip of variable chains of an antibody dominates antigen-binding specificity. Therefore, it is a
+priority to design optimal antigen-specific CDRH3 regions to develop therapeutic antibodies to combat harmful pathogens.
+However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence 
+exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian 
+Optimisation framework enabling efficient in silico design of the CDRH3 region. Ideally, antibodies should bind to
+their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that 
+restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software 
+suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico 
+in an unconstrained fashion. The results across 188 antigens demonstrate the benefit of AntBO in designing CDRH3 regions
+with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform 
+the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm 
+baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no 
+domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for 
+in vitro experimentation.
+
+# Reinforcement Learning Research
+
+## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
+
+Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf) and  [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
+
+##### Abstract for Sauté RL: Almost Surely Safe RL Using State Augmentation (ICML 2022)
 
 Satisfying safety constraints almost surely (or with probability one) can be critical for deployment of Reinforcement
 Learning (RL) in real-life applications. For example, plane landing and take-off should ideally occur with probability
@@ -123,12 +134,9 @@ approach has a plug-and-play nature, i.e., any RL algorithm can be "sauteed". Ad
 for policy generalization across safety constraints. We finally show that Saute RL algorithms can outperform their
 state-of-the-art counterparts when constraint satisfaction is of high importance.
 
-## [SIMMER](./SIMMER)
 
 
-Codebase associated to: [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
-
-##### Abstract
+##### Abstract for Effects of Safety State Augmentation on Safe Exploration (NeurIPS 2022)
 Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
  is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in 
  safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is 
@@ -140,9 +148,33 @@ Safe exploration is a challenging and important problem in model-free reinforcem
  that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
   stabilize training and improve the performance of safe RL with average constraints.
 
+
+
+## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+
+Code associdated to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842) accepted
+at **NeurIPS22** conference.
+
+#### Abstract
+Model-based offline reinforcement learning (RL) aims to find highly rewarding policy, by leveraging a previously
+collected static dataset and a dynamics model. While learned through reuse of static dataset, the dynamics model's
+generalization ability hopefully promotes policy learning if properly utilized. To that end, several works propose to
+quantify the uncertainty of predicted dynamics, and explicitly apply it to penalize reward. However, as the dynamics and
+the reward are  intrinsically different factors in context of MDP, characterizing the impact of dynamics uncertainty
+through reward penalty may incur unexpected tradeoff between model utilization and risk avoidance. In this work, we
+instead maintain a belief distribution over dynamics, and evaluate/optimize policy through biased sampling from the
+belief. The sampling procedure, biased towards pessimism, is derived based on an alternating Markov game formulation
+of offline RL. We formally show that the biased sampling naturally induces an updated dynamics belief with
+policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief*. To improve policy, we devise an
+iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
+condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
+results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Codebase Contributors 
-<strong> Alexander I Cowen-Rivers, Antoine Grosnit, Alexandre Max Maravel, Aivar Sootla, Taher Jafferjee, Ryan Rhys Griffiths, Wenlong Lyu, Zhi Wang. </strong>
+## Codebase Contributors 
 
+<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo.
+
+<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
   
