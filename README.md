@@ -10,7 +10,7 @@ Huawei, Noah's Ark Lab.
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 - Reinforcement Learning Research
-  - [Sauté RL: and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
+  - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Further instructions are provided in the README files associated to each project.
