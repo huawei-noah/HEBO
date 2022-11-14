@@ -10,8 +10,7 @@ Huawei, Noah's Ark Lab.
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 - Reinforcement Learning Research
-  - [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE)
-  - [SIMMER - Enhancing Safe Exploration Using Safety State Augmentation](./SIMMER)
+  - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Further instructions are provided in the README files associated to each project.
@@ -119,27 +118,11 @@ in vitro experimentation.
 
 # Reinforcement Learning Research
 
-## [Sauté RL: Almost Surely Safe RL Using State Augmentation](./SAUTE/)
+## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
 
-### Saute&#769;ing a safe environment
+Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf) and  [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
 
-Safety state augmentation (saute&#769;ing) is done in a straightforward manner. Assume a safe environment is defined in
-a class `MySafeEnv`. The saute&#769;ed environment is defined using a decorator `saute_env`, which contains all the
-required definitions. Custom and overloaded functions can be defined in the class body.
-
-```python
-from envs.common.saute_env import saute_env
-
-
-@saute_env
-class MySautedEnv(MySafeEnv):
-    """New sauteed class."""    
-```
-
-Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf).
-.
-
-##### Abstract
+##### Abstract for Sauté RL: Almost Surely Safe RL Using State Augmentation (ICML 2022)
 
 Satisfying safety constraints almost surely (or with probability one) can be critical for deployment of Reinforcement
 Learning (RL) in real-life applications. For example, plane landing and take-off should ideally occur with probability
@@ -151,12 +134,9 @@ approach has a plug-and-play nature, i.e., any RL algorithm can be "sauteed". Ad
 for policy generalization across safety constraints. We finally show that Saute RL algorithms can outperform their
 state-of-the-art counterparts when constraint satisfaction is of high importance.
 
-## [SIMMER](./SIMMER)
 
 
-Codebase associated to: [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
-
-##### Abstract
+##### Abstract for Effects of Safety State Augmentation on Safe Exploration (NeurIPS 2022)
 Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
  is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in 
  safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is 
@@ -167,6 +147,7 @@ Safe exploration is a challenging and important problem in model-free reinforcem
  imposed on an average cost, and RL with constraints imposed on a cost with probability one. Our experiments suggest 
  that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
   stabilize training and improve the performance of safe RL with average constraints.
+
 
 ## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 

@@ -28,6 +28,9 @@ if __name__ == "__main__":
     elif current_experiment == 15:
         from exps.single_pendulum.q_simmer_cfg import cfg
         run_simmer(**cfg, smoketest=args.smoketest)    
+    elif current_experiment == 16:
+        from exps.single_pendulum.key_observation_cfg import cfg
+        run_saute(**cfg, smoketest=args.smoketest)    
 ### Double Pendulum      
     elif current_experiment == 20:
         from exps.double_pendulum.trpo_cfg import cfg

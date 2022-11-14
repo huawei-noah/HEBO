@@ -1,7 +1,20 @@
-# Enhancing Safe Exploration Using Safety State Augmentation
+# Saut\'e and Simmer {RL}: Safe Reinforcement Learning Using Safety State Augmentation
 
-## About 
+###  Sauté RL: Almost Surely Safe RL Using State Augmentation
 
+Satisfying safety constraints almost surely (or with probability one) can be critical for deployment of Reinforcement
+Learning (RL) in real-life applications. For example, plane landing and take-off should ideally occur with probability
+one. We address the problem by introducing Safety Augmented (Saute) Markov Decision Processes (MDPs), where the safety
+constraints are eliminated by augmenting them into the state-space and reshaping the objective. We show that Saute MDP
+satisfies the Bellman equation and moves us closer to solving Safe RL with constraints satisfied almost surely. We argue
+that Saute MDP allows to view Safe RL problem from a different perspective enabling new features. For instance, our
+approach has a plug-and-play nature, i.e., any RL algorithm can be "sauteed". Additionally, state augmentation allows
+for policy generalization across safety constraints. We finally show that Saute RL algorithms can outperform their
+state-of-the-art counterparts when constraint satisfaction is of high importance.
+
+
+
+### Effects of Safety State Augmentation on Safe Exploration
 Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
  is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in 
  safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is 
@@ -124,7 +137,7 @@ If you find our code useful please cite the following papers
 }
 
 @article{sootla2022simmer,
-  title = {Enhancing Safe Exploration Using Safety State Augmentation},
+  title = {Effects of Safety State Augmentation on Safe Exploration},
   author = {Sootla, Aivar and Cowen-Rivers, Alexander I. and Wang, Jun and Bou-Ammar, Haitham},
   journal={arXiv preprint arXiv:2206.02675},
   year={2022}
@@ -135,8 +148,8 @@ or
 
 ```
 @misc{sootla_saute_2022_git,
-	 title={Saut\'e {RL}: Almost Surely Safe Reinforcement Learning Using State Augmentation}, 
-   url = {https://github.com/huawei-noah/HEBO/tree/master/SAUTE},
+	 title={Saut\'e and Simmer {RL}:  Safe Reinforcement Learning Using Safety State Augmentation}, 
+   url = {https://github.com/huawei-noah/HEBO/tree/master/SIMMER},
    year = {2022},
 	 author = {Sootla, Aivar and Cowen-Rivers, Alexander I. and Jafferjee, Taher and Wang, Ziyan},
 }
