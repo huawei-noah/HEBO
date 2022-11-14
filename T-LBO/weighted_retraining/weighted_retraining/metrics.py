@@ -144,13 +144,16 @@ class TripletLossTorch:
     @staticmethod
     def exp_metric_id(threshold: float, margin: Optional[float] = None, soft: Optional[bool] = None,
                       eta: Optional[bool] = None) -> str:
+        metric_id_base = f'triplet-thr-{threshold:g}'
         if margin is not None:
-            return f'triplet-thr-{threshold:g}-mrg-{margin:g}'
+            return f'{metric_id_base}-mrg-{margin:g}'
         if soft is not None:
-            metric_id = f'triplet-thr-{threshold:g}-soft'
+            metric_id = f'{metric_id_base}-soft'
             if eta is not None:
                 metric_id += f'-eta-{eta:g}'
             return metric_id
+        else:
+            return metric_id_base
 
 
 class LogRatioLossTorch:

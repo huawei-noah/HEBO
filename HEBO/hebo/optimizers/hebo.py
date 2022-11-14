@@ -9,6 +9,8 @@
 
 
 import sys
+from typing import Optional
+
 import numpy  as np
 import pandas as pd
 import torch
@@ -29,10 +31,12 @@ class HEBO(AbstractOptimizer):
     support_parallel_opt  = True
     support_combinatorial = True
     support_contextual    = True
-    def __init__(self, space, model_name = 'gpy', rand_sample = None, acq_cls = MACE, es = 'nsga2', model_config = None):
+    def __init__(self, space, model_name = 'gpy', rand_sample = None, acq_cls = MACE, es = 'nsga2', model_config = None,
+                 scramble_seed: Optional[int] = None ):
         """
         model_name  : surrogate model to be used
         rand_sample : iterations to perform random sampling
+        scramble_seed : seed used for the sobol sampling of the first initial points
         """
         super().__init__(space)
         self.space       = space
@@ -41,7 +45,8 @@ class HEBO(AbstractOptimizer):
         self.y           = np.zeros((0, 1))
         self.model_name  = model_name
         self.rand_sample = 1 + self.space.num_paras if rand_sample is None else max(2, rand_sample)
-        self.sobol       = SobolEngine(self.space.num_paras, scramble = False)
+        self.scramble_seed = scramble_seed
+        self.sobol       = SobolEngine(self.space.num_paras, scramble = True, seed = scramble_seed)
         self.acq_cls     = acq_cls
         self._model_config = model_config
 

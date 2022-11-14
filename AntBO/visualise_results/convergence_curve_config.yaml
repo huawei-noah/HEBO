@@ -1,0 +1,34 @@
+antigens:
+  - 1ADQ_A
+  - 1FBI_X
+methods:
+  BO_ssk:
+    kernel_name: ssk
+    search_strategy: 'local'
+    label: CASMO SSK
+    line_color: blue
+  BO_transformed_overlap:
+    kernel_name: transformed_overlap
+    search_strategy: 'local'
+    label: CASMO TK
+    line_color: red
+  GA:
+    kernel_name: GA
+    label: Genetic Algorithm
+    line_color: green
+  RS:
+    kernel_name: RS
+    label: Random Search
+    line_color: orange
+  RealData:
+    antigen_path: /ABS/PATH/TO/CDRdata/RawBindingsMurine/  # contains folders of antigens properties
+    label: Human Wet Lab Best Score
+    line_color: yellow
+num_std: 1
+f_evals: 200
+random_seeds:
+- 0
+- 1
+results_dir: './results/'  # Put path where you fetch the results '/ABS/PATH/TO/results/'
+save_dir: './plots/'  # Put path where plots should be saved /ABS/PATH/TO/plots
+sequence_length: 11

@@ -1,0 +1,37 @@
+absolut_config:
+  path: './Absolut' # Put path to Absolut (/ABS/PATH/TO/Absolut/)
+  process: 20
+  startTask: 50
+antigens:
+- 1ADQ_A
+- 1FBI_X
+- 1H0D_C
+- 1NSN_S
+- 1OB1_C
+- 1WEJ_F
+- 2YPV_A
+- 3RAJ_A
+- 3VRL_C
+- 2DD8_S
+- 1S78_B
+- 2JEL_P
+genetic_algorithm_config:
+  crossover_probability: 1.0
+  crossover_type: uniform
+  elite_ratio: 0.15
+  max_num_iterations: 200
+  parents_portion: 0.4
+  population_size: 40
+random_seeds:
+- 42
+- 43
+- 44
+- 45
+- 46
+- 47
+- 48
+- 49
+- 50
+- 51
+save_path: './results/GA/'  # Put path where you want results to be stored '/ABS/PATH/TO/results/'
+sequence_length: 11

@@ -1,0 +1,20 @@
+acq: ei
+ard: True
+n_init: 20
+max_iters: 200
+min_cuda: 10
+device: 'cuda'
+seq_len: 11
+normalise: True
+batch_size: 1
+save_path: './results/BO_transformed_overlap/'  # Put path where you want results to be stored '/ABS/PATH/TO/results/'
+kernel_type: 'transformed_overlap'
+noise_variance: 1e-6
+resume: ???
+search_strategy: 'local' # local (CASMO), 'batch_local' (CASMO with NSGA con), 'global' (NSGA), or glocal (HEBO variant)
+
+bbox:
+  tool: Absolut
+  path: './Absolut' # Put path to Absolut (/ABS/PATH/TO/Absolut/)
+  process: 2    # Number of cores
+  startTask: 0  # start core id

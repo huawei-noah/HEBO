@@ -149,7 +149,6 @@ Safe exploration is a challenging and important problem in model-free reinforcem
   stabilize training and improve the performance of safe RL with average constraints.
 
 
-
 ## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Code associdated to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842) accepted

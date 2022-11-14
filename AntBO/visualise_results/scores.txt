@@ -1,0 +1,1152 @@
+
+Best binding for antigen 4ZFO_F, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFFFWLLMLFL 
+ - binding energy: -96.2300 
+ - hp: 2.7455 
+ - charge: -0.4425 
+ - instability_index: 20.3091
+
+Best binding for antigen 4ZFO_F, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLRFLHLFLFL 
+ - binding energy: -96.1700 
+ - hp: 2.1364 
+ - charge: 0.5941 
+ - instability_index: 26.6000
+
+Best binding for antigen 4ZFO_F, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFFLFEFFYLL 
+ - binding energy: -96.1100 
+ - hp: 2.1273 
+ - charge: -1.4439 
+ - instability_index: 38.7282
+
+Best binding for antigen 4ZFO_F, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLLFILLALLW 
+ - binding energy: -94.8600 
+ - hp: 3.0727 
+ - charge: -0.4425 
+ - instability_index: 48.1273
+
+Best binding for antigen 4ZFO_F, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLFLLLLFTLL 
+ - binding energy: -96.1100 
+ - hp: 3.1182 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4ZFO_F, method BO_ssk, and iteration number 200
+
+ - CDR3: LYFLRFFLLLF 
+ - binding energy: -96.1400 
+ - hp: 2.2182 
+ - charge: 0.5549 
+ - instability_index: 26.6000
+
+Best binding for antigen 4ZFO_F, method BO_ssk, and iteration number 200
+
+ - CDR3: FLWFVVFLTFV 
+ - binding energy: -92.9100 
+ - hp: 2.7091 
+ - charge: -0.4425 
+ - instability_index: 41.8364
+
+Best binding for antigen 4ZFO_F, method GA, and iteration number 200
+
+ - CDR3: LFLVLLTFLFF 
+ - binding energy: -96.2400 
+ - hp: 3.0636 
+ - charge: -0.4425 
+ - instability_index: 20.3091
+
+Best binding for antigen 4ZFO_F, method GA, and iteration number 200
+
+ - CDR3: LLRFLILLLFF 
+ - binding energy: -96.2500 
+ - hp: 2.8364 
+ - charge: 0.5574 
+ - instability_index: 44.1091
+
+Best binding for antigen 4ZFO_F, method GA, and iteration number 200
+
+ - CDR3: FLNFLGFLLFF 
+ - binding energy: -96.1600 
+ - hp: 2.3000 
+ - charge: -0.4425 
+ - instability_index: -4.5727
+
+Best binding for antigen 4ZFO_F, method GA, and iteration number 200
+
+ - CDR3: FFLLLGLFPLF 
+ - binding energy: -96.2500 
+ - hp: 2.5636 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 4ZFO_F, method GA, and iteration number 200
+
+ - CDR3: FFLFNLFNLLL 
+ - binding energy: -96.2500 
+ - hp: 2.1091 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4ZFO_F, method RS, and iteration number 200
+
+ - CDR3: VNKFLEFLMLI 
+ - binding energy: -85.7200 
+ - hp: 1.5182 
+ - charge: -0.4782 
+ - instability_index: 30.6182
+
+Best binding for antigen 4ZFO_F, method RS, and iteration number 200
+
+ - CDR3: TGFITILLFPL 
+ - binding energy: -88.5900 
+ - hp: 2.0545 
+ - charge: -0.7916 
+ - instability_index: 36.3909
+
+Best binding for antigen 4ZFO_F, method RS, and iteration number 200
+
+ - CDR3: QSMFCCFLFVF 
+ - binding energy: -86.5900 
+ - hp: 1.9818 
+ - charge: -0.4916 
+ - instability_index: 49.0364
+
+Best binding for antigen 4ZFO_F, method RS, and iteration number 200
+
+ - CDR3: FYIHFFFMLIH 
+ - binding energy: -85.8300 
+ - hp: 1.6545 
+ - charge: -0.3718 
+ - instability_index: 51.7373
+
+Best binding for antigen 4ZFO_F, method RS, and iteration number 200
+
+ - CDR3: FIALDFDMFRL 
+ - binding energy: -86.4100 
+ - hp: 1.1545 
+ - charge: -1.4417 
+ - instability_index: 13.4545
+
+Best binding for antigen 1ADQ_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LTILLLLFFIF 
+ - binding energy: -110.9200 
+ - hp: 3.2455 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 1ADQ_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LQLLLLFFRLF 
+ - binding energy: -112.3900 
+ - hp: 2.1091 
+ - charge: 0.5574 
+ - instability_index: 38.7273
+
+Best binding for antigen 1ADQ_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLLFLWFLFLL 
+ - binding energy: -111.9400 
+ - hp: 3.0091 
+ - charge: -0.4425 
+ - instability_index: 30.6182
+
+Best binding for antigen 1ADQ_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLLFLLLNIIL 
+ - binding energy: -111.4900 
+ - hp: 3.1727 
+ - charge: -0.4425 
+ - instability_index: 66.5455
+
+Best binding for antigen 1ADQ_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: ILPFFCFFLLL 
+ - binding energy: -110.6400 
+ - hp: 2.8909 
+ - charge: -0.4671 
+ - instability_index: 61.6182
+
+Best binding for antigen 1ADQ_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FFLFLILVYIL 
+ - binding energy: -110.8200 
+ - hp: 3.2273 
+ - charge: -0.4451 
+ - instability_index: 37.2545
+
+Best binding for antigen 1ADQ_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FLWFLGLLLFF 
+ - binding energy: -112.2700 
+ - hp: 2.6273 
+ - charge: -0.4425 
+ - instability_index: 30.6182
+
+Best binding for antigen 1ADQ_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FLMRLFLLFFF 
+ - binding energy: -111.8500 
+ - hp: 2.4182 
+ - charge: 0.5574 
+ - instability_index: 2.2364
+
+Best binding for antigen 1ADQ_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LEFLLLFFMII 
+ - binding energy: -110.4400 
+ - hp: 2.8182 
+ - charge: -1.4414 
+ - instability_index: 9.0909
+
+Best binding for antigen 1ADQ_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FFFFLFLLFFL 
+ - binding energy: -112.0500 
+ - hp: 3.1636 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1ADQ_A, method GA, and iteration number 200
+
+ - CDR3: FLVLLLFLLQL 
+ - binding energy: -112.4800 
+ - hp: 2.9909 
+ - charge: -0.4425 
+ - instability_index: 38.7273
+
+Best binding for antigen 1ADQ_A, method GA, and iteration number 200
+
+ - CDR3: LLLLLKLLLLF 
+ - binding energy: -112.5800 
+ - hp: 3.0091 
+ - charge: 0.5549 
+ - instability_index: -6.3455
+
+Best binding for antigen 1ADQ_A, method GA, and iteration number 200
+
+ - CDR3: FLWLLLFLLYL 
+ - binding energy: -112.4800 
+ - hp: 2.7273 
+ - charge: -0.4451 
+ - instability_index: 41.8364
+
+Best binding for antigen 1ADQ_A, method GA, and iteration number 200
+
+ - CDR3: LALFLLLLILF 
+ - binding energy: -112.4200 
+ - hp: 3.5000 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 1ADQ_A, method GA, and iteration number 200
+
+ - CDR3: FLVLLFLLLFL 
+ - binding energy: -112.4600 
+ - hp: 3.5636 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1ADQ_A, method RS, and iteration number 200
+
+ - CDR3: VNKFLEFLMLI 
+ - binding energy: -99.7900 
+ - hp: 1.5182 
+ - charge: -0.4782 
+ - instability_index: 30.6182
+
+Best binding for antigen 1ADQ_A, method RS, and iteration number 200
+
+ - CDR3: LHWFVLWLGIM 
+ - binding energy: -102.7000 
+ - hp: 1.7636 
+ - charge: -0.4059 
+ - instability_index: 31.5000
+
+Best binding for antigen 1ADQ_A, method RS, and iteration number 200
+
+ - CDR3: FFSFNLHYQIA 
+ - binding energy: -102.9800 
+ - hp: 0.5636 
+ - charge: -0.4084 
+ - instability_index: 49.0364
+
+Best binding for antigen 1ADQ_A, method RS, and iteration number 200
+
+ - CDR3: FYIHFFFMLIH 
+ - binding energy: -101.0100 
+ - hp: 1.6545 
+ - charge: -0.3718 
+ - instability_index: 51.7373
+
+Best binding for antigen 1ADQ_A, method RS, and iteration number 200
+
+ - CDR3: NLGIIFSYKIY 
+ - binding energy: -102.4600 
+ - hp: 0.8091 
+ - charge: 0.5499 
+ - instability_index: -6.3455
+
+Best binding for antigen 5EZO_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LFLQLLLFFFL 
+ - binding energy: -146.3700 
+ - hp: 2.7727 
+ - charge: -0.4425 
+ - instability_index: 38.7273
+
+Best binding for antigen 5EZO_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLLQLLLLFLF 
+ - binding energy: -146.7200 
+ - hp: 2.9545 
+ - charge: -0.4425 
+ - instability_index: 38.7273
+
+Best binding for antigen 5EZO_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLLSLFLLFLL 
+ - binding energy: -146.7700 
+ - hp: 3.2000 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLLNLLLFLFF 
+ - binding energy: -146.4400 
+ - hp: 2.8636 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLFLLFFKLFL 
+ - binding energy: -146.0700 
+ - hp: 2.6455 
+ - charge: 0.5549 
+ - instability_index: -12.2909
+
+Best binding for antigen 5EZO_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FMFLFILSFLL 
+ - binding energy: -144.9000 
+ - hp: 2.9091 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 5EZO_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LVLNLLLLWLL 
+ - binding energy: -144.5100 
+ - hp: 2.7455 
+ - charge: -0.4425 
+ - instability_index: 41.8364
+
+Best binding for antigen 5EZO_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LLMFLLLHLIL 
+ - binding energy: -144.7100 
+ - hp: 2.9636 
+ - charge: -0.4059 
+ - instability_index: 26.6000
+
+Best binding for antigen 5EZO_A, method BO_ssk, and iteration number 200
+
+ - CDR3: YSWFLCQYAFS 
+ - binding energy: -108.3300 
+ - hp: 0.4636 
+ - charge: -0.4721 
+ - instability_index: 16.9091
+
+Best binding for antigen 5EZO_A, method BO_ssk, and iteration number 200
+
+ - CDR3: MIWIFMLDLFL 
+ - binding energy: -139.7000 
+ - hp: 2.3091 
+ - charge: -1.7147 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method GA, and iteration number 200
+
+ - CDR3: LFLTLLLLFLF 
+ - binding energy: -146.6300 
+ - hp: 3.1182 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method GA, and iteration number 200
+
+ - CDR3: LLLSLLLLFLL 
+ - binding energy: -146.7800 
+ - hp: 3.2909 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method GA, and iteration number 200
+
+ - CDR3: LLFLLLLDLLF 
+ - binding energy: -146.1900 
+ - hp: 2.9545 
+ - charge: -1.4421 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method GA, and iteration number 200
+
+ - CDR3: LFLTLLLLLFL 
+ - binding energy: -146.6100 
+ - hp: 3.2091 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method GA, and iteration number 200
+
+ - CDR3: LLLLLFLSLLL 
+ - binding energy: -146.8100 
+ - hp: 3.2909 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5EZO_A, method RS, and iteration number 200
+
+ - CDR3: LFLNLPMSIII 
+ - binding energy: -133.7900 
+ - hp: 2.1545 
+ - charge: -0.4425 
+ - instability_index: 59.6909
+
+Best binding for antigen 5EZO_A, method RS, and iteration number 200
+
+ - CDR3: VAIAFQIPFWI 
+ - binding energy: -127.9400 
+ - hp: 1.9000 
+ - charge: -0.4768 
+ - instability_index: 23.9818
+
+Best binding for antigen 5EZO_A, method RS, and iteration number 200
+
+ - CDR3: LHPHFYILIVV 
+ - binding energy: -128.0900 
+ - hp: 1.6818 
+ - charge: -0.3718 
+ - instability_index: 36.4736
+
+Best binding for antigen 5EZO_A, method RS, and iteration number 200
+
+ - CDR3: FGMTLKLFLHI 
+ - binding energy: -132.8800 
+ - hp: 1.3818 
+ - charge: 0.5916 
+ - instability_index: 30.9818
+
+Best binding for antigen 5EZO_A, method RS, and iteration number 200
+
+ - CDR3: MMFKMQLRIYL 
+ - binding energy: -128.5900 
+ - hp: 0.6727 
+ - charge: 1.2799 
+ - instability_index: 33.1000
+
+Best binding for antigen 4OII_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFLLYFLLIFL 
+ - binding energy: -148.3600 
+ - hp: 3.0364 
+ - charge: -0.4451 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LFLLFMYFLFL 
+ - binding energy: -148.1300 
+ - hp: 2.8000 
+ - charge: -0.4451 
+ - instability_index: 30.6182
+
+Best binding for antigen 4OII_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LFLLFLAFLFL 
+ - binding energy: -149.6600 
+ - hp: 3.2545 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFLFNLFLLFL 
+ - binding energy: -149.7300 
+ - hp: 2.6818 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LILFFFIFFLF 
+ - binding energy: -147.6600 
+ - hp: 3.3818 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 4OII_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FMLLFIAFFFL 
+ - binding energy: -146.7600 
+ - hp: 3.0545 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method GA, and iteration number 200
+
+ - CDR3: LFFLLLEFLFF 
+ - binding energy: -149.6400 
+ - hp: 2.6818 
+ - charge: -1.4414 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method GA, and iteration number 200
+
+ - CDR3: LFLLLLKFFFL 
+ - binding energy: -149.8500 
+ - hp: 2.7364 
+ - charge: 0.5549 
+ - instability_index: 1.3727
+
+Best binding for antigen 4OII_A, method GA, and iteration number 200
+
+ - CDR3: LFLLLLIFLFF 
+ - binding energy: -149.8500 
+ - hp: 3.5000 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method GA, and iteration number 200
+
+ - CDR3: LFLLLLCFFFL 
+ - binding energy: -149.8500 
+ - hp: 3.3182 
+ - charge: -0.4671 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OII_A, method GA, and iteration number 200
+
+ - CDR3: LFLLLLTFFFL 
+ - binding energy: -149.8500 
+ - hp: 3.0273 
+ - charge: -0.4425 
+ - instability_index: 20.3091
+
+Best binding for antigen 4OII_A, method RS, and iteration number 200
+
+ - CDR3: WLIVAFMYMSL 
+ - binding energy: -125.9000 
+ - hp: 1.9727 
+ - charge: -0.4451 
+ - instability_index: 114.0091
+
+Best binding for antigen 4OII_A, method RS, and iteration number 200
+
+ - CDR3: WFCFFNKLFMW 
+ - binding energy: -131.5600 
+ - hp: 0.9273 
+ - charge: 0.5304 
+ - instability_index: 22.9000
+
+Best binding for antigen 4OII_A, method RS, and iteration number 200
+
+ - CDR3: YFVICMIMYFY 
+ - binding energy: -127.7700 
+ - hp: 1.9273 
+ - charge: -0.4746 
+ - instability_index: 89.8918
+
+Best binding for antigen 4OII_A, method RS, and iteration number 200
+
+ - CDR3: IIFWYFTLWVW 
+ - binding energy: -130.4400 
+ - hp: 1.6273 
+ - charge: -0.4451 
+ - instability_index: 22.9000
+
+Best binding for antigen 4OII_A, method RS, and iteration number 200
+
+ - CDR3: FFFCQLDVLFY 
+ - binding energy: -132.6400 
+ - hp: 1.5636 
+ - charge: -1.4691 
+ - instability_index: 31.8736
+
+Best binding for antigen 4OKV_E, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: VWLMLLLFLLL 
+ - binding energy: -79.5900 
+ - hp: 3.1455 
+ - charge: -0.4768 
+ - instability_index: 20.3091
+
+Best binding for antigen 4OKV_E, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLFLLLFLLLF 
+ - binding energy: -82.9500 
+ - hp: 3.5273 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLLFFIFLLLL 
+ - binding energy: -82.4825 
+ - hp: 3.5000 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFLLWLLLLLF 
+ - binding energy: -82.1700 
+ - hp: 3.1000 
+ - charge: -0.4425 
+ - instability_index: 41.8364
+
+Best binding for antigen 4OKV_E, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLFLIFLILLL 
+ - binding energy: -82.1800 
+ - hp: 3.6545 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 4OKV_E, method BO_ssk, and iteration number 200
+
+ - CDR3: FFLLFLLLFLL 
+ - binding energy: -82.7000 
+ - hp: 3.4364 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method BO_ssk, and iteration number 200
+
+ - CDR3: LMIFFLWLLFL 
+ - binding energy: -80.4300 
+ - hp: 2.9909 
+ - charge: -0.4425 
+ - instability_index: 41.8364
+
+Best binding for antigen 4OKV_E, method GA, and iteration number 200
+
+ - CDR3: LLLFFLFFFLL 
+ - binding energy: -82.7700 
+ - hp: 3.3455 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method GA, and iteration number 200
+
+ - CDR3: FLLFFLFLLLF 
+ - binding energy: -82.8300 
+ - hp: 3.3455 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method GA, and iteration number 200
+
+ - CDR3: FLFLLLFLLLF 
+ - binding energy: -82.9200 
+ - hp: 3.4364 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 4OKV_E, method GA, and iteration number 200
+
+ - CDR3: FFLFFLLLFIL 
+ - binding energy: -82.2700 
+ - hp: 3.4091 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 4OKV_E, method GA, and iteration number 200
+
+ - CDR3: FLLLFFLLLIL 
+ - binding energy: -82.4500 
+ - hp: 3.5909 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 4OKV_E, method RS, and iteration number 200
+
+ - CDR3: WFVFLALFNHK 
+ - binding energy: -70.8700 
+ - hp: 0.9545 
+ - charge: 0.5916 
+ - instability_index: 30.6182
+
+Best binding for antigen 4OKV_E, method RS, and iteration number 200
+
+ - CDR3: FCFIHVISFDL 
+ - binding energy: -72.8900 
+ - hp: 1.8545 
+ - charge: -1.4300 
+ - instability_index: 31.5273
+
+Best binding for antigen 4OKV_E, method RS, and iteration number 200
+
+ - CDR3: YFVICMIMYFY 
+ - binding energy: -73.2100 
+ - hp: 1.9273 
+ - charge: -0.4746 
+ - instability_index: 89.8918
+
+Best binding for antigen 4OKV_E, method RS, and iteration number 200
+
+ - CDR3: FYWFEFEYFCI 
+ - binding energy: -71.3200 
+ - hp: 0.7000 
+ - charge: -2.4698 
+ - instability_index: 29.3009
+
+Best binding for antigen 4OKV_E, method RS, and iteration number 200
+
+ - CDR3: FFFCQLDVLFY 
+ - binding energy: -74.0200 
+ - hp: 1.5636 
+ - charge: -1.4691 
+ - instability_index: 31.8736
+
+Best binding for antigen 1NCA_N, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LIGILTLMLFL 
+ - binding energy: -124.8300 
+ - hp: 2.8727 
+ - charge: -0.4425 
+ - instability_index: 18.8818
+
+Best binding for antigen 1NCA_N, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LGLFLLFLFLL 
+ - binding energy: -132.8500 
+ - hp: 3.1455 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1NCA_N, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLHLFEVYLHL 
+ - binding energy: -121.6800 
+ - hp: 1.3455 
+ - charge: -1.3707 
+ - instability_index: 2.2364
+
+Best binding for antigen 1NCA_N, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: EILLLLLFALL 
+ - binding energy: -122.4000 
+ - hp: 2.9273 
+ - charge: -1.3326 
+ - instability_index: 44.1091
+
+Best binding for antigen 1NCA_N, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LALFHFLFFLL 
+ - binding energy: -130.3300 
+ - hp: 2.6182 
+ - charge: -0.4059 
+ - instability_index: -0.3364
+
+Best binding for antigen 1NCA_N, method BO_ssk, and iteration number 200
+
+ - CDR3: PILLLLILRFL 
+ - binding energy: -121.6400 
+ - hp: 2.5909 
+ - charge: 0.9013 
+ - instability_index: 61.6182
+
+Best binding for antigen 1NCA_N, method BO_ssk, and iteration number 200
+
+ - CDR3: FMPMLLFCLLK 
+ - binding energy: -120.8100 
+ - hp: 1.9636 
+ - charge: 0.5304 
+ - instability_index: 51.9727
+
+Best binding for antigen 1NCA_N, method GA, and iteration number 200
+
+ - CDR3: IFAFLWLMLFF 
+ - binding energy: -127.4800 
+ - hp: 2.7182 
+ - charge: -0.4425 
+ - instability_index: 41.8364
+
+Best binding for antigen 1NCA_N, method GA, and iteration number 200
+
+ - CDR3: FLFLFLFLLGL 
+ - binding energy: -133.1100 
+ - hp: 3.0545 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1NCA_N, method GA, and iteration number 200
+
+ - CDR3: LLFFFLFFLGL 
+ - binding energy: -132.7800 
+ - hp: 2.9636 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1NCA_N, method GA, and iteration number 200
+
+ - CDR3: FLFLLLFFLAL 
+ - binding energy: -132.8700 
+ - hp: 3.2545 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 1NCA_N, method GA, and iteration number 200
+
+ - CDR3: VFLLLTLFLFF 
+ - binding energy: -128.1100 
+ - hp: 3.0636 
+ - charge: -0.4768 
+ - instability_index: 9.0909
+
+Best binding for antigen 1NCA_N, method RS, and iteration number 200
+
+ - CDR3: CFTWFQLHIIH 
+ - binding energy: -112.0700 
+ - hp: 0.8545 
+ - charge: -0.3938 
+ - instability_index: 46.5909
+
+Best binding for antigen 1NCA_N, method RS, and iteration number 200
+
+ - CDR3: TGFITILLFPL 
+ - binding energy: -113.0400 
+ - hp: 2.0545 
+ - charge: -0.7916 
+ - instability_index: 36.3909
+
+Best binding for antigen 1NCA_N, method RS, and iteration number 200
+
+ - CDR3: LPSIIKIYLCL 
+ - binding energy: -114.8600 
+ - hp: 1.8000 
+ - charge: 0.5279 
+ - instability_index: 46.1818
+
+Best binding for antigen 1NCA_N, method RS, and iteration number 200
+
+ - CDR3: PFLELIIVLIH 
+ - binding energy: -114.5800 
+ - hp: 2.1455 
+ - charge: -1.0609 
+ - instability_index: 30.1000
+
+Best binding for antigen 1NCA_N, method RS, and iteration number 200
+
+ - CDR3: FWKRPLILFLI 
+ - binding energy: -114.5300 
+ - hp: 1.3727 
+ - charge: 1.5549 
+ - instability_index: 73.7455
+
+Best binding for antigen 5CZV_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFILELRVLLL 
+ - binding energy: -127.3500 
+ - hp: 2.3000 
+ - charge: -0.4415 
+ - instability_index: 44.1091
+
+Best binding for antigen 5CZV_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: WFLYLCLLILL 
+ - binding energy: -120.5200 
+ - hp: 2.7636 
+ - charge: -0.4696 
+ - instability_index: 44.1091
+
+Best binding for antigen 5CZV_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: YLFLFLFRFLF 
+ - binding energy: -120.5900 
+ - hp: 2.1273 
+ - charge: 0.5549 
+ - instability_index: 9.0909
+
+Best binding for antigen 5CZV_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LLLVKLKFLLF 
+ - binding energy: -127.4300 
+ - hp: 2.2545 
+ - charge: 1.5524 
+ - instability_index: -8.9636
+
+Best binding for antigen 5CZV_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: YFLLGFLCLFL 
+ - binding energy: -120.7400 
+ - hp: 2.5636 
+ - charge: -0.4696 
+ - instability_index: 26.6000
+
+Best binding for antigen 5CZV_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LFFWILLLLWL 
+ - binding energy: -119.7500 
+ - hp: 2.8273 
+ - charge: -0.4425 
+ - instability_index: 59.3455
+
+Best binding for antigen 5CZV_A, method BO_ssk, and iteration number 200
+
+ - CDR3: VLLFDLLDLML 
+ - binding energy: -120.4400 
+ - hp: 2.2455 
+ - charge: -2.4760 
+ - instability_index: 20.3091
+
+Best binding for antigen 5CZV_A, method GA, and iteration number 200
+
+ - CDR3: LRVLLFLWLGL 
+ - binding energy: -130.6600 
+ - hp: 2.1818 
+ - charge: 0.5574 
+ - instability_index: 59.3455
+
+Best binding for antigen 5CZV_A, method GA, and iteration number 200
+
+ - CDR3: FNLWLLISLRW 
+ - binding energy: -121.2200 
+ - hp: 1.0818 
+ - charge: 0.5574 
+ - instability_index: 111.4182
+
+Best binding for antigen 5CZV_A, method GA, and iteration number 200
+
+ - CDR3: LLSFLAFWLFL 
+ - binding energy: -122.8000 
+ - hp: 2.5000 
+ - charge: -0.4425 
+ - instability_index: 20.3091
+
+Best binding for antigen 5CZV_A, method GA, and iteration number 200
+
+ - CDR3: LRLWLLLFLRL 
+ - binding energy: -131.3400 
+ - hp: 1.7727 
+ - charge: 1.5574 
+ - instability_index: 76.8545
+
+Best binding for antigen 5CZV_A, method GA, and iteration number 200
+
+ - CDR3: LFLCKLQFLLF 
+ - binding energy: -126.7400 
+ - hp: 2.0455 
+ - charge: 0.5304 
+ - instability_index: 24.1545
+
+Best binding for antigen 5CZV_A, method RS, and iteration number 200
+
+ - CDR3: IDCEWMFLIPF 
+ - binding energy: -115.7300 
+ - hp: 1.2091 
+ - charge: -2.4655 
+ - instability_index: 31.8455
+
+Best binding for antigen 5CZV_A, method RS, and iteration number 200
+
+ - CDR3: FQLNWVCLSRL 
+ - binding energy: -116.2400 
+ - hp: 0.7000 
+ - charge: 0.5329 
+ - instability_index: 26.9636
+
+Best binding for antigen 5CZV_A, method RS, and iteration number 200
+
+ - CDR3: LAMSLLLYQKY 
+ - binding energy: -112.3900 
+ - hp: 0.7364 
+ - charge: 0.5499 
+ - instability_index: 49.0364
+
+Best binding for antigen 5CZV_A, method RS, and iteration number 200
+
+ - CDR3: MSWDTFIISPF 
+ - binding energy: -111.0500 
+ - hp: 0.7455 
+ - charge: -1.7147 
+ - instability_index: 104.0455
+
+Best binding for antigen 5CZV_A, method RS, and iteration number 200
+
+ - CDR3: PLVMGILDFFW 
+ - binding energy: -113.3200 
+ - hp: 1.5818 
+ - charge: -1.0982 
+ - instability_index: 12.0273
+
+Best binding for antigen 5JW4_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FLLLLQLLLFL 
+ - binding energy: -144.3300 
+ - hp: 2.9545 
+ - charge: -0.4425 
+ - instability_index: 38.7273
+
+Best binding for antigen 5JW4_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: IFFLLYLLLLL 
+ - binding energy: -143.7200 
+ - hp: 3.2182 
+ - charge: -0.4451 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFLLIPFLLLL 
+ - binding energy: -143.9900 
+ - hp: 3.1000 
+ - charge: -0.4425 
+ - instability_index: 23.9818
+
+Best binding for antigen 5JW4_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: LMLLYFFLFLF 
+ - binding energy: -139.1900 
+ - hp: 2.8000 
+ - charge: -0.4451 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method BO_transformed_overlap, and iteration number 200
+
+ - CDR3: FFLLLWFFLFL 
+ - binding energy: -144.0100 
+ - hp: 2.9182 
+ - charge: -0.4425 
+ - instability_index: 30.6182
+
+Best binding for antigen 5JW4_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LLLLLMFLFFF 
+ - binding energy: -144.3800 
+ - hp: 3.2636 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LLVLLYLILLL 
+ - binding energy: -142.3000 
+ - hp: 3.4364 
+ - charge: -0.4451 
+ - instability_index: 26.6000
+
+Best binding for antigen 5JW4_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FCLLLPILCLL 
+ - binding energy: -139.1000 
+ - hp: 3.0455 
+ - charge: -0.4916 
+ - instability_index: 79.1273
+
+Best binding for antigen 5JW4_A, method BO_ssk, and iteration number 200
+
+ - CDR3: LLLCLCFFFFF 
+ - binding energy: -141.7900 
+ - hp: 3.1091 
+ - charge: -0.4916 
+ - instability_index: 26.6000
+
+Best binding for antigen 5JW4_A, method BO_ssk, and iteration number 200
+
+ - CDR3: FFMLFFFIIFF 
+ - binding energy: -141.4100 
+ - hp: 3.1182 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method GA, and iteration number 200
+
+ - CDR3: LLFLLYLLFFF 
+ - binding energy: -144.4000 
+ - hp: 2.9727 
+ - charge: -0.4451 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method GA, and iteration number 200
+
+ - CDR3: FFLLLPLLLLL 
+ - binding energy: -144.4900 
+ - hp: 3.1273 
+ - charge: -0.4425 
+ - instability_index: 26.6000
+
+Best binding for antigen 5JW4_A, method GA, and iteration number 200
+
+ - CDR3: FFFFLELLLLL 
+ - binding energy: -144.3500 
+ - hp: 2.7727 
+ - charge: -1.4414 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method GA, and iteration number 200
+
+ - CDR3: FFLFLCLLLLL 
+ - binding energy: -144.3700 
+ - hp: 3.4091 
+ - charge: -0.4671 
+ - instability_index: 26.6000
+
+Best binding for antigen 5JW4_A, method GA, and iteration number 200
+
+ - CDR3: LLLLLALLLFF 
+ - binding energy: -144.4900 
+ - hp: 3.4364 
+ - charge: -0.4425 
+ - instability_index: 9.0909
+
+Best binding for antigen 5JW4_A, method RS, and iteration number 200
+
+ - CDR3: WFWLYNIDWMI 
+ - binding energy: -127.6500 
+ - hp: 0.5909 
+ - charge: -1.4446 
+ - instability_index: 81.7818
+
+Best binding for antigen 5JW4_A, method RS, and iteration number 200
+
+ - CDR3: WFCFFNKLFMW 
+ - binding energy: -126.8000 
+ - hp: 0.9273 
+ - charge: 0.5304 
+ - instability_index: 22.9000
+
+Best binding for antigen 5JW4_A, method RS, and iteration number 200
+
+ - CDR3: YFVICMIMYFY 
+ - binding energy: -125.6300 
+ - hp: 1.9273 
+ - charge: -0.4746 
+ - instability_index: 89.8918
+
+Best binding for antigen 5JW4_A, method RS, and iteration number 200
+
+ - CDR3: FYIHFFFMLIH 
+ - binding energy: -127.5700 
+ - hp: 1.6545 
+ - charge: -0.3718 
+ - instability_index: 51.7373
+
+Best binding for antigen 5JW4_A, method RS, and iteration number 200
+
+ - CDR3: FFFCQLDVLFY 
+ - binding energy: -129.6700 
+ - hp: 1.5636 
+ - charge: -1.4691 
+ - instability_index: 31.8736
