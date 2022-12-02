@@ -15,7 +15,7 @@ class IntExponentPara(Parameter):
     def __init__(self, param_dict):
         """
         Integer value, search in log-scale, and the exponent must be integer.
-        For example, parameter whose values must be one of [32, 64, 128, 512, 1024]
+        For example, parameter whose values must be one of [32, 64, 128, 256, 512, 1024]
         """
         super().__init__(param_dict)
         self.base = param_dict['base']
@@ -31,7 +31,7 @@ class IntExponentPara(Parameter):
         return (np.log(x) / np.log(self.base))
 
     def inverse_transform(self, x):
-        return (self.base ** x).astype(int)
+        return (self.base ** x.round().astype(int)).astype(int)
 
     @property
     def is_numeric(self):
