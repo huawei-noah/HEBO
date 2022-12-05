@@ -11,8 +11,8 @@ import numpy  as np
 import pandas as pd
 import torch
 from torch.quasirandom import SobolEngine
-from pymoo.factory import get_problem, get_mutation, get_crossover, get_algorithm
-from pymoo.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
+from ..pymoo_fix.factory import get_problem, get_mutation, get_crossover, get_algorithm
+from ..pymoo_fix.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
 from pymoo.optimize import minimize
 from pymoo.core.problem import Problem
 from pymoo.config import Config

@@ -165,10 +165,10 @@ class CMAES(AbstractOptimizer):
         mu_old        = self.mu.clone()
         self.mu       = (px.t() * self.weights).sum(axis = 1)
 
-        D, P          = self.C.eig(True)
-        D             = D[:, 0] * torch.eye(self.dim)
+        D, P          = torch.linalg.eig(self.C)
+        D             = D.real * torch.eye(self.dim)
         Dinv          = (1. / D.diag()) * torch.eye(self.dim)
-        C_half_inv    = P.mm(Dinv.sqrt()).mm(P.t())
+        C_half_inv    = P.real.mm(Dinv.sqrt()).mm(P.real.t())
 
         self.p_sigma  = (1 - self.cs) * self.p_sigma + np.sqrt(self.cs * (2 - self.cs) * self.mu_eff) * C_half_inv.mm((self.mu - mu_old).view(-1, 1) / self.sigma).view(self.p_sigma.shape)
 

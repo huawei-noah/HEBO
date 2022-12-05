@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 import torch
 
-from pymoo.factory import get_mutation, get_crossover, get_algorithm
-from pymoo.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
+from ..pymoo_fix.factory import get_mutation, get_crossover, get_algorithm
+from ..pymoo_fix.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
 from pymoo.core.problem import Problem
 from pymoo.config import Config
 Config.show_compile_hint = False
@@ -65,7 +65,7 @@ class Evolution(AbstractOptimizer):
         lb = self.space.opt_lb.numpy()
         ub = self.space.opt_ub.numpy()
         self.prob = DummyProb(lb, ub, self.num_obj, self.num_constr)
-        self.algo.setup(self.prob, ('n_gen', np.inf), verbose = verbose)
+        self.algo.setup(self.prob, termination = ('n_gen', np.inf), verbose = verbose)
         self.n_observation = 0
 
     def suggest(self, n_suggestions = None, fix_input : dict = None):

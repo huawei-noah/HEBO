@@ -12,8 +12,8 @@ import numpy as np
 import random
 from scipy.spatial import KDTree
 
-from pymoo.factory import get_sampling, get_crossover, get_mutation, get_algorithm
-from pymoo.operators.mixed_variable_operator import MixedVariableSampling, MixedVariableMutation, MixedVariableCrossover
+from hebo.pymoo_fix.factory import get_sampling, get_crossover, get_mutation, get_algorithm
+from hebo.pymoo_fix.operators.mixed_variable_operator import MixedVariableSampling, MixedVariableMutation, MixedVariableCrossover
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 
