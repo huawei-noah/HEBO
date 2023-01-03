@@ -124,20 +124,23 @@ Follow the instructions in visualise3d.txt
 
 ## Cite us
 ```bibtex
-@misc{https://doi.org/10.48550/arxiv.2201.12570,
-  doi = {10.48550/ARXIV.2201.12570},
-  url = {https://arxiv.org/abs/2201.12570},
-  author = {Khan, Asif and Cowen-Rivers, Alexander I. and Deik, Derrick-Goh-Xin and Grosnit, Antoine and Dreczkowski, Kamil and Robert, Philippe A. and Greiff, Victor and Tutunov, Rasul and Bou-Ammar, Dany and Wang, Jun and Bou-Ammar, Haitham},
-  keywords = {Biomolecules (q-bio.BM), Artificial Intelligence (cs.AI), Machine Learning (cs.LG), Neural and Evolutionary Computing (cs.NE), Machine Learning (stat.ML), FOS: Biological sciences, FOS: Biological sciences, FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation},
-  publisher = {arXiv},
-  year = {2022},
-  copyright = {arXiv.org perpetual, non-exclusive license}
+@article{KHAN2023100374,
+title = {Toward real-world automated antibody design with combinatorial Bayesian optimization},
+journal = {Cell Reports Methods},
+pages = {100374},
+year = {2023},
+issn = {2667-2375},
+doi = {https://doi.org/10.1016/j.crmeth.2022.100374},
+url = {https://www.sciencedirect.com/science/article/pii/S2667237522002764},
+author = {Asif Khan and Alexander I. Cowen-Rivers and Antoine Grosnit and Derrick-Goh-Xin Deik and Philippe A. Robert and Victor Greiff and Eva Smorodina and Puneet Rawat and Rahmad Akbar and Kamil Dreczkowski and Rasul Tutunov and Dany Bou-Ammar and Jun Wang and Amos Storkey and Haitham Bou-Ammar},
+keywords = {computational antibody design, structural biology, protein engineering, Bayesian optimization, combinatorial Bayesian optimization, Gaussian processes, machine learning},
+abstract = {Summary
+Antibodies are multimeric proteins capable of highly specific molecular recognition. The complementarity determining region 3 of the antibody variable heavy chain (CDRH3) often dominates antigen-binding specificity. Hence, it is a priority to design optimal antigen-specific CDRH3 to develop therapeutic antibodies. The combinatorial structure of CDRH3 sequences makes it impossible to query binding-affinity oracles exhaustively. Moreover, antibodies are expected to have high target specificity and developability. Here, we present AntBO, a combinatorial Bayesian optimization framework utilizing a CDRH3 trust region for an in silico design of antibodies with favorable developability scores. The in silico experiments on 159 antigens demonstrate that AntBO is a step toward practically viable in vitro antibody design. In under 200 calls to the oracle, AntBO suggests antibodies outperforming the best binding sequence from 6.9 million experimentally obtained CDRH3s. Additionally, AntBO finds very-high-affinity CDRH3 in only 38 protein designs while requiring no domain knowledge.}
 }
 ```
 
 ## Contributors
-**Asif Khan**, **Alexander I. Cowen-Rivers**, **Derrick-Goh-Xin Deik**, **Antoine Grosnit**,
-**Kamil Dreczkowski**, **Philippe A. Robert**, **Victor Greiff**,
-**Rasul Tutunov**, **Dany Bou-Ammar**, **Jun Wang**, **Haitham Bou-Ammar**
+**Asif Khan**, **Alexander I. Cowen-Rivers**, **Antoine Grosnit**, **Derrick-Goh-Xin Deik**, 
+**Philippe A. Robert**, **Victor Greiff**, **Eva Smorodina**, **Puneet Rawat**, **Rahmad Akbar**, 
+**Kamil Dreczkowski**, **Rasul Tutunov**, **Dany Bou-Ammar**, **Jun Wang**, **Amos Storkey**,**Haitham Bou-Ammar**
 -- _Huawei Noah's Ark lab_.
