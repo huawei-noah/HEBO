@@ -109,10 +109,13 @@ Cowen-Rivers, Alexander I., et al. "An Empirical Study of Assumptions in Bayesia
 
 ## BibTex
 ```
-@article{cowen2020empirical,
-  title={An Empirical Study of Assumptions in Bayesian Optimisation},
-  author={Cowen-Rivers, Alexander I and Lyu, Wenlong and Tutunov, Rasul and Wang, Zhi and Grosnit, Antoine and Griffiths, Ryan Rhys and Jianye, Hao and Wang, Jun and Ammar, Haitham Bou},
-  journal={arXiv preprint arXiv:2012.03826},
-  year={2020}
+@article{article,
+author = {Cowen-Rivers, Alexander and Lyu, Wenlong and Tutunov, Rasul and Wang, Zhi and Grosnit, Antoine and Griffiths, Ryan-Rhys and Maravel, Alexandre and Hao, Jianye and Wang, Jun and Peters, Jan and Bou Ammar, Haitham},
+year = {2022},
+month = {07},
+pages = {},
+title = {HEBO: Pushing The Limits of Sample-Efficient Hyperparameter Optimisation},
+volume = {74},
+journal = {Journal of Artificial Intelligence Research}
 }
 ```
