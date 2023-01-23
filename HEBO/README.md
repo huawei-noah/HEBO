@@ -109,7 +109,7 @@ Cowen-Rivers, Alexander I., et al. "An Empirical Study of Assumptions in Bayesia
 
 ## BibTex
 ```
-@article{article,
+@article{Cowen-Rivers2022-HEBO,
 author = {Cowen-Rivers, Alexander and Lyu, Wenlong and Tutunov, Rasul and Wang, Zhi and Grosnit, Antoine and Griffiths, Ryan-Rhys and Maravel, Alexandre and Hao, Jianye and Wang, Jun and Peters, Jan and Bou Ammar, Haitham},
 year = {2022},
 month = {07},
