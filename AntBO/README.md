@@ -7,7 +7,7 @@ silico design of the CDRH3 region.**
 
 This repo provides the official implementation of _AntBO_,
 as well as all the code needed to reproduce the experiments presented in
-[AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://arxiv.org/abs/2201.12570).
+[AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
 
 
 ## Setup
