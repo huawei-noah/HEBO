@@ -33,7 +33,7 @@ the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/lea
 </p>
 
 Codebase associated
-to: [High-Dimensional Bayesian Optimisation withVariational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
+to: [High-Dimensional Bayesian Optimisation with Variational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
 
 ##### Abstract
 
@@ -96,7 +96,7 @@ performance improvements across all domains in which Bayesian optimisation is cu
 
 ![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
 
-Codebase associated to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://arxiv.org/abs/2201.12570).
+Codebase associated to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
 
 ##### Abstract
 
