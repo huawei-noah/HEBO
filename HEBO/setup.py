@@ -24,5 +24,8 @@ setuptools.setup(
         long_description = long_description,
         long_description_content_type = 'text/markdown', 
         install_requires = required,
-        url = 'https://github.com/huawei-noah/HEBO/tree/master/HEBO', 
+        url = 'https://github.com/huawei-noah/HEBO/tree/master/HEBO',
+        classifiers=[
+        'License :: OSI Approved :: MIT License',
+            ]
         )
