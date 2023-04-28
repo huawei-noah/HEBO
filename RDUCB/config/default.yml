@@ -1,0 +1,31 @@
+algorithm_type:
+  Algorithm:
+    algorithm: Rembo
+    algorithm_random_seed: 1
+    eps: -1
+    exploration_weight: 'lambda t: 0.5 * np.log(2*t)'
+    graphSamplingNumIter: 250
+    initial_kernel_params:
+      lengthscale: 0.1
+      variance: 0.5
+    learnDependencyStructureRate: 15
+    lengthscaleNumIter: 2
+    max_eval: -4
+    noise_var: 0.01
+    param_n_iter: 16
+data_type:
+  Synthetic:
+    data_random_seed: 3
+    dimension: 15
+    fn_noise_var: 0.0225
+    graph_type: StarGraph
+    grid_params:
+      domain_lower: 0.0
+      domain_upper: 1.0
+      grid_size: 150
+    kernel_params:
+      lengthscale: 0.2
+      variance: 1.0
+    
+n_iter: 1000
+n_rand: 10
