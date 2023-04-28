@@ -1,0 +1,24 @@
+algorithm_type:
+  Algorithm:
+    algorithm: Tree
+    algorithm_random_seed: 1
+    eps: -1
+    exploration_weight: 'lambda t: 0.5 * np.log(2*t)'
+    graphSamplingNumIter: 100
+    initial_kernel_params:
+      lengthscale: 0.1
+      variance: 0.5
+    learnDependencyStructureRate: 15
+    lengthscaleNumIter: 2
+    max_eval: -4
+    noise_var: 0.1
+    param_n_iter: 16
+data_type:
+  Hpolib:
+    aug_dimension: 14
+    data_random_seed: 2
+    fn_noise_var: 0
+    grid_size: 150
+    hpo_fn: Hartmann6Aug
+n_iter: 1000
+n_rand: 10

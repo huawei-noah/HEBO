@@ -1,0 +1,23 @@
+algorithm_type:
+  Algorithm:
+    algorithm: Rembo
+    algorithm_random_seed: 2
+    eps: -1
+    exploration_weight: 'lambda t: 0.5 * np.log(2*t)'
+    graphSamplingNumIter: 100
+    initial_kernel_params:
+      lengthscale: 0.1
+      variance: 0.5
+    learnDependencyStructureRate: 15
+    lengthscaleNumIter: 2
+    max_eval: -4
+    noise_var: 0.1
+    param_n_iter: 16
+data_type:
+  LassoBenchlib:
+    problem_type: LassoBenchLoader
+    fidelity: 4
+    pick_data: 'dna'
+    grid_size: 1000
+n_iter: 25
+n_rand: 10
