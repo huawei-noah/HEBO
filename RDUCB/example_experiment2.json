@@ -1,5 +1,0 @@
-{
-    "RDUCB": "config/examples/example2_rducb.yml",
-    "REMBO": "config/examples/example2_rembo.yml",
-    "sub_benchmark": "pick_data:diabetes"
-}
