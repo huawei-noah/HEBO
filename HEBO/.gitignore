@@ -15,6 +15,7 @@ dist/
 *.egg-info/
 htmlcov/
 worksapce/
+.coverage
 
 # catboost
 catboost_info/

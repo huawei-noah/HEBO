@@ -11,7 +11,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 import pytest
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 from hebo.sklearn_tuner import sklearn_tuner
@@ -26,5 +26,5 @@ def test_sklearn_tuner(report):
             {'name' : 'bootstrap',        'type' : 'bool'},
             {'name' : 'min_impurity_decrease', 'type' : 'pow', 'lb' : 1e-4, 'ub' : 1.0},
             ]
-    X, y = load_boston(return_X_y = True)
+    X, y = load_diabetes(return_X_y = True)
     _    = sklearn_tuner(RandomForestRegressor, space_cfg, X, y, metric = r2_score, max_iter = 1, report = report)

@@ -15,34 +15,38 @@ import numpy as np
 import pandas as pd
 import torch
 
-from pymoo.factory import get_mutation, get_crossover, get_algorithm
-from pymoo.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
+# from pymoo.factory import get_mutation, get_crossover, get_algorithm
+# from pymoo.operators.mixed_variable_operator import MixedVariableMutation, MixedVariableCrossover
 from pymoo.core.problem import Problem
 from pymoo.config import Config
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.core.mixed import MixedVariableMating, MixedVariableGA, MixedVariableSampling, MixedVariableDuplicateElimination
 Config.show_compile_hint = False
 
 from hebo.design_space.design_space import DesignSpace
 from .abstract_optimizer import AbstractOptimizer
+from hebo.acq_optimizers.evolution_optimizer import space_to_pymoo_vars
 
 class DummyProb(Problem):
     def __init__(self,
-            lb         : np.ndarray,
-            ub         : np.ndarray,
+            space      : DesignSpace, 
             num_obj    : int,
             num_constr : int
             ):
-        super().__init__(len(lb), xl = lb, xu = ub, n_obj = num_obj, n_constr = num_constr)
+        vars = space_to_pymoo_vars(space)
+        super().__init__(vars = vars, n_obj = num_obj, n_constr = num_constr)
+        self.space      = space
+        self.num_obj    = num_obj
+        self.num_constr = num_constr
 
     def _evaluate(self, x, out : dict, *args, **kwargs):
-        for k, v in kwargs.items():
-            out[k] = v
+        pass
 
 class Evolution(AbstractOptimizer):
     support_parallel_opt    = True
     support_constraint      = True
     support_multi_objective = True
     support_combinatorial   = True
-    support_contextual      = False
 
     def __init__(self, 
             space      : DesignSpace,
@@ -53,33 +57,35 @@ class Evolution(AbstractOptimizer):
             **algo_conf
             ):
         super().__init__(space)
-        if algo is None:
-            algo = 'ga' if num_obj == 1 else 'nsga2'
-
         self.num_obj    = num_obj
         self.num_constr = num_constr
-        if algo in ['ga', 'nsga2']:
-            self.algo = get_algorithm(algo, mutation = self.get_mutation(), crossover = self.get_crossover(), **algo_conf)
+        if algo == 'ga':
+            self.algo = MixedVariableGA(**algo_conf)
+        elif algo == 'nsga2':
+            self.algo = NSGA2(
+                    sampling = MixedVariableSampling(), 
+                    mating   = MixedVariableMating(eliminate_duplicates = MixedVariableDuplicateElimination()), 
+                    eliminate_duplicates = MixedVariableDuplicateElimination(), 
+                    **algo_conf, 
+                    )
         else:
-            self.algo = get_algorithm(algo, **algo_conf)
-        lb = self.space.opt_lb.numpy()
-        ub = self.space.opt_ub.numpy()
-        self.prob = DummyProb(lb, ub, self.num_obj, self.num_constr)
-        self.algo.setup(self.prob, ('n_gen', np.inf), verbose = verbose)
+            raise ValueError(f'Only ga and nsga2 supported, unrecognized algorithm {algo}')
+        self.prob = DummyProb(self.space, self.num_obj, self.num_constr)
+        self.algo.setup(self.prob, termination = ('n_gen', np.inf), verbose = verbose)
         self.n_observation = 0
 
-    def suggest(self, n_suggestions = None, fix_input : dict = None):
+    def suggest(self, n_suggestions = None):
         self.pop = self.algo.ask()
-        pop_x    = torch.from_numpy(self.pop.get('X').astype(float)).float()
-        x        = pop_x[:, :self.space.num_numeric]
-        xe       = pop_x[:, self.space.num_numeric:].round().long()
-        rec      = self.space.inverse_transform(x, xe)
-        if fix_input is not None:
-            for k, v in fix_input.items():
-                rec[k] = v
-        x, xe = self.space.transform(rec)
-        x_cat = torch.cat([x, xe.float()], dim = 1).numpy()
-        self.pop.set('X', x_cat)
+        pop_x    = self.pop.get('X')
+        x        = []
+        xe       = []
+        for n in self.space.numeric_names:
+            x.append(np.vectorize(lambda x : x[n])(pop_x))
+        for n in self.space.enum_names:
+            xe.append(np.vectorize(lambda x : x[n])(pop_x))
+        x   = torch.FloatTensor(x).t()
+        xe  = torch.LongTensor(xe).t()
+        rec = self.space.inverse_transform(x, xe)
         return rec
 
     def observe(self, rec : pd.DataFrame, obs : np.ndarray):
@@ -87,12 +93,11 @@ class Evolution(AbstractOptimizer):
         x_cat = torch.cat([x, xe.float()], dim = 1).numpy()
         obj   = obs[:, :self.num_obj]
         vio   = obs[:, self.num_obj:]
-
-        self.pop.set('X', x_cat)
         if self.num_constr > 0:
-            self.algo.evaluator.eval(self.prob, self.pop, F = obj, G = vio)
+            self.pop.set('F', obj)
+            self.pop.set('G', vio)
         else:
-            self.algo.evaluator.eval(self.prob, self.pop, F = obj)
+            self.pop.set('F', obj)
         self.algo.tell(infills = self.pop)
         self.n_observation += rec.shape[0]
 
@@ -100,10 +105,17 @@ class Evolution(AbstractOptimizer):
     def best_x(self) -> pd.DataFrame:
         if self.n_observation == 0:
             raise RuntimeError('No data has been observed')
-        opt = torch.from_numpy(self.algo.opt.get('X')).float()
-        x   = opt[:, :self.space.num_numeric]
-        xe  = opt[:, self.space.num_numeric:].round().long()
-        return self.space.inverse_transform(x, xe)
+        pop_x = self.algo.opt.get('X')
+        x     = []
+        xe    = []
+        for n in self.space.numeric_names:
+            x.append(np.vectorize(lambda x : x[n])(pop_x))
+        for n in self.space.enum_names:
+            xe.append(np.vectorize(lambda x : x[n])(pop_x))
+        x   = torch.FloatTensor(x).t()
+        xe  = torch.LongTensor(xe).t()
+        rec = self.space.inverse_transform(x, xe)
+        return rec
 
     @property
     def best_y(self) -> np.ndarray:
@@ -115,31 +127,3 @@ class Evolution(AbstractOptimizer):
             vio = opt.get('G')
             best_y = np.hstack([best_y, vio])
         return best_y
-
-    def get_mutation(self):
-        mask = []
-        for name in (self.space.numeric_names + self.space.enum_names):
-            if self.space.paras[name].is_discrete_after_transform:
-                mask.append('int')
-            else:
-                mask.append('real')
-
-        mutation = MixedVariableMutation(mask, {
-            'real' : get_mutation('real_pm', eta = 20), 
-            'int'  : get_mutation('int_pm', eta = 20)
-        })
-        return mutation
-
-    def get_crossover(self):
-        mask = []
-        for name in (self.space.numeric_names + self.space.enum_names):
-            if self.space.paras[name].is_discrete_after_transform:
-                mask.append('int')
-            else:
-                mask.append('real')
-
-        crossover = MixedVariableCrossover(mask, {
-            'real' : get_crossover('real_sbx', eta = 15, prob = 0.9), 
-            'int'  : get_crossover('int_sbx', eta = 15, prob = 0.9)
-        })
-        return crossover

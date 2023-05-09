@@ -12,8 +12,7 @@ import numpy as np
 import random
 from scipy.spatial import KDTree
 
-from pymoo.factory import get_sampling, get_crossover, get_mutation, get_algorithm
-from pymoo.operators.mixed_variable_operator import MixedVariableSampling, MixedVariableMutation, MixedVariableCrossover
+from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 
@@ -82,13 +81,6 @@ class VCBO(AbstractOptimizer):
             assert not p.is_discrete_after_transform, f"VCBO currently only accept continuous parameters, invalid parameter {k}"
 
         self.random_state = np.random.RandomState(42)
-        self.mask = ["real" for i in range(0, self.dims)]
-        self.sampling = MixedVariableSampling(self.mask,   {"real": get_sampling("real_random"),
-                                                            "int": get_sampling("int_random")})
-        self.crossover = MixedVariableCrossover(self.mask, {"real": get_crossover("real_sbx", prob=1.0, eta=3.0),
-                                                            "int": get_crossover("int_sbx", prob=1.0, eta=3.0)})
-        self.mutation = MixedVariableMutation(self.mask,   {"real": get_mutation("real_pm", eta=3.0),
-                                                            "int": get_mutation("int_pm", eta=3.0)})
 
 
     @property
@@ -182,8 +174,7 @@ class VCBO(AbstractOptimizer):
     def gpbo_in_vcell(self, gp_model, d_ball, kappa = 1.0, noise_level = 0.1):
         xi = 0.0
 
-        algorithm = get_algorithm('ga', pop_size=50, sampling=self.sampling, crossover=self.crossover, mutation=self.mutation,
-                       eliminate_duplicates=True)
+        algorithm = GA(pop_size=50, eliminate_duplicates=True)
         prob = MyProblem_gplocal(gp_model, np.min(self.Ys), self.local_constraints + [self.indices_local_points, self.X],
                                  var_num=self.dims, lb=self.random_bound_lb, ub=self.random_bound_ub, kappa=kappa, xi=xi,
                                  noise_level=noise_level)

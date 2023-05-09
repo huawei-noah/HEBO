@@ -49,7 +49,7 @@ def test_eacrnn(output_noise, model_type, model_cls, num_processes, share_weight
     df_X    = space.sample(20)
     df_X['dummy@RRELU#Stage0'] = 'a' # XXX: other categories not seen in training dat
     df_X['dummy@RRELU#Stage1'] = 'a' # XXX: other categories not seen in training dat
-    y       = torch.from_numpy(train_boston_housing(df_X))
+    y       = torch.from_numpy(train_diabetes(df_X))
     Xc, Xe  = space.transform(df_X)
 
     model = model_cls(Xc.shape[1], Xe.shape[1], 1, 
@@ -178,10 +178,10 @@ def test_enum_layer(enum_trans):
         with pytest.raises(RuntimeError):
             model.fit(X, Xe, y)
 
-def train_boston_housing(params: pd.DataFrame) -> [float]:
+def train_diabetes(params: pd.DataFrame) -> [float]:
     """data"""
-    from sklearn.datasets import load_boston
-    X, y = load_boston(return_X_y=True)
+    from sklearn.datasets import load_diabetes
+    X, y = load_diabetes(return_X_y=True)
     X_trn, X_tst, y_trn, y_tst = train_test_split(X, y, test_size=0.1, shuffle=True, random_state=42)
     X_trn, X_tst = FloatTensor(X_trn), FloatTensor(X_tst)
     y_trn, y_tst = FloatTensor(y_trn.reshape(-1, 1)), FloatTensor(y_tst.reshape(-1, 1))

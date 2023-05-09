@@ -162,14 +162,14 @@ class HEBO(AbstractOptimizer):
             while rec.shape[0] < n_suggestions:
                 rand_rec = self.quasi_sample(n_suggestions - rec.shape[0], fix_input)
                 rand_rec = rand_rec[self.check_unique(rand_rec)]
-                rec      = rec.append(rand_rec, ignore_index = True)
+                rec      = pd.concat([rec, rand_rec], axis = 0, ignore_index = True)
                 cnt +=  1
                 if cnt > 3:
                     # sometimes the design space is so small that duplicated sampling is unavoidable
                     break 
             if rec.shape[0] < n_suggestions:
                 rand_rec = self.quasi_sample(n_suggestions - rec.shape[0], fix_input)
-                rec      = rec.append(rand_rec, ignore_index = True)
+                rec      = pd.concat([rec, rand_rec], axsi = 0, ignore_index = True)
 
             select_id = np.random.choice(rec.shape[0], n_suggestions, replace = False).tolist()
             x_guess   = []
@@ -203,7 +203,7 @@ class HEBO(AbstractOptimizer):
         valid_id = np.where(np.isfinite(y.reshape(-1)))[0].tolist()
         XX       = X.iloc[valid_id]
         yy       = y[valid_id].reshape(-1, 1)
-        self.X   = self.X.append(XX, ignore_index = True)
+        self.X   = pd.concat([self.X, XX], axis = 0, ignore_index = True)
         self.y   = np.vstack([self.y, yy])
 
     @property

@@ -74,7 +74,7 @@ class BO(AbstractOptimizer):
         valid_id = np.where(np.isfinite(y.reshape(-1)))[0].tolist()
         XX       = X.iloc[valid_id]
         yy       = y[valid_id].reshape(-1, 1)
-        self.X   = self.X.append(XX, ignore_index = True)
+        self.X   = pd.concat([self.X, XX], axis = 0, ignore_index = True)
         self.y   = np.vstack([self.y, yy])
 
     @property

@@ -18,7 +18,7 @@ from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
 
 from .abstract_optimizer import AbstractOptimizer
 
-from pymoo.factory import get_performance_indicator
+from pymoo.indicators.hv import HV
 from pymoo.util.dominator import Dominator
 
 class GeneralBO(AbstractOptimizer):
@@ -106,7 +106,7 @@ class GeneralBO(AbstractOptimizer):
                 assert self.num_obj > 1
                 assert self.num_constr == 0
                 n_mc = 10
-                hv   = get_performance_indicator('hv', ref_point = self.ref_point.reshape(-1))
+                hv   = HV(ref_point = self.ref_point.reshape(-1))
                 with torch.no_grad():
                     py, ps2 = self.model.predict(*self.space.transform(suggest))
                     y_samp  = self.model.sample_y(*self.space.transform(suggest), n_mc).numpy()
@@ -148,7 +148,7 @@ class GeneralBO(AbstractOptimizer):
         valid_id = np.isfinite(y).all(axis = 1)
         XX       = X.iloc[valid_id]
         yy       = y[valid_id]
-        self.X   = self.X.append(XX, ignore_index = True)
+        self.X   = pd.concat([self.X, XX], axis = 0, ignore_index = True)
         self.y   = np.vstack([self.y, yy])
         assert self.y.shape[1] == self.num_obj + self.num_constr
 

@@ -12,7 +12,7 @@ import torch.nn as nn
 import pandas as pd
 import numpy as np
 from torch.distributions import MultivariateNormal
-from pymoo.factory import get_problem
+from pymoo.problems import get_problem
 from abc import ABC, abstractmethod
 from sklearn.preprocessing import MinMaxScaler
 from scipy.stats import special_ortho_group

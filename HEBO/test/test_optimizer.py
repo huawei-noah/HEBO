@@ -96,13 +96,14 @@ def test_contextual_opt(opt_cls):
         {'name' : 'x1', 'type' : 'int', 'lb' : -20, 'ub' : 20},
         ])
     opt = opt_cls(space, rand_sample = 2, model_name = 'rf')
-    for _ in range(2):
-        n_suggestions = 8 if opt.support_parallel_opt else 1
-        context = np.random.randint(40) - 20
-        rec = opt.suggest(n_suggestions = n_suggestions, fix_input = {'x0' : context})
-        y   = (rec[['x0', 'x1']].values ** 2).sum(axis = 1, keepdims =True)
-        assert((rec['x0'] == context).all())
-        opt.observe(rec, y)
+    if opt.support_contextual:
+        for _ in range(2):
+            n_suggestions = 8 if opt.support_parallel_opt else 1
+            context = np.random.randint(40) - 20
+            rec = opt.suggest(n_suggestions = n_suggestions, fix_input = {'x0' : context})
+            y   = (rec[['x0', 'x1']].values ** 2).sum(axis = 1, keepdims =True)
+            assert((rec['x0'] == context).all())
+            opt.observe(rec, y)
 
 def test_bayesmark_parser():
     api_config = \

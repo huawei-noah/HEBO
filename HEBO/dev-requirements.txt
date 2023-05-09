@@ -4,3 +4,4 @@ nbsphinx
 recommonmark
 sphinx_rtd_theme
 notebook
+pytest-cov

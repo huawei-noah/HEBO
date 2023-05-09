@@ -51,7 +51,6 @@ class ToyExampleMO(Acquisition):
         return 0
 
     def eval(self, x, xe):
-        # minimize L2norm(x) s.t. L2norm(x) > 1.0
         o1 = (x**2).sum(dim = 1).view(-1, 1)
         o2 = ((x-1)**2).sum(dim = 1).view(-1, 1)
         return torch.cat([o1, o2], dim = 1)
@@ -99,3 +98,36 @@ def test_mo():
     opt = EvolutionOpt(space, acq, pop = 10)
     rec = opt.optimize()
     assert(rec.shape[0] == 10)
+
+def test_initial_suggest():
+    space = DesignSpace().parse([
+        {'name' : 'x1', 'type' : 'num', 'lb' : -3.0, 'ub' : 3.0}, 
+        {'name' : 'x2', 'type' : 'int', 'lb' : -3.0, 'ub' : 3.0}
+        ])
+    acq          = ToyExample()
+    opt          = EvolutionOpt(space, acq, pop = 10, iters = 1)
+    init_suggest = space.sample(10)
+    init_suggest.at[0, 'x1'] = 1.0
+    init_suggest.at[0, 'x2'] = 0.0
+    rec          = opt.optimize(initial_suggest = init_suggest)
+    x            = rec.values
+    obj          = (x**2).sum(axis = 1)
+    constr_v = acq.constr_v - obj
+    assert approx(1.0, abs = 1e-3) == obj
+    assert approx(0.0, abs = 1e-3) == constr_v
+    pass
+
+def test_initial_suggest_mo():
+    space = DesignSpace().parse([
+        {'name' : 'x1', 'type' : 'num', 'lb' : -3.0, 'ub' : 3.0}, 
+        {'name' : 'x2', 'type' : 'int', 'lb' : -3.0, 'ub' : 3.0}
+        ])
+    acq          = ToyExampleMO()
+    opt          = EvolutionOpt(space, acq, pop = 10, iters = 1, verbose = True)
+    init_suggest = space.sample(10)
+    init_suggest.at[0, 'x1'] = 0.371
+    init_suggest.at[0, 'x2'] = 0.0
+    rec = opt.optimize(initial_suggest = init_suggest)
+    assert approx(0.371, abs = 1e-3) == rec.iloc[0].x1
+    assert approx(0.0, abs = 1e-3) == rec.iloc[0].x2
+    pass

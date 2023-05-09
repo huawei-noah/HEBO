@@ -15,7 +15,7 @@ import torch
 import numpy as np
 
 from hebo.models.base_model import BaseModel
-from hebo.models.model_factory import get_model, get_model_class, model_dict
+from hebo.models.model_factory import get_model, get_model_class, model_dict, MultiTaskModel
 from .util import check_prediction
 
 
@@ -136,3 +136,11 @@ def test_fit_with_nan(model_name):
     with torch.no_grad():
         py, ps2 = model.predict(x, None)
         check_prediction(y, py, ps2)
+
+def test_multi_task_wrapper(model_name):
+    x  = torch.randn(10, 1)
+    xe = torch.zeros(x.shape[0], 0).long()
+    y  = x.sinc()
+    model = MultiTaskModel(1, 0, 1, base_model_name = model_name)
+    model.fit(x, xe, y)
+    py, ps2 = model.predict(x, xe)
