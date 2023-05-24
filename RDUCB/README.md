@@ -1,5 +1,5 @@
 # Are Random Decomositions all we need in High Dimensional Bayesian Optimisation
-<p float="center">
+<p align="center">
   <img src="./figures/ToyProblem.PNG" width="400" /> 
 </p>
 

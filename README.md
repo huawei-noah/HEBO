@@ -119,7 +119,7 @@ in vitro experimentation.
 
 ## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
 
-<p float="center">
+<p align="center">
   <img src="./RDUCB/figures/ToyProblem.PNG" width="400" /> 
 </p>
 
