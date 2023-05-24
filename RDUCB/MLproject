@@ -1,0 +1,36 @@
+name: HDBO
+
+conda_env: hdbo.yml
+
+entry_points:
+  main:
+    parameters:
+      param_file: {type: path, default: config/default.yml}
+    command: "LOGGING_TYPE=local CUDA_VISIBLE_DEVICES=-1 nice -1 python hdbo/main.py {param_file}"
+  start:
+    parameters:
+      param_file: {type: path}
+    command: "LOGGING_TYPE=server CUDA_VISIBLE_DEVICES=-1 python hdbo/main.py {param_file} /dev/shm"
+  stop:
+    parameters:
+      exe_hash: {type: str}
+    command: "kill `cat /tmp/mlflow-pid/{exe_hash}.pid`"
+  stop_all:
+    command: "for p in /tmp/mlflow-pid/*.pid; do kill `cat $p`; done"
+  status:
+    command: "ls /tmp/mlflow-pid"
+  test:
+    command: "mlflow run test"
+  doc:
+    command: "mlflow run doc"
+  generate:
+    command: "python hdbo/generation_script.py"
+  profile:
+    parameters:
+      param_file: {type: path, default: config/default.yml}
+      profile_file: {type: string, default: program.profile}
+    command: "LOGGING_TYPE=local python -m cProfile -o {profile_file} hdbo/main.py {param_file}"
+  view-profile:
+    parameters:
+      profile_file: {type: string, default: program.profile}
+    command: "snakeviz {profile_file}"

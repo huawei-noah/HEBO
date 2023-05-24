@@ -1,0 +1,26 @@
+algorithm_type:
+  Algorithm:
+    algorithm: Rembo
+    algorithm_random_seed: 0
+    eps: -1
+    exploration_weight: 'lambda t: 0.5 * np.log(2*t)'
+    graphSamplingNumIter: 100
+    initial_kernel_params:
+      lengthscale: 0.1
+      variance: 0.5
+    learnDependencyStructureRate: 15
+    lengthscaleNumIter: 2
+    max_eval: -4
+    noise_var: 0.1
+    param_n_iter: 16
+data_type:
+  LPSolve:
+    infinite: 1.0e+30
+    max_floor: 500.0
+    mps_filename: mtest4ma
+    problem_type: MpsLoader
+    time_limit: 5
+    # input the home directory of the LPSolve data if it is not at root
+    #home_dir:
+n_iter: 200
+n_rand: 10

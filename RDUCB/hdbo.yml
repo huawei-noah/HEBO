@@ -1,0 +1,43 @@
+name: hdbo
+channels:
+  - defaults
+dependencies:
+  - python==3.8.3
+  - pip=20
+  - glib==2.63.1 # Some machines missing glib...
+  - conda-forge::libblas=*=*mkl
+  - conda-forge::git # needed to clone HPO
+  - conda-forge::cython==0.29.19
+  - conda-forge::networkx==2.4
+  - conda-forge::matplotlib==3.2.2
+  - conda-forge::psutil==5.7.0
+  - conda-forge::h5py==2.10.0
+  - conda-forge::numpy==1.18.5
+  - conda-forge::scipy==1.4.1
+  - conda-forge::boto3==1.14.14
+  - conda-forge::lpsolve55
+  - conda-forge::gpy==1.9.9 # pip's variant is errornous
+  - conda-forge::gpyopt==1.2.6
+  - conda-forge::mlflow==1.9.1 # sometimes fails on pip, dunno why.
+  - conda-forge::scikit-learn
+  - conda-forge::cma
+  - conda-forge::celery
+  - conda-forge::pyyaml
+  - conda-forge::ruamel.yaml
+  - conda-forge::coloredlogs
+  - conda-forge::pyDOE
+  - conda-forge::imageio
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::cpuonly
+  - pip:
+    - disjoint-set==0.6.2
+    - pid==3.0.3
+    - ConfigSpace==0.4.11 # this works with glibc 2.12 which xgpa is on
+    - noisyopt
+    - git+https://github.com/eric-vader/HPOlib2.git#egg=hpolib2
+    - git+https://github.com/ksehic/LassoBench.git
+    - tensorflow==2.2.0
+#    - ./tensorflow-2.2.0-cp38-cp38-linux_x86_64.whl
+#  - cudnn=7.6.5=cuda10.1_0
+#  - cudatoolkit=10.1
