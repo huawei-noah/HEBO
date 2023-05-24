@@ -121,7 +121,7 @@ in vitro experimentation.
 
 <p float="center">
   <img src="./RDUCB/figures/Ablation_bar.png" width="400" />
-  <img src="./RDUCB/figures/ToyProblem.png" width="400" /> 
+  <img src="./RDUCB/figures/ToyProblem.PNG" width="400" /> 
 </p>
 
 Codebase associated to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
