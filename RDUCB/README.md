@@ -1,6 +1,6 @@
 # Are Random Decomositions all we need in High Dimensional Bayesian Optimisation
 <p align="center">
-  <img src="./figures/ToyProblem.PNG" width="600" /> 
+  <img src="./figures/ToyProblem.PNG" width="400" /> 
 </p>
 
 This repository accompanies an [ICML 2023 publication](https://arxiv.org/pdf/2301.12844.pdf) by Juliusz Ziomek and Haitham Bou-Ammar.
