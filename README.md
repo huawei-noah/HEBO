@@ -119,6 +119,11 @@ in vitro experimentation.
 
 ## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
 
+<p float="center">
+  <img src="./RDUCB/figures/Ablation_plot.pdf" width="400" />
+  <img src="./RDUCB/figures/Adversarial_function.pdf" width="400" /> 
+</p>
+
 Codebase associated to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
 
 ##### Abstract

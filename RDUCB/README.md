@@ -1,5 +1,8 @@
 # Are Random Decomositions all we need in High Dimensional Bayesian Optimisation
-
+<p float="center">
+  <img src="./RDUCB/figures/Ablation_plot.pdf" width="400" />
+  <img src="./RDUCB/figures/Adversarial_function.pdf" width="400" /> 
+</p>
 
 This repository accompanies a [ICML 2023 publication](https://arxiv.org/pdf/2301.12844.pdf) by Juliusz Ziomek and Haitham Bou-Ammar.
 The repository is largely based on code from [High-Dimensional Bayesian Optimization via Tree-Structured Additive Models ](https://github.com/eric-vader/HD-BO-Additive-Models), as such the code in this repository is released under the original MIT license (in the LICENSE file) giving copyright to Eric Han, except for the parts that have been added or substantially modified, which are released under MIT licence giving copyrights to Huawei Technologies Co., Ltd. Such parts are clearly marked in code by comments.
@@ -8,25 +11,13 @@ The repository is largely based on code from [High-Dimensional Bayesian Optimiza
 
 1. The code here is largely derived from the [High-Dimensional Bayesian Optimization via Tree-Structured Additive Models ](https://github.com/eric-vader/HD-BO-Additive-Models) repository by Eric Han, Ishank Arora and Jonathan Scarlett.
 2. The code in this repository is derived from the code base from [High-Dimensional Bayesian Optimization via Additive Models with Overlapping Groups](https://arxiv.org/pdf/1802.07028.pdf), supplied by Paul Rolland.
-3. The NAS-Bench-101 datasets included in `data/fcnet` is taken from [nas_benchmarks](https://github.com/automl/nas_benchmarks). The paper accompanying the code is [NAS-Bench-101: Towards Reproducible Neural Architecture Search](https://arxiv.org/pdf/1902.09635.pdf).
-4. The lpsolve datasets included in `data/mps` is taken from the benchmark dataset in [MIPLIB 2017](https://miplib.zib.de/download.html). 
+3. The code included in hdbo/febo is taken from [LineBO](https://github.com/kirschnj/LineBO). The paper accompanying the code is [Adaptive and Safe Bayesian Optimization in High Dimensions via One-Dimensional Subspaces](https://arxiv.org/abs/1902.03229).
+4. The NAS-Bench-101 datasets included in `data/fcnet` is taken from [nas_benchmarks](https://github.com/automl/nas_benchmarks). The paper accompanying the code is [NAS-Bench-101: Towards Reproducible Neural Architecture Search](https://arxiv.org/pdf/1902.09635.pdf).
+5. The lpsolve datasets included in `data/mps` is taken from the benchmark dataset in [MIPLIB 2017](https://miplib.zib.de/download.html). 
 
-## Repository Structure
-
-The code repository is structured as follows:
-
-* `data`: Folder containing the data files from NAS-Bench-101 and lpsolve.
-* `hdbo`: Folder containing our code
-* `config`: Folder containing some sample configurations of the experiments
-* `MLproject`: MLflow project file, we are using mlflow to help organize our experiments
-* `README.md`: This readme
-* `hdbo.yml`: Conda file that is used internally by the MLflow project
-
-## Setup
+## Installation
 
 We implemented all algorithms in Python 3.8.3. 
-The Python environments are managed using Conda, and experiments are managed using [MLflow](https://www.mlflow.org), which allows convenient management of experiments.
-We have included code from data from external sources in our repository for the ease of setup. 
 
 Minimum System requirements:
 
