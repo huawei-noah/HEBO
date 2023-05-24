@@ -2,6 +2,7 @@
 
 
 This repository accompanies a [ICML 2023 publication](https://arxiv.org/pdf/2301.12844.pdf) by Juliusz Ziomek and Haitham Bou-Ammar.
+The repository is largely based on code from [High-Dimensional Bayesian Optimization via Tree-Structured Additive Models ](https://github.com/eric-vader/HD-BO-Additive-Models), as such the code in this repository is released under the original MIT license (in the LICENSE file) giving copyright to Eric Han, except for the parts that have been added or substantially modified, which are released under MIT licence giving copyrights to Huawei Technologies Co., Ltd. Such parts are clearly marked in code by comments.
 
 ## Acknowledgements
 
@@ -35,9 +36,12 @@ Minimum System requirements:
 Prepare your environment:
 
 1. If you don't have it already, [Install Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-2. (Optional) Run `bash data/setup.sh` to download data from [NAS Benchmarks](https://github.com/automl/nas_benchmarks) and  into your home directory. You may skip this step if you are not running lpsolve and NAS-Bench-101 datasets.
-3. [Install MLflow](https://mlflow.org/) either on your system or in the base environment of Conda - `pip install mlflow`
-4. Build and test environment by using the command `mlflow run .` (this may take a while).
+2. [Install MLflow](https://mlflow.org/) either on your system or in the base environment of Conda - `pip install mlflow`
+3. Build and test environment by using the command `mlflow run .` (this may take a while).
+
+Optional steps:
+1. (Optional) Run `bash data/setup.sh` to download data from [NAS Benchmarks](https://github.com/automl/nas_benchmarks) and  into your home directory. You may skip this step if you are not running lpsolve and NAS-Bench-101 datasets.
+2. (Optional) Run `pip install -U pandas matplotlib seaborn` in your base environment for plotting the results.  You may skip this step if you do not need the plotting script.
 
 ## Running experiments from Paper
 
@@ -50,9 +54,9 @@ mlflow run . -P param_file=config/LassoBench/rducb.yml
 All the parameters of the run should be specified in the `.yml` file. However, to facilitate running batch jobs, one can include command line arguments to override the seed or subproblem. For example:
 
 ```
-mlflow run . -P param_file=config/LassoBench/rducb.yml -P seed=1 -P sub_benchmark="pick_data:leukemia"
+mlflow run . -P param_file=config/LassoBench/rducb.yml -P seed=1 -P sub_benchmark="pick_data:diabetes"
 ```
-will run the experiment as specified in `config/LassoBench/rducb.yml` but will overwrite the seed to 1 and pick_data to leukemia. See an example of workflow in `example.sh`
+will run the experiment as specified in `config/LassoBench/rducb.yml` but will overwrite the seed to 1 and pick_data to diabetes. See an example of workflow in `example.sh`
 
 
 ## Visualising the results

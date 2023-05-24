@@ -77,6 +77,30 @@ def debug_graph(G):
     
 
 def get_random_graph(size, connection_draws=1):
+    """
+    MIT License
+
+    Copyright (c) 2023  Huawei Technologies Co., Ltd
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    """
 
     graph = nx.empty_graph(size)
     disjoint_set = DisjointSet()
@@ -96,23 +120,3 @@ def get_random_graph(size, connection_draws=1):
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    for i in range(100):
-        test_graph = get_random_graph(20, 5)
-        nx.draw_networkx(test_graph)
-        try:
-            nx.find_cycle(test_graph)
-            has_cycles = True
-        except nx.exception.NetworkXNoCycle:
-            has_cycles = False
-        print(i, test_graph.edges())
-        if has_cycles:
-            pass
-        else:
-            print('No cycles')
-
-        plt.savefig(f'test_graph{i}')
-        plt.clf()

@@ -36,7 +36,7 @@ dependencies:
     - ConfigSpace==0.4.11 # this works with glibc 2.12 which xgpa is on
     - noisyopt
     - git+https://github.com/eric-vader/HPOlib2.git#egg=hpolib2
-    #- git+https://github.com/ksehic/LassoBench.git
+    - git+https://github.com/ksehic/LassoBench.git
     - tensorflow==2.2.0
 #    - ./tensorflow-2.2.0-cp38-cp38-linux_x86_64.whl
 #  - cudnn=7.6.5=cuda10.1_0

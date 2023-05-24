@@ -2,7 +2,7 @@
 mlflow run . -P param_file=config/examples/example1_random.yml -P seed=0
 mlflow run . -P param_file=config/examples/example1_random.yml -P seed=1
 
-# Run two seeds of RDUCBon example1 problem (Rosenbrock)
+# Run two seeds of RDUCB on example1 problem (Rosenbrock)
 mlflow run . -P param_file=config/examples/example1_rducb.yml -P seed=0
 mlflow run . -P param_file=config/examples/example1_rducb.yml -P seed=1
 

@@ -14,18 +14,11 @@ algorithm_type:
     noise_var: 0.01
     param_n_iter: 16
 data_type:
-  Synthetic:
-    data_random_seed: 3
-    dimension: 15
-    fn_noise_var: 0.0225
-    graph_type: StarGraph
-    grid_params:
-      domain_lower: 0.0
-      domain_upper: 1.0
-      grid_size: 150
-    kernel_params:
-      lengthscale: 0.2
-      variance: 1.0
-    
-n_iter: 1000
+  Hpolib:
+    aug_dimension: 14
+    data_random_seed: 2
+    fn_noise_var: 0
+    grid_size: 150
+    hpo_fn: Hartmann6Aug
+n_iter: 10
 n_rand: 10
