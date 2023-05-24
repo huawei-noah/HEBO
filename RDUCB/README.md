@@ -1,10 +1,11 @@
 # Are Random Decomositions all we need in High Dimensional Bayesian Optimisation
-<p align="center">
-  <img src="./figures/ToyProblem.PNG" width="400" /> 
-</p>
 
 This repository accompanies an [ICML 2023 publication](https://arxiv.org/pdf/2301.12844.pdf) by Juliusz Ziomek and Haitham Bou-Ammar.
 The repository is largely based on code from [High-Dimensional Bayesian Optimization via Tree-Structured Additive Models ](https://github.com/eric-vader/HD-BO-Additive-Models), as such the code in this repository is released under the original MIT license (in the LICENSE file) giving copyright to Eric Han, except for the parts that have been added or substantially modified, which are released under MIT licence giving copyrights to Huawei Technologies Co., Ltd. Such parts are clearly marked in code by comments.
+
+<p align="center">
+  <img src="./figures/ToyProblem.PNG" width="400" /> 
+</p>
 
 ## Acknowledgements
 
