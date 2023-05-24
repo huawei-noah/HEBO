@@ -1,7 +1,7 @@
 # Are Random Decomositions all we need in High Dimensional Bayesian Optimisation
 <p float="center">
-  <img src="./RDUCB/figures/Ablation_plot.pdf" width="400" />
-  <img src="./RDUCB/figures/Adversarial_function.pdf" width="400" /> 
+  <img src="./RDUCB/figures/Ablation_plot.png" width="400" />
+  <img src="./RDUCB/figures/Adversarial_function.png" width="400" /> 
 </p>
 
 This repository accompanies a [ICML 2023 publication](https://arxiv.org/pdf/2301.12844.pdf) by Juliusz Ziomek and Haitham Bou-Ammar.
