@@ -9,6 +9,7 @@ Huawei, Noah's Ark Lab.
   - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
+  - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
 - Reinforcement Learning Research
   - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
@@ -116,6 +117,27 @@ baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 3
 domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for 
 in vitro experimentation.
 
+## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
+
+Codebase associated to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
+
+##### Abstract
+
+Learning decompositions of expensive-toevaluate black-box functions promises to scale Bayesian optimisation (BO) to high-dimensional
+problems. However, the success of these techniques depends on finding proper decompositions
+that accurately represent the black-box. While previous works learn those decompositions based
+on data, we investigate data-independent decomposition sampling rules in this paper. We find
+that data-driven learners of decompositions can be easily misled towards local decompositions
+that do not hold globally across the search space. Then, we formally show that a random tree-based
+decomposition sampler exhibits favourable theoretical guarantees that effectively trade
+off maximal information gain and functional mismatch between the actual black-box and its
+surrogate as provided by the decomposition. Those results motivate the development of the
+random decomposition upper-confidence bound algorithm (RDUCB) that is straightforward
+to implement - (almost) plug-and-play - and, surprisingly, yields significant empirical gains
+compared to the previous state-of-the-art on a comprehensive set of benchmarks. We also
+confirm the plug-and-play nature of our modelling component by integrating our method with
+HEBO, showing improved practical gains in the highest dimensional tasks from Bayesmark.
+
 # Reinforcement Learning Research
 
 ## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
@@ -173,7 +195,7 @@ results show that the proposed approach achieves state-of-the-art performance on
 
 ## Codebase Contributors 
 
-<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo.
+<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek.
 
 <strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
   
