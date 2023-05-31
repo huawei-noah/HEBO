@@ -274,7 +274,7 @@ class Optimizer:
                 self.casmopolitan._adjust_length(yy)
 
 
-        self.casmopolitan.n_evals += self.batch_size
+        self.casmopolitan.n_evals += len(X)
         self.casmopolitan._X = np.vstack((self.casmopolitan._X, deepcopy(XX)))
         self.casmopolitan._fX = np.vstack((self.casmopolitan._fX, deepcopy(yy.reshape(-1, 1))))
         self.casmopolitan.X = np.vstack((self.casmopolitan.X, deepcopy(XX)))
