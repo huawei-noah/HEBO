@@ -270,11 +270,10 @@ class Optimizer:
         #     XX = self.warp_discrete(XX, )
 
         if self.kwargs['search_strategy'] in ['local', 'batch_local']:
-            if len(self.casmopolitan._fX) >= self.casmopolitan.n_init:
+            if len(self.casmopolitan._fX) >= self.casmopolitan.n_init > 0:
                 self.casmopolitan._adjust_length(yy)
 
-
-        self.casmopolitan.n_evals += len(X)
+        self.casmopolitan.n_evals += len(y)
         self.casmopolitan._X = np.vstack((self.casmopolitan._X, deepcopy(XX)))
         self.casmopolitan._fX = np.vstack((self.casmopolitan._fX, deepcopy(yy.reshape(-1, 1))))
         self.casmopolitan.X = np.vstack((self.casmopolitan.X, deepcopy(XX)))

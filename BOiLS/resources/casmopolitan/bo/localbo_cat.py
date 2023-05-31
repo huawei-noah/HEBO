@@ -173,7 +173,6 @@ class CASMOPOLITANCat:
             self.length_discrete = int(min(self.length_discrete * self.tr_multiplier, self.length_max_discrete))
             # self.length = min(self.length * 1.5, self.length_max)
             self.succcount = 0
-            print("expand", self.length, self.length_discrete)
         elif self.failcount == self.failtol:  # Shrink trust region
             # self.length = max([self.length_min, self.length / 2.0])
             self.failcount = 0

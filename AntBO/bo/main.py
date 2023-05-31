@@ -21,6 +21,15 @@ import argparse
 SEARCH_STRATEGIES: Set[str] = {'glocal', 'local', 'local-no-hamming', 'batch_local', 'global'}
 
 
+def get_x_y_from_csv(csv_path):
+    data = pd.read_csv(csv_path)
+    x = data["x"].values
+    from bo.bo_utils import AA_to_idx
+    x = np.array([[AA_to_idx[cat] for cat in xx] for xx in x])
+    y = torch.tensor(data["y"].values).reshape(-1, 1)
+    return x, y
+
+
 class BOExperiments:
     def __init__(self,
                  config,
@@ -138,7 +147,7 @@ class BOExperiments:
         if os.path.exists(res_path):
             self.res = pd.read_csv(res_path,
                                    usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
-            self.start_itern = len(self.res) - self.res['Index'].isna().sum()
+            self.start_itern = len(self.res) - self.res['Index'].isna().sum() // self.config['batch_size']
         return optim
 
     def save(self, optim):
@@ -198,6 +207,11 @@ class BOExperiments:
                               **kwargs
                               )
 
+            if self.config.get("pre_evals") is not None:
+                pre_eval_x, pre_eval_y = get_x_y_from_csv(self.config.get("pre_evals"))
+                optim.observe(pre_eval_x, pre_eval_y)
+                print(f"Observed {len(pre_eval_y)} already evaluated points")
+
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()
             x_next = optim.suggest(self.config['batch_size'])
@@ -211,7 +225,9 @@ class BOExperiments:
             end = time.time()
             self.results(optim, x_next, itern, rtime=end - start)
             if itern % 5 == 0:
-                self.log(f"Iter {itern + 1} / {self.config['max_iters']} in {end - start:.2f} s")
+                self.log(f"Iter {itern + 1} / {self.config['max_iters']} in {end - start:.2f} s "
+                         f"- {''.join(['ACDEFGHIKLMNPQRSTVWY'[int(x)] for x in x_next[0]])}"
+                         f" ({y_next[0].item():.2f})")
             self.save(optim)
 
     def log(self, message: str, end: Optional[str] = None):
