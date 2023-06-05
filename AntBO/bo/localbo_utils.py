@@ -51,7 +51,7 @@ def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None)
 
 def check_cdr_constraints(x) -> bool:
     constr = check_cdr_constraints_all(x)
-    return np.all(constr)
+    return not np.any(constr)
 
 
 def onehot2ordinal(x, categorical_dims):
