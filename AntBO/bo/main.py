@@ -24,7 +24,7 @@ SEARCH_STRATEGIES: Set[str] = {'glocal', 'local', 'local-no-hamming', 'batch_loc
 def get_x_y_from_csv(csv_path):
     data = pd.read_csv(csv_path)
     x = data["x"].values
-    from bo.bo_utils import AA_to_idx
+    from bo.localbo_utils import AA_to_idx
     x = np.array([[AA_to_idx[cat] for cat in xx] for xx in x])
     y = torch.tensor(data["y"].values).reshape(-1, 1)
     return x, y

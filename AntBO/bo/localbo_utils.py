@@ -4,9 +4,14 @@ from collections import Callable
 import random
 from copy import deepcopy
 
-from bo.bo_utils import check_cdr_constraints, idx_to_AA, N_glycosylation_pattern
 from bo.kernels import *
 import re
+
+COUNT_AA = 5
+AA = 'ACDEFGHIKLMNPQRSTVWY'
+AA_to_idx = {aa: i for i, aa in enumerate(AA)}
+idx_to_AA = {value: key for key, value in AA_to_idx.items()}
+N_glycosylation_pattern = 'N[^P][ST][^P]'
 
 
 # from Bio.SeqUtils.ProtParam import ProteinAnalysis
@@ -42,6 +47,11 @@ def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None)
         return int(not (c1)), int(not (c2)), int(not (c3)), int(not (c4))
 
     return int(not (c1)), int(not (c2)), int(not (c3))
+
+
+def check_cdr_constraints(x) -> bool:
+    constr = check_cdr_constraints_all(x)
+    return np.all(constr)
 
 
 def onehot2ordinal(x, categorical_dims):

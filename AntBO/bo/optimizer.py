@@ -5,7 +5,7 @@ import scipy.stats as ss
 from bo.localbo_cat import CASMOPOLITANCat
 from bo.localbo_utils import from_unit_cube, latin_hypercube, to_unit_cube, ordinal2onehot, onehot2ordinal,\
     random_sample_within_discrete_tr_ordinal
-from bo.bo_utils import check_cdr_constraints
+from bo.localbo_utils import check_cdr_constraints
 import torch
 import logging
 from gpytorch.utils.errors import NotPSDError, NanError
