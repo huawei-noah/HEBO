@@ -1,6 +1,6 @@
 import numpy as np
 from bo.base import TestFunction
-from task.tools import Absolut
+from task.tools import Absolut, Manual
 import torch
 
 class BOTask(TestFunction):
@@ -26,8 +26,10 @@ class BOTask(TestFunction):
         self.categorical_dims = np.arange(self.dim)
         if self.bbox['tool'] == 'Absolut':
             self.fbox = Absolut(self.bbox)
+        elif self.bbox['tool'] == 'manual':
+            self.fbox = Manual(self.bbox)
         else:
-            assert 0,f"{self.config['tool']} Not Implemented"
+            assert 0,f"{self.bbox['tool']} Not Implemented"
 
 
     def compute(self, x):

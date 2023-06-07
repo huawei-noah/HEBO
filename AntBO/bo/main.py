@@ -209,6 +209,10 @@ class BOExperiments:
 
             if self.config.get("pre_evals") is not None:
                 pre_eval_x, pre_eval_y = get_x_y_from_csv(self.config.get("pre_evals"))
+                optim.suggest(len(pre_eval_x)) # exhaust init random suggestions
+                optim.batch_size = self.config['batch_size']
+                optim.casmopolitan.batch_size = optim.batch_size
+                optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
                 optim.observe(pre_eval_x, pre_eval_y)
                 print(f"Observed {len(pre_eval_y)} already evaluated points")
 

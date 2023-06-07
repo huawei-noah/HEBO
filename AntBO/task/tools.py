@@ -1,8 +1,8 @@
-import os
-
 # import pymol
 import __main__
+import os
 import subprocess
+
 import numpy as np
 import pandas as pd
 
@@ -183,6 +183,48 @@ class PyMolVisualisation:
         # """)
 
         cmd.quit()
+
+
+class Manual(BaseTool):
+    def __init__(self, config):
+        BaseTool.__init__(self)
+        '''
+        config: dictionary of parameters for BO
+            antigen: PDB ID of antigen
+            process: Number of CPU processes
+            expid: experiment ID
+        '''
+        for key in ['antigen']:
+            assert key in config, f"\"{key}\" is not defined in config"
+        self.config = config
+        self.antigen = self.config["antigen"]
+
+    def Energy(self, x):
+        '''
+        x: categorical vector (num_Seq x Length)
+        '''
+        x = x.astype('int32')
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
+
+        print("Suggested sequences:")
+        sequences = []
+        for i, seq in enumerate(x):
+            seq2char = ''.join(self.idx_to_AA[aa] for aa in seq)
+            sequences.append(seq2char)
+            print(seq2char)
+
+        energies = []
+        for i in range(len(sequences)):
+            energy1 = float(input(f"[{self.antigen}] Write energy for {sequences[i]}:"))
+            energy2 = float(input(f"[{self.antigen}] Confirm energy for {sequences[i]}:"))
+            while energy1 != energy2:
+                print("Mismatch, pleaser enter energies again")
+                energy1 = float(input(f"[{self.antigen}] Write energy for {sequences[i]}:"))
+                energy2 = float(input(f"[{self.antigen}] Confirm energy for {sequences[i]}:"))
+            energies.append(energy1)
+
+        return np.array(energies), sequences
 
 
 ###########################################
