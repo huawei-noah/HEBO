@@ -1,5 +1,6 @@
 # NAP (Neural Acquisition Process)
-
+This repository is the official implementation of [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+The code provided in this repo allows the user to train, validate and test NAP on `HPO-B and Antigen experiments.
 ## Setup
 Setup a virtualenv/conda/miniconda environment with at least python3.8 and use the requirements.txt to install the dependencies. 
 ```commandline
@@ -9,15 +10,6 @@ python3.8 -m venv nap_env
 . nap_env/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-```
- 
-## Download the datasets
-The HPO-Bench data are already present in this .zip to run the small example below.
-If you need to download the data for the HPO-B, EDA, MIP and Antigen experiments, you need to download them from this anonymized repository https://osf.io/kbmtu/?view_only=c58ae60d3422469787f83218c34939d8.
-```commandline
-wget -O NAP_data.zip "https://osf.io/download/u7p8m/?view_only=c58ae60d3422469787f83218c34939d8"
-unzip NAP_data.zip
-#Train GPs on those datasets with the given scripts
 ```
 
 ## Training
@@ -29,10 +21,28 @@ ulimit -Sn 10000
 ```
 
 ## Testing
-Adjust the paths inside scripts/nap/test_nap_hpo.py and run the script.
+Adjust the paths inside `scripts/nap/test_nap_hpo.py` and run the script.
 ```commandline
 PYTHONPATH=. python scripts/nap/test_nap_hpo.py
 ```
+
+## Results
+![regret-all](./figures/regret-all.png)
+
+## Cite us
+```
+@misc{maraval2023endtoend,
+      title={End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes}, 
+      author={Alexandre Maraval and Matthieu Zimmer and Antoine Grosnit and Haitham Bou Ammar},
+      year={2023},
+      eprint={2305.15930},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
+
+## Contributors
+Alexandre Max Maraval, Matthieu Zimmer, Antoine Grosnit, Haitham Bou Ammar
 
 ## License
 
