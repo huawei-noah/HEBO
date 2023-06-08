@@ -1,0 +1,12 @@
+tensorboard
+torch
+namedlist
+gym==0.25
+scipy
+sobol-seq
+gpy
+matplotlib
+botorch==0.8.0
+numpy==1.22.0
+plotext
+pandas
