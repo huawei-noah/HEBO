@@ -10,6 +10,7 @@ Huawei, Noah's Ark Lab.
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
   - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
+  - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](/.NAP)
 - Reinforcement Learning Research
   - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
@@ -142,6 +143,11 @@ compared to the previous state-of-the-art on a comprehensive set of benchmarks. 
 confirm the plug-and-play nature of our modelling component by integrating our method with
 HEBO, showing improved practical gains in the highest dimensional tasks from Bayesmark.
 
+## [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP/)
+![regret-all](./NAP/figures/regret-all.png)
+Codebase associated to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+##### Abstract
+Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody design, and logic synthesis for electronic design automation.
 # Reinforcement Learning Research
 
 ## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
