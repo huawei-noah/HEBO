@@ -10,7 +10,7 @@ Huawei, Noah's Ark Lab.
   - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
   - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
-  - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](/.NAP)
+  - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
 - Reinforcement Learning Research
   - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
