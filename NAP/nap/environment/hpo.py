@@ -1,7 +1,11 @@
-# Copyright (c) 2023
-# Copyright holder of the paper "End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes".
-# Submitted to NeurIPS 2023 for review.
-# All rights reserved.
+# Copyright (C) 2023. Huawei Technologies Co., Ltd. All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the MIT license.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the MIT License for more details.
 
 
 import pickle

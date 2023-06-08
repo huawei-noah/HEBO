@@ -1,3 +1,11 @@
+# Copyright (C) 2023. Huawei Technologies Co., Ltd. All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the MIT license.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the MIT License for more details.
 
 import os
 import pickle
@@ -51,7 +59,7 @@ if __name__ == '__main__':
                 "min_regret": 1e-20,
                 "models": trained_gps_val,
                 "cat_dims": list(range(11)),
-                "cat_alphabet": {c: list(range(22) for c in list(range(11))},
+                "cat_alphabet": {c: list(range(22)) for c in list(range(11))},
                 "cat_alphabet_map": None,
                 "cont_dims": [],
                 "perturb_training_inputs": False,
