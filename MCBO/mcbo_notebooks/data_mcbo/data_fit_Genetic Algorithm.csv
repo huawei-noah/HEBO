@@ -1,0 +1,601 @@
+,Task,Model,Seed,Case,Num observe,avg_ll
+0,RNA Inverse Folding,GP (TO),42,train,150,-1.6735256
+1,RNA Inverse Folding,GP (TO),43,train,150,-1.836138
+2,RNA Inverse Folding,GP (TO),44,train,150,-1.8072485000000007
+3,RNA Inverse Folding,GP (TO),45,train,150,-2.8728437000000002
+4,RNA Inverse Folding,GP (TO),46,train,150,-1.8963361
+5,RNA Inverse Folding,GP (TO),47,train,150,-2.0135620000000003
+6,RNA Inverse Folding,GP (TO),48,train,150,-2.2099341999999993
+7,RNA Inverse Folding,GP (TO),49,train,150,-2.11513
+8,RNA Inverse Folding,GP (TO),50,train,150,-2.3819221999999995
+9,RNA Inverse Folding,GP (TO),51,train,150,-3.0720496000000006
+10,RNA Inverse Folding,GP (TO),42,test,150,-2.7452499977520484
+11,RNA Inverse Folding,GP (TO),43,test,150,-2.5803329224610625
+12,RNA Inverse Folding,GP (TO),44,test,150,-2.4790557236331794
+13,RNA Inverse Folding,GP (TO),45,test,150,-3.3091032804024225
+14,RNA Inverse Folding,GP (TO),46,test,150,-2.413461444725693
+15,RNA Inverse Folding,GP (TO),47,test,150,-2.762350441556755
+16,RNA Inverse Folding,GP (TO),48,test,150,-3.7420297237010725
+17,RNA Inverse Folding,GP (TO),49,test,150,-2.827703437110406
+18,RNA Inverse Folding,GP (TO),50,test,150,-2.920246024245694
+19,RNA Inverse Folding,GP (TO),51,test,150,-3.708747736765414
+20,RNA Inverse Folding,GP (O),42,train,150,-2.0137815
+21,RNA Inverse Folding,GP (O),43,train,150,-3.2119616999999994
+22,RNA Inverse Folding,GP (O),44,train,150,-2.0899625000000004
+23,RNA Inverse Folding,GP (O),45,train,150,-3.005681
+24,RNA Inverse Folding,GP (O),46,train,150,-2.2512019999999997
+25,RNA Inverse Folding,GP (O),47,train,150,-2.3102570000000004
+26,RNA Inverse Folding,GP (O),48,train,150,-2.863964
+27,RNA Inverse Folding,GP (O),49,train,150,-2.8375688000000006
+28,RNA Inverse Folding,GP (O),50,train,150,-2.7105965999999997
+29,RNA Inverse Folding,GP (O),51,train,150,-3.603076999999999
+30,RNA Inverse Folding,GP (O),42,test,150,-3.1884980571219703
+31,RNA Inverse Folding,GP (O),43,test,150,-2.656592036994229
+32,RNA Inverse Folding,GP (O),44,test,150,-2.5699912609573534
+33,RNA Inverse Folding,GP (O),45,test,150,-3.151327049473345
+34,RNA Inverse Folding,GP (O),46,test,150,-2.682361353140734
+35,RNA Inverse Folding,GP (O),47,test,150,-2.787217128804619
+36,RNA Inverse Folding,GP (O),48,test,150,-3.37957119620169
+37,RNA Inverse Folding,GP (O),49,test,150,-2.8901725736116557
+38,RNA Inverse Folding,GP (O),50,test,150,-2.8921066848672363
+39,RNA Inverse Folding,GP (O),51,test,150,-3.560391626520362
+40,RNA Inverse Folding,GP (Diffusion),42,train,150,-12.490761
+41,RNA Inverse Folding,GP (Diffusion),43,train,150,4.5432816
+42,RNA Inverse Folding,GP (Diffusion),44,train,150,2.4310355000000006
+43,RNA Inverse Folding,GP (Diffusion),45,train,150,4.202550999999999
+44,RNA Inverse Folding,GP (Diffusion),46,train,150,3.547188300000002
+45,RNA Inverse Folding,GP (Diffusion),47,train,150,4.262176
+46,RNA Inverse Folding,GP (Diffusion),48,train,150,4.163259499999999
+47,RNA Inverse Folding,GP (Diffusion),49,train,150,2.1297455000000003
+48,RNA Inverse Folding,GP (Diffusion),50,train,150,4.096156999999999
+49,RNA Inverse Folding,GP (Diffusion),51,train,150,4.069371699999998
+50,RNA Inverse Folding,GP (Diffusion),42,test,150,-33.69338431293036
+51,RNA Inverse Folding,GP (Diffusion),43,test,150,-8.95127792791656
+52,RNA Inverse Folding,GP (Diffusion),44,test,150,-7.2414462512237
+53,RNA Inverse Folding,GP (Diffusion),45,test,150,-5.864919600037868
+54,RNA Inverse Folding,GP (Diffusion),46,test,150,-8.16932912852762
+55,RNA Inverse Folding,GP (Diffusion),47,test,150,-31.8121824967775
+56,RNA Inverse Folding,GP (Diffusion),48,test,150,-41.914188071263816
+57,RNA Inverse Folding,GP (Diffusion),49,test,150,-7.5163784286157105
+58,RNA Inverse Folding,GP (Diffusion),50,test,150,-5.660869322675602
+59,RNA Inverse Folding,GP (Diffusion),51,test,150,-8.54873395267579
+60,RNA Inverse Folding,GP (HED-mat52),42,train,150,-1.275293
+61,RNA Inverse Folding,GP (HED-mat52),43,train,150,-1.4373585
+62,RNA Inverse Folding,GP (HED-mat52),44,train,150,-1.5791401999999997
+63,RNA Inverse Folding,GP (HED-mat52),45,train,150,-2.0616297999999995
+64,RNA Inverse Folding,GP (HED-mat52),46,train,150,-1.7113749
+65,RNA Inverse Folding,GP (HED-mat52),47,train,150,-1.7283355000000002
+66,RNA Inverse Folding,GP (HED-mat52),48,train,150,-1.9402909000000008
+67,RNA Inverse Folding,GP (HED-mat52),49,train,150,-2.0105650000000006
+68,RNA Inverse Folding,GP (HED-mat52),50,train,150,-2.0419722
+69,RNA Inverse Folding,GP (HED-mat52),51,train,150,-2.273606300000001
+70,RNA Inverse Folding,GP (HED-mat52),42,test,150,-2.8416813269492085
+71,RNA Inverse Folding,GP (HED-mat52),43,test,150,-2.691922310619431
+72,RNA Inverse Folding,GP (HED-mat52),44,test,150,-2.4917081359669173
+73,RNA Inverse Folding,GP (HED-mat52),45,test,150,-3.4597147263469936
+74,RNA Inverse Folding,GP (HED-mat52),46,test,150,-2.497721499529658
+75,RNA Inverse Folding,GP (HED-mat52),47,test,150,-3.212264510719612
+76,RNA Inverse Folding,GP (HED-mat52),48,test,150,-3.74909931444217
+77,RNA Inverse Folding,GP (HED-mat52),49,test,150,-3.15409831492259
+78,RNA Inverse Folding,GP (HED-mat52),50,test,150,-3.2181013827391936
+79,RNA Inverse Folding,GP (HED-mat52),51,test,150,-3.4563619451380054
+80,RNA Inverse Folding,GP (SSK),42,train,150,-2.682042599999999
+81,RNA Inverse Folding,GP (SSK),43,train,150,-2.7544177000000007
+82,RNA Inverse Folding,GP (SSK),44,train,150,-2.1636121
+83,RNA Inverse Folding,GP (SSK),45,train,150,-3.4446870000000005
+84,RNA Inverse Folding,GP (SSK),46,train,150,-2.4386333999999996
+85,RNA Inverse Folding,GP (SSK),47,train,150,-2.9379929999999996
+86,RNA Inverse Folding,GP (SSK),48,train,150,-2.4979094999999996
+87,RNA Inverse Folding,GP (SSK),49,train,150,-3.3988662
+88,RNA Inverse Folding,GP (SSK),50,train,150,-2.3089761999999996
+89,RNA Inverse Folding,GP (SSK),51,train,150,-3.8699265
+90,RNA Inverse Folding,GP (SSK),42,test,150,-2.85789151766121
+91,RNA Inverse Folding,GP (SSK),43,test,150,-2.6347290345555923
+92,RNA Inverse Folding,GP (SSK),44,test,150,-2.573655169852078
+93,RNA Inverse Folding,GP (SSK),45,test,150,-2.8407568028984933
+94,RNA Inverse Folding,GP (SSK),46,test,150,-2.818689203233218
+95,RNA Inverse Folding,GP (SSK),47,test,150,-2.6461331659208382
+96,RNA Inverse Folding,GP (SSK),48,test,150,-3.1568475918585244
+97,RNA Inverse Folding,GP (SSK),49,test,150,-2.879238176102031
+98,RNA Inverse Folding,GP (SSK),50,test,150,-2.7464918122345243
+99,RNA Inverse Folding,GP (SSK),51,test,150,-3.3471570055079995
+100,Ackley Function,GP (TO),42,train,150,1.337186
+101,Ackley Function,GP (TO),43,train,150,0.9384908699999998
+102,Ackley Function,GP (TO),44,train,150,0.35334623000000004
+103,Ackley Function,GP (TO),45,train,150,0.022143363999999995
+104,Ackley Function,GP (TO),46,train,150,-0.04332440999999999
+105,Ackley Function,GP (TO),47,train,150,1.2905228999999998
+106,Ackley Function,GP (TO),48,train,150,1.0578268000000002
+107,Ackley Function,GP (TO),49,train,150,0.3862856599999999
+108,Ackley Function,GP (TO),50,train,150,0.10331440000000003
+109,Ackley Function,GP (TO),51,train,150,-0.31624490000000005
+110,Ackley Function,GP (TO),42,test,150,0.22939587830394553
+111,Ackley Function,GP (TO),43,test,150,-0.7836747494578907
+112,Ackley Function,GP (TO),44,test,150,-0.11095717968907094
+113,Ackley Function,GP (TO),45,test,150,-0.5819597728695222
+114,Ackley Function,GP (TO),46,test,150,-1.267671554482333
+115,Ackley Function,GP (TO),47,test,150,-0.42284351248822216
+116,Ackley Function,GP (TO),48,test,150,-0.12592347412865781
+117,Ackley Function,GP (TO),49,test,150,-0.7420889578109232
+118,Ackley Function,GP (TO),50,test,150,-0.7611969799009202
+119,Ackley Function,GP (TO),51,test,150,-0.9305273774321173
+120,Ackley Function,GP (O),42,train,150,1.3208812000000003
+121,Ackley Function,GP (O),43,train,150,0.8493591499999998
+122,Ackley Function,GP (O),44,train,150,0.30777454
+123,Ackley Function,GP (O),45,train,150,0.012712240000000001
+124,Ackley Function,GP (O),46,train,150,-0.08657806999999997
+125,Ackley Function,GP (O),47,train,150,1.3868559999999999
+126,Ackley Function,GP (O),48,train,150,0.9646733000000001
+127,Ackley Function,GP (O),49,train,150,0.39416945000000003
+128,Ackley Function,GP (O),50,train,150,-0.019945085
+129,Ackley Function,GP (O),51,train,150,-0.39753865999999993
+130,Ackley Function,GP (O),42,test,150,0.26707545002940525
+131,Ackley Function,GP (O),43,test,150,-0.944343619701908
+132,Ackley Function,GP (O),44,test,150,-0.145239603343703
+133,Ackley Function,GP (O),45,test,150,-0.4727286748604059
+134,Ackley Function,GP (O),46,test,150,-1.2027960575136385
+135,Ackley Function,GP (O),47,test,150,-0.12928916652659683
+136,Ackley Function,GP (O),48,test,150,-0.033078444024600404
+137,Ackley Function,GP (O),49,test,150,-0.9027044616326728
+138,Ackley Function,GP (O),50,test,150,-0.7851751067495104
+139,Ackley Function,GP (O),51,test,150,-1.0278344095902447
+140,Ackley Function,GP (Diffusion),42,train,150,-82.47129000000001
+141,Ackley Function,GP (Diffusion),43,train,150,5.979530300000001
+142,Ackley Function,GP (Diffusion),44,train,150,2.9445933999999996
+143,Ackley Function,GP (Diffusion),45,train,150,-125.10008000000002
+144,Ackley Function,GP (Diffusion),46,train,150,-263.43737999999996
+145,Ackley Function,GP (Diffusion),47,train,150,4.464770299999999
+146,Ackley Function,GP (Diffusion),48,train,150,3.9362186999999995
+147,Ackley Function,GP (Diffusion),49,train,150,4.337280000000001
+148,Ackley Function,GP (Diffusion),50,train,150,2.6581821000000003
+149,Ackley Function,GP (Diffusion),51,train,150,-183.50099000000003
+150,Ackley Function,GP (Diffusion),42,test,150,-588.3978329876015
+151,Ackley Function,GP (Diffusion),43,test,150,-12.762161028034365
+152,Ackley Function,GP (Diffusion),44,test,150,-6.938417961438014
+153,Ackley Function,GP (Diffusion),45,test,150,-96.96218958595995
+154,Ackley Function,GP (Diffusion),46,test,150,-247.55312929256976
+155,Ackley Function,GP (Diffusion),47,test,150,-18.108712971759232
+156,Ackley Function,GP (Diffusion),48,test,150,-8.493361580760928
+157,Ackley Function,GP (Diffusion),49,test,150,-12.296966979272147
+158,Ackley Function,GP (Diffusion),50,test,150,-13.679071865495597
+159,Ackley Function,GP (Diffusion),51,test,150,-367.2133459486998
+160,Ackley Function,GP (HED-mat52),42,train,150,1.4249562000000002
+161,Ackley Function,GP (HED-mat52),43,train,150,0.9673097000000002
+162,Ackley Function,GP (HED-mat52),44,train,150,0.42837809999999993
+163,Ackley Function,GP (HED-mat52),45,train,150,0.08535182500000002
+164,Ackley Function,GP (HED-mat52),46,train,150,-0.015592873
+165,Ackley Function,GP (HED-mat52),47,train,150,1.3531224000000002
+166,Ackley Function,GP (HED-mat52),48,train,150,1.0410821
+167,Ackley Function,GP (HED-mat52),49,train,150,0.4256093500000001
+168,Ackley Function,GP (HED-mat52),50,train,150,0.20125425000000002
+169,Ackley Function,GP (HED-mat52),51,train,150,-0.1880607
+170,Ackley Function,GP (HED-mat52),42,test,150,0.1911753611159406
+171,Ackley Function,GP (HED-mat52),43,test,150,-0.01777353374893945
+172,Ackley Function,GP (HED-mat52),44,test,150,-0.0259938539187816
+173,Ackley Function,GP (HED-mat52),45,test,150,-0.697525430263301
+174,Ackley Function,GP (HED-mat52),46,test,150,-0.9585692244843653
+175,Ackley Function,GP (HED-mat52),47,test,150,-0.17970013971709675
+176,Ackley Function,GP (HED-mat52),48,test,150,0.027033664155611245
+177,Ackley Function,GP (HED-mat52),49,test,150,-0.3248564590860454
+178,Ackley Function,GP (HED-mat52),50,test,150,-0.984660765792072
+179,Ackley Function,GP (HED-mat52),51,test,150,-0.7540168311014485
+180,Ackley Function,GP (SSK),42,train,150,1.4367076000000003
+181,Ackley Function,GP (SSK),43,train,150,1.0036632999999997
+182,Ackley Function,GP (SSK),44,train,150,0.43908154999999993
+183,Ackley Function,GP (SSK),45,train,150,0.11022878000000001
+184,Ackley Function,GP (SSK),46,train,150,-0.009798883999999999
+185,Ackley Function,GP (SSK),47,train,150,1.438774
+186,Ackley Function,GP (SSK),48,train,150,1.0922621
+187,Ackley Function,GP (SSK),49,train,150,0.40957165000000006
+188,Ackley Function,GP (SSK),50,train,150,0.18214689999999997
+189,Ackley Function,GP (SSK),51,train,150,-0.23877644999999997
+190,Ackley Function,GP (SSK),42,test,150,0.5572654569423718
+191,Ackley Function,GP (SSK),43,test,150,-0.05036587199497415
+192,Ackley Function,GP (SSK),44,test,150,0.1805411347185984
+193,Ackley Function,GP (SSK),45,test,150,-0.2667090515209565
+194,Ackley Function,GP (SSK),46,test,150,-0.8072244078107693
+195,Ackley Function,GP (SSK),47,test,150,0.5139746964226397
+196,Ackley Function,GP (SSK),48,test,150,0.1223558144393657
+197,Ackley Function,GP (SSK),49,test,150,-0.3691204083719727
+198,Ackley Function,GP (SSK),50,test,150,-0.9255730198698702
+199,Ackley Function,GP (SSK),51,test,150,-0.600319385272613
+200,MIG Sequence Optimisation - sqrt - both,GP (TO),42,train,150,-0.9111975999999998
+201,MIG Sequence Optimisation - sqrt - both,GP (TO),43,train,150,-0.42419492999999997
+202,MIG Sequence Optimisation - sqrt - both,GP (TO),44,train,150,-0.583176
+203,MIG Sequence Optimisation - sqrt - both,GP (TO),45,train,150,-0.4646037799999999
+204,MIG Sequence Optimisation - sqrt - both,GP (TO),46,train,150,-0.5503105000000001
+205,MIG Sequence Optimisation - sqrt - both,GP (TO),47,train,150,-0.6007647
+206,MIG Sequence Optimisation - sqrt - both,GP (TO),48,train,150,-0.6351089500000002
+207,MIG Sequence Optimisation - sqrt - both,GP (TO),49,train,150,-0.6157765399999999
+208,MIG Sequence Optimisation - sqrt - both,GP (TO),50,train,150,-0.7924328000000002
+209,MIG Sequence Optimisation - sqrt - both,GP (TO),51,train,150,-0.5075258
+210,MIG Sequence Optimisation - sqrt - both,GP (TO),42,test,150,-1.2748554378297268
+211,MIG Sequence Optimisation - sqrt - both,GP (TO),43,test,150,-1.139563755264881
+212,MIG Sequence Optimisation - sqrt - both,GP (TO),44,test,150,-0.9751949290786477
+213,MIG Sequence Optimisation - sqrt - both,GP (TO),45,test,150,-1.5414934191738512
+214,MIG Sequence Optimisation - sqrt - both,GP (TO),46,test,150,-1.1889044210226667
+215,MIG Sequence Optimisation - sqrt - both,GP (TO),47,test,150,-0.9706521789965089
+216,MIG Sequence Optimisation - sqrt - both,GP (TO),48,test,150,-1.2807049759235838
+217,MIG Sequence Optimisation - sqrt - both,GP (TO),49,test,150,-1.1403700440854756
+218,MIG Sequence Optimisation - sqrt - both,GP (TO),50,test,150,-1.273934259001465
+219,MIG Sequence Optimisation - sqrt - both,GP (TO),51,test,150,-0.9344790030207512
+220,MIG Sequence Optimisation - sqrt - both,GP (O),42,train,150,-1.0974731
+221,MIG Sequence Optimisation - sqrt - both,GP (O),43,train,150,-0.5409505399999999
+222,MIG Sequence Optimisation - sqrt - both,GP (O),44,train,150,-0.8137299999999998
+223,MIG Sequence Optimisation - sqrt - both,GP (O),45,train,150,-0.6825138299999999
+224,MIG Sequence Optimisation - sqrt - both,GP (O),46,train,150,-0.7611804600000001
+225,MIG Sequence Optimisation - sqrt - both,GP (O),47,train,150,-0.7869537500000002
+226,MIG Sequence Optimisation - sqrt - both,GP (O),48,train,150,-0.7872379399999998
+227,MIG Sequence Optimisation - sqrt - both,GP (O),49,train,150,-0.7560358599999999
+228,MIG Sequence Optimisation - sqrt - both,GP (O),50,train,150,-0.8535467399999999
+229,MIG Sequence Optimisation - sqrt - both,GP (O),51,train,150,-0.6957987499999999
+230,MIG Sequence Optimisation - sqrt - both,GP (O),42,test,150,-1.355213582724109
+231,MIG Sequence Optimisation - sqrt - both,GP (O),43,test,150,-1.0817534977159105
+232,MIG Sequence Optimisation - sqrt - both,GP (O),44,test,150,-1.0036532210159668
+233,MIG Sequence Optimisation - sqrt - both,GP (O),45,test,150,-1.664908087506591
+234,MIG Sequence Optimisation - sqrt - both,GP (O),46,test,150,-1.2864367750916756
+235,MIG Sequence Optimisation - sqrt - both,GP (O),47,test,150,-1.0562926072057406
+236,MIG Sequence Optimisation - sqrt - both,GP (O),48,test,150,-1.5797944568342412
+237,MIG Sequence Optimisation - sqrt - both,GP (O),49,test,150,-1.0395157363964098
+238,MIG Sequence Optimisation - sqrt - both,GP (O),50,test,150,-1.2887319284312762
+239,MIG Sequence Optimisation - sqrt - both,GP (O),51,test,150,-0.8950705260960629
+240,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),42,train,150,4.7587967
+241,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),43,train,150,5.5004144
+242,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),44,train,150,2.158867
+243,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),45,train,150,5.2891107
+244,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),46,train,150,5.227815599999999
+245,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),47,train,150,2.6864023000000006
+246,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),48,train,150,3.742904199999999
+247,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),49,train,150,4.9090877
+248,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),50,train,150,4.2667346
+249,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),51,train,150,5.2610269999999995
+250,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),42,test,150,-2.808823049648427
+251,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),43,test,150,-16.434408172868924
+252,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),44,test,150,-2.1397620493494514
+253,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),45,test,150,-2.4533158586956842
+254,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),46,test,150,-227.68494687327586
+255,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),47,test,150,-11.931861739580649
+256,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),48,test,150,-2.797814804788193
+257,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),49,test,150,-1.856263415228671
+258,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),50,test,150,-514.3228595171043
+259,MIG Sequence Optimisation - sqrt - both,GP (Diffusion),51,test,150,-2152.352929723189
+260,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),42,train,150,-0.7928799399999998
+261,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),43,train,150,-0.3457331699999999
+262,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),44,train,150,-0.629737
+263,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),45,train,150,-0.33231562
+264,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),46,train,150,-0.50779474
+265,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),47,train,150,-0.4736963799999999
+266,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),48,train,150,-0.5713657000000001
+267,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),49,train,150,-0.54284465
+268,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),50,train,150,-0.7254299000000001
+269,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),51,train,150,-0.46868104
+270,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),42,test,150,-1.1654815104746334
+271,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),43,test,150,-0.9500334614197149
+272,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),44,test,150,-0.866953530093147
+273,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),45,test,150,-0.8533830143539027
+274,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),46,test,150,-0.932031765554336
+275,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),47,test,150,-0.91824647455817
+276,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),48,test,150,-1.0583868614082281
+277,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),49,test,150,-0.9481116443515022
+278,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),50,test,150,-1.0324556586301952
+279,MIG Sequence Optimisation - sqrt - both,GP (HED-mat52),51,test,150,-0.7952334261502578
+280,MIG Sequence Optimisation - sqrt - both,GP (SSK),42,train,150,-0.9132768000000002
+281,MIG Sequence Optimisation - sqrt - both,GP (SSK),43,train,150,-0.5851721000000001
+282,MIG Sequence Optimisation - sqrt - both,GP (SSK),44,train,150,-0.7017046999999998
+283,MIG Sequence Optimisation - sqrt - both,GP (SSK),45,train,150,-0.5028803299999999
+284,MIG Sequence Optimisation - sqrt - both,GP (SSK),46,train,150,-0.6079941
+285,MIG Sequence Optimisation - sqrt - both,GP (SSK),47,train,150,-0.6055791400000001
+286,MIG Sequence Optimisation - sqrt - both,GP (SSK),48,train,150,-0.7265269999999999
+287,MIG Sequence Optimisation - sqrt - both,GP (SSK),49,train,150,-1.0623759000000002
+288,MIG Sequence Optimisation - sqrt - both,GP (SSK),50,train,150,-1.2866132000000001
+289,MIG Sequence Optimisation - sqrt - both,GP (SSK),51,train,150,-0.5693359400000002
+290,MIG Sequence Optimisation - sqrt - both,GP (SSK),42,test,150,-1.1930295993402789
+291,MIG Sequence Optimisation - sqrt - both,GP (SSK),43,test,150,-0.8730472482431354
+292,MIG Sequence Optimisation - sqrt - both,GP (SSK),44,test,150,-0.8625668150286476
+293,MIG Sequence Optimisation - sqrt - both,GP (SSK),45,test,150,-0.9193317136810887
+294,MIG Sequence Optimisation - sqrt - both,GP (SSK),46,test,150,-0.9864134115475154
+295,MIG Sequence Optimisation - sqrt - both,GP (SSK),47,test,150,-0.9381819357459014
+296,MIG Sequence Optimisation - sqrt - both,GP (SSK),48,test,150,-0.9693269778558229
+297,MIG Sequence Optimisation - sqrt - both,GP (SSK),49,test,150,-0.9051875970380435
+298,MIG Sequence Optimisation - sqrt - both,GP (SSK),50,test,150,-0.9446719921944217
+299,MIG Sequence Optimisation - sqrt - both,GP (SSK),51,test,150,-0.767786163876226
+300,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),42,train,150,1.9412728999999997
+301,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),43,train,150,2.0206904
+302,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),44,train,150,1.8603575999999995
+303,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),45,train,150,1.8829039000000003
+304,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),46,train,150,1.6789402
+305,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),47,train,150,1.7216238
+306,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),48,train,150,1.6840816999999997
+307,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),49,train,150,1.8967351000000003
+308,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),50,train,150,1.790912
+309,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),51,train,150,2.1009015999999994
+310,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),42,test,150,1.2189950355458181
+311,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),43,test,150,1.3491510391045487
+312,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),44,test,150,1.2753425679170156
+313,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),45,test,150,1.373835414858193
+314,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),46,test,150,1.1864093662925916
+315,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),47,test,150,1.0951234479092076
+316,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),48,test,150,1.238102471608262
+317,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),49,test,150,1.3170696229538774
+318,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),50,test,150,1.3921800009903142
+319,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (TO),51,test,150,0.8998968963089615
+320,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),42,train,150,1.9593611999999996
+321,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),43,train,150,2.0103793000000003
+322,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),44,train,150,1.8403006999999998
+323,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),45,train,150,1.8430984999999998
+324,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),46,train,150,1.2855664
+325,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),47,train,150,1.6591261999999998
+326,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),48,train,150,1.7534621999999997
+327,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),49,train,150,1.8488771000000002
+328,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),50,train,150,1.7632238
+329,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),51,train,150,2.0283628
+330,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),42,test,150,1.4541972991034253
+331,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),43,test,150,1.2294221133702596
+332,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),44,test,150,1.3254174175197706
+333,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),45,test,150,1.455315665692144
+334,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),46,test,150,1.1727466602210066
+335,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),47,test,150,1.2450844429503005
+336,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),48,test,150,1.3822096326360154
+337,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),49,test,150,1.385230521110345
+338,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),50,test,150,1.4949364664055906
+339,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (O),51,test,150,0.9932615874897792
+340,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),42,train,150,5.988684999999999
+341,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),43,train,150,5.2733355
+342,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),44,train,150,4.859597
+343,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),45,train,150,4.6940420000000005
+344,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),46,train,150,4.985446500000002
+345,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),47,train,150,-28.150427000000004
+346,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),48,train,150,4.847336999999999
+347,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),49,train,150,4.664846400000001
+348,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),50,train,150,4.484462999999999
+349,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),51,train,150,4.078676
+350,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),42,test,150,-1.727228729147775
+351,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),43,test,150,-1.1958735779261116
+352,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),44,test,150,-1.088452493329482
+353,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),45,test,150,-1.1321798887662762
+354,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),46,test,150,-2.0929552930662867
+355,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),47,test,150,-21.16083400421108
+356,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),48,test,150,-0.8828398012938643
+357,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),49,test,150,-2.3071056132297545
+358,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),50,test,150,-1.579229486134934
+359,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (Diffusion),51,test,150,-1.2328770195387013
+360,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),42,train,150,2.049961
+361,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),43,train,150,2.0519295
+362,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),44,train,150,1.9086542999999998
+363,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),45,train,150,1.9258115999999998
+364,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),46,train,150,1.7444931000000001
+365,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),47,train,150,1.7950910000000002
+366,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),48,train,150,1.7607126999999996
+367,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),49,train,150,1.9204735000000006
+368,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),50,train,150,1.8749889
+369,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),51,train,150,2.096643
+370,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),42,test,150,1.169170546306048
+371,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),43,test,150,1.5053088569244903
+372,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),44,test,150,1.3600944911996045
+373,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),45,test,150,1.4405774773629256
+374,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),46,test,150,0.8342064405934341
+375,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),47,test,150,1.3136860710695482
+376,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),48,test,150,1.3785071404105274
+377,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),49,test,150,1.373355918706677
+378,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),50,test,150,1.6205760291628224
+379,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (HED-mat52),51,test,150,1.1422425361447106
+380,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),42,train,150,2.0477734000000005
+381,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),43,train,150,2.0421366999999995
+382,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),44,train,150,1.9107238
+383,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),45,train,150,1.96705
+384,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),46,train,150,1.7636321999999995
+385,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),47,train,150,1.820374600000001
+386,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),48,train,150,1.8059821999999996
+387,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),49,train,150,1.8914192999999992
+388,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),50,train,150,1.856388
+389,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),51,train,150,2.1415963
+390,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),42,test,150,1.6935497230519052
+391,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),43,test,150,1.6584587511200182
+392,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),44,test,150,1.5957007705143287
+393,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),45,test,150,1.6641562720758722
+394,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),46,test,150,1.4214651484137661
+395,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),47,test,150,1.6372247371027544
+396,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),48,test,150,1.574707803206053
+397,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),49,test,150,1.653491597766121
+398,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),50,test,150,1.6485012728718196
+399,EDA Sequence Optimization - Design sin - Ops basic - Pattern basic - Obj both,GP (SSK),51,test,150,1.7932169979221402
+400,Pest Control,GP (TO),42,train,150,0.38222253
+401,Pest Control,GP (TO),43,train,150,0.15306318
+402,Pest Control,GP (TO),44,train,150,0.030614971999999997
+403,Pest Control,GP (TO),45,train,150,-0.15069956000000004
+404,Pest Control,GP (TO),46,train,150,-0.08383923999999998
+405,Pest Control,GP (TO),47,train,150,0.33508623000000004
+406,Pest Control,GP (TO),48,train,150,0.006013572000000002
+407,Pest Control,GP (TO),49,train,150,-0.17447108
+408,Pest Control,GP (TO),50,train,150,-0.2684387
+409,Pest Control,GP (TO),51,train,150,-0.36249745
+410,Pest Control,GP (TO),42,test,150,0.023422001148568322
+411,Pest Control,GP (TO),43,test,150,-0.36802488745445916
+412,Pest Control,GP (TO),44,test,150,-0.09666997688574891
+413,Pest Control,GP (TO),45,test,150,-0.22398092423919727
+414,Pest Control,GP (TO),46,test,150,-0.21133314161904315
+415,Pest Control,GP (TO),47,test,150,-0.24356913483485862
+416,Pest Control,GP (TO),48,test,150,-0.29322424443856643
+417,Pest Control,GP (TO),49,test,150,-0.3005668365907008
+418,Pest Control,GP (TO),50,test,150,-0.4615489198190734
+419,Pest Control,GP (TO),51,test,150,-0.5578518615362692
+420,Pest Control,GP (O),42,train,150,0.4466785199999999
+421,Pest Control,GP (O),43,train,150,0.19461500000000004
+422,Pest Control,GP (O),44,train,150,0.025044202999999994
+423,Pest Control,GP (O),45,train,150,-0.008566022000000001
+424,Pest Control,GP (O),46,train,150,-0.018175006
+425,Pest Control,GP (O),47,train,150,0.386508
+426,Pest Control,GP (O),48,train,150,0.07042622600000001
+427,Pest Control,GP (O),49,train,150,-0.10411787000000002
+428,Pest Control,GP (O),50,train,150,-0.15510183999999996
+429,Pest Control,GP (O),51,train,150,-0.34469687999999993
+430,Pest Control,GP (O),42,test,150,0.13921255321973042
+431,Pest Control,GP (O),43,test,150,-0.28595808539464856
+432,Pest Control,GP (O),44,test,150,0.007232727315277188
+433,Pest Control,GP (O),45,test,150,-0.12666132849198103
+434,Pest Control,GP (O),46,test,150,-0.17198818556011478
+435,Pest Control,GP (O),47,test,150,-0.11999529145504802
+436,Pest Control,GP (O),48,test,150,-0.2118719173956358
+437,Pest Control,GP (O),49,test,150,-0.2022877495652985
+438,Pest Control,GP (O),50,test,150,-0.482986267935453
+439,Pest Control,GP (O),51,test,150,-0.41905525217347434
+440,Pest Control,GP (Diffusion),42,train,150,3.6519412999999994
+441,Pest Control,GP (Diffusion),43,train,150,3.2306232
+442,Pest Control,GP (Diffusion),44,train,150,2.5396442
+443,Pest Control,GP (Diffusion),45,train,150,2.9968409999999994
+444,Pest Control,GP (Diffusion),46,train,150,0.13570750000000004
+445,Pest Control,GP (Diffusion),47,train,150,3.2410350000000006
+446,Pest Control,GP (Diffusion),48,train,150,3.7510962
+447,Pest Control,GP (Diffusion),49,train,150,-9.525157000000002
+448,Pest Control,GP (Diffusion),50,train,150,-172.96135999999998
+449,Pest Control,GP (Diffusion),51,train,150,4.280979600000002
+450,Pest Control,GP (Diffusion),42,test,150,-8.407014200469286
+451,Pest Control,GP (Diffusion),43,test,150,-7.665548641945024
+452,Pest Control,GP (Diffusion),44,test,150,-6.029973399254358
+453,Pest Control,GP (Diffusion),45,test,150,-3.9685259954237413
+454,Pest Control,GP (Diffusion),46,test,150,-2.734711540023034
+455,Pest Control,GP (Diffusion),47,test,150,-9.124531046970683
+456,Pest Control,GP (Diffusion),48,test,150,-7.218402939005743
+457,Pest Control,GP (Diffusion),49,test,150,-15.368037846842576
+458,Pest Control,GP (Diffusion),50,test,150,-82.49377565330025
+459,Pest Control,GP (Diffusion),51,test,150,-5.678933099027602
+460,Pest Control,GP (HED-mat52),42,train,150,0.4454163300000001
+461,Pest Control,GP (HED-mat52),43,train,150,0.21749627999999996
+462,Pest Control,GP (HED-mat52),44,train,150,0.07237118499999999
+463,Pest Control,GP (HED-mat52),45,train,150,-0.07634824500000001
+464,Pest Control,GP (HED-mat52),46,train,150,0.018232167
+465,Pest Control,GP (HED-mat52),47,train,150,0.4431403999999999
+466,Pest Control,GP (HED-mat52),48,train,150,0.09602952
+467,Pest Control,GP (HED-mat52),49,train,150,-0.06810284
+468,Pest Control,GP (HED-mat52),50,train,150,-0.15208404999999997
+469,Pest Control,GP (HED-mat52),51,train,150,-0.37917930000000005
+470,Pest Control,GP (HED-mat52),42,test,150,0.11307545018270203
+471,Pest Control,GP (HED-mat52),43,test,150,-0.02339792685028689
+472,Pest Control,GP (HED-mat52),44,test,150,-0.03571856101567987
+473,Pest Control,GP (HED-mat52),45,test,150,-0.17007126408360954
+474,Pest Control,GP (HED-mat52),46,test,150,-0.06681912200108622
+475,Pest Control,GP (HED-mat52),47,test,150,0.08909089526018286
+476,Pest Control,GP (HED-mat52),48,test,150,-0.026934784666704577
+477,Pest Control,GP (HED-mat52),49,test,150,-0.12134216543429051
+478,Pest Control,GP (HED-mat52),50,test,150,-0.30030966188809904
+479,Pest Control,GP (HED-mat52),51,test,150,-0.36774139694339314
+480,Pest Control,GP (SSK),42,train,150,0.4139048000000001
+481,Pest Control,GP (SSK),43,train,150,0.17653847000000003
+482,Pest Control,GP (SSK),44,train,150,0.16558634999999997
+483,Pest Control,GP (SSK),45,train,150,0.034906924
+484,Pest Control,GP (SSK),46,train,150,-0.04272592
+485,Pest Control,GP (SSK),47,train,150,0.39629388000000004
+486,Pest Control,GP (SSK),48,train,150,0.08899391
+487,Pest Control,GP (SSK),49,train,150,-0.47628071999999994
+488,Pest Control,GP (SSK),50,train,150,-0.27421618
+489,Pest Control,GP (SSK),51,train,150,-0.28441995000000003
+490,Pest Control,GP (SSK),42,test,150,-0.18210035225166904
+491,Pest Control,GP (SSK),43,test,150,-0.14970950189335447
+492,Pest Control,GP (SSK),44,test,150,0.0405842646255729
+493,Pest Control,GP (SSK),45,test,150,-0.22292589312996697
+494,Pest Control,GP (SSK),46,test,150,-0.13168680383985865
+495,Pest Control,GP (SSK),47,test,150,0.03907342190596265
+496,Pest Control,GP (SSK),48,test,150,0.020382155042120122
+497,Pest Control,GP (SSK),49,test,150,-0.15056618094952579
+498,Pest Control,GP (SSK),50,test,150,-0.18463346592164903
+499,Pest Control,GP (SSK),51,test,150,-0.29449639982680176
+500,2DD8_S Antibody Design,GP (TO),42,train,150,-2.399766
+501,2DD8_S Antibody Design,GP (TO),43,train,150,-2.5899692000000005
+502,2DD8_S Antibody Design,GP (TO),44,train,150,-2.7169256
+503,2DD8_S Antibody Design,GP (TO),45,train,150,-2.792427
+504,2DD8_S Antibody Design,GP (TO),46,train,150,-2.8004925
+505,2DD8_S Antibody Design,GP (TO),47,train,150,-2.5379615
+506,2DD8_S Antibody Design,GP (TO),48,train,150,-2.599853
+507,2DD8_S Antibody Design,GP (TO),49,train,150,-2.8315825
+508,2DD8_S Antibody Design,GP (TO),50,train,150,-2.927825500000001
+509,2DD8_S Antibody Design,GP (TO),51,train,150,-2.912458399999999
+510,2DD8_S Antibody Design,GP (TO),42,test,150,-3.2711974234916097
+511,2DD8_S Antibody Design,GP (TO),43,test,150,-3.794795659419986
+512,2DD8_S Antibody Design,GP (TO),44,test,150,-3.8955466800053755
+513,2DD8_S Antibody Design,GP (TO),45,test,150,-3.789446256747067
+514,2DD8_S Antibody Design,GP (TO),46,test,150,-3.678032765212683
+515,2DD8_S Antibody Design,GP (TO),47,test,150,-3.533687455400263
+516,2DD8_S Antibody Design,GP (TO),48,test,150,-3.607523358165486
+517,2DD8_S Antibody Design,GP (TO),49,test,150,-3.5317659889160935
+518,2DD8_S Antibody Design,GP (TO),50,test,150,-3.9566230910748725
+519,2DD8_S Antibody Design,GP (TO),51,test,150,-4.0271035354274405
+520,2DD8_S Antibody Design,GP (O),42,train,150,-2.6363368000000005
+521,2DD8_S Antibody Design,GP (O),43,train,150,-2.70133
+522,2DD8_S Antibody Design,GP (O),44,train,150,-2.8546753
+523,2DD8_S Antibody Design,GP (O),45,train,150,-3.2403927000000006
+524,2DD8_S Antibody Design,GP (O),46,train,150,-3.1090279000000005
+525,2DD8_S Antibody Design,GP (O),47,train,150,-2.9238996999999998
+526,2DD8_S Antibody Design,GP (O),48,train,150,-2.672474999999999
+527,2DD8_S Antibody Design,GP (O),49,train,150,-3.0188440999999995
+528,2DD8_S Antibody Design,GP (O),50,train,150,-3.109455
+529,2DD8_S Antibody Design,GP (O),51,train,150,-3.021663700000001
+530,2DD8_S Antibody Design,GP (O),42,test,150,-3.6216602729240464
+531,2DD8_S Antibody Design,GP (O),43,test,150,-3.866426756290867
+532,2DD8_S Antibody Design,GP (O),44,test,150,-3.896635685080018
+533,2DD8_S Antibody Design,GP (O),45,test,150,-3.8888644523383813
+534,2DD8_S Antibody Design,GP (O),46,test,150,-3.837764782078169
+535,2DD8_S Antibody Design,GP (O),47,test,150,-3.6406605846514064
+536,2DD8_S Antibody Design,GP (O),48,test,150,-3.944399767305181
+537,2DD8_S Antibody Design,GP (O),49,test,150,-3.494381378438163
+538,2DD8_S Antibody Design,GP (O),50,test,150,-4.0159624368788895
+539,2DD8_S Antibody Design,GP (O),51,test,150,-3.9929375749011924
+540,2DD8_S Antibody Design,GP (Diffusion),42,train,150,2.1702885999999992
+541,2DD8_S Antibody Design,GP (Diffusion),43,train,150,2.771897800000001
+542,2DD8_S Antibody Design,GP (Diffusion),44,train,150,3.207490400000001
+543,2DD8_S Antibody Design,GP (Diffusion),45,train,150,0.9307781499999996
+544,2DD8_S Antibody Design,GP (Diffusion),46,train,150,1.9650923000000005
+545,2DD8_S Antibody Design,GP (Diffusion),47,train,150,-214.55258
+546,2DD8_S Antibody Design,GP (Diffusion),48,train,150,2.5303168000000005
+547,2DD8_S Antibody Design,GP (Diffusion),49,train,150,-0.7665311
+548,2DD8_S Antibody Design,GP (Diffusion),50,train,150,1.0640999999999998
+549,2DD8_S Antibody Design,GP (Diffusion),51,train,150,2.8473715999999993
+550,2DD8_S Antibody Design,GP (Diffusion),42,test,150,-8.268415687336462
+551,2DD8_S Antibody Design,GP (Diffusion),43,test,150,-4585.395029005044
+552,2DD8_S Antibody Design,GP (Diffusion),44,test,150,-38.40961005589768
+553,2DD8_S Antibody Design,GP (Diffusion),45,test,150,-10.650612014286056
+554,2DD8_S Antibody Design,GP (Diffusion),46,test,150,-1992.550527525302
+555,2DD8_S Antibody Design,GP (Diffusion),47,test,150,-530.7990727887798
+556,2DD8_S Antibody Design,GP (Diffusion),48,test,150,-20.721430824534746
+557,2DD8_S Antibody Design,GP (Diffusion),49,test,150,-14.256817923926517
+558,2DD8_S Antibody Design,GP (Diffusion),50,test,150,-7.270687847250607
+559,2DD8_S Antibody Design,GP (Diffusion),51,test,150,-78.37537395912804
+560,2DD8_S Antibody Design,GP (HED-mat52),42,train,150,-2.3533478
+561,2DD8_S Antibody Design,GP (HED-mat52),43,train,150,-2.5291513999999995
+562,2DD8_S Antibody Design,GP (HED-mat52),44,train,150,-2.6961422
+563,2DD8_S Antibody Design,GP (HED-mat52),45,train,150,-2.724590299999999
+564,2DD8_S Antibody Design,GP (HED-mat52),46,train,150,-2.7266216
+565,2DD8_S Antibody Design,GP (HED-mat52),47,train,150,-2.295477
+566,2DD8_S Antibody Design,GP (HED-mat52),48,train,150,-2.6057424999999994
+567,2DD8_S Antibody Design,GP (HED-mat52),49,train,150,-2.7979025999999996
+568,2DD8_S Antibody Design,GP (HED-mat52),50,train,150,-2.7838476000000005
+569,2DD8_S Antibody Design,GP (HED-mat52),51,train,150,-2.8527055
+570,2DD8_S Antibody Design,GP (HED-mat52),42,test,150,-3.3837372291113836
+571,2DD8_S Antibody Design,GP (HED-mat52),43,test,150,-3.8817893528670355
+572,2DD8_S Antibody Design,GP (HED-mat52),44,test,150,-4.004061610573197
+573,2DD8_S Antibody Design,GP (HED-mat52),45,test,150,-4.661127183746036
+574,2DD8_S Antibody Design,GP (HED-mat52),46,test,150,-4.354359641259708
+575,2DD8_S Antibody Design,GP (HED-mat52),47,test,150,-3.8423281990033327
+576,2DD8_S Antibody Design,GP (HED-mat52),48,test,150,-4.773272591601706
+577,2DD8_S Antibody Design,GP (HED-mat52),49,test,150,-3.7651293756729842
+578,2DD8_S Antibody Design,GP (HED-mat52),50,test,150,-4.594067161100224
+579,2DD8_S Antibody Design,GP (HED-mat52),51,test,150,-4.4152470800307455
+580,2DD8_S Antibody Design,GP (SSK),42,train,150,-2.3695020000000007
+581,2DD8_S Antibody Design,GP (SSK),43,train,150,-2.7117648000000005
+582,2DD8_S Antibody Design,GP (SSK),44,train,150,-2.7742038
+583,2DD8_S Antibody Design,GP (SSK),45,train,150,-2.7951143
+584,2DD8_S Antibody Design,GP (SSK),46,train,150,-2.9098403
+585,2DD8_S Antibody Design,GP (SSK),47,train,150,-2.4111292000000004
+586,2DD8_S Antibody Design,GP (SSK),48,train,150,-2.656725999999999
+587,2DD8_S Antibody Design,GP (SSK),49,train,150,-2.8672776000000004
+588,2DD8_S Antibody Design,GP (SSK),50,train,150,-3.1410294000000007
+589,2DD8_S Antibody Design,GP (SSK),51,train,150,-3.0570911999999995
+590,2DD8_S Antibody Design,GP (SSK),42,test,150,-3.4323087841772577
+591,2DD8_S Antibody Design,GP (SSK),43,test,150,-3.5392330646371692
+592,2DD8_S Antibody Design,GP (SSK),44,test,150,-4.17350183990056
+593,2DD8_S Antibody Design,GP (SSK),45,test,150,-3.947421267758171
+594,2DD8_S Antibody Design,GP (SSK),46,test,150,-4.255313782062455
+595,2DD8_S Antibody Design,GP (SSK),47,test,150,-3.819320613206662
+596,2DD8_S Antibody Design,GP (SSK),48,test,150,-3.9044819460006437
+597,2DD8_S Antibody Design,GP (SSK),49,test,150,-3.925454037441722
+598,2DD8_S Antibody Design,GP (SSK),50,test,150,-4.145505223506052
+599,2DD8_S Antibody Design,GP (SSK),51,test,150,-4.106116717071145
