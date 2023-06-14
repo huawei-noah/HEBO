@@ -140,7 +140,7 @@ Results will be saved in `./resutls/` or in user specified path.
 
 #### Visualize 
 We provide [notebooks](./mcbo_notebooks) to visualize rankings and regrets. Many plotting tools are available
-in [genral_plot_utils.py](./mcbo/utils/general_plot_utils.py).
+in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 
 
 ## Extend MCBO
