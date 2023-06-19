@@ -154,3 +154,14 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
   depends on packages not listed in [requirements.txt](./requirements.txt)).
 - Add reference to the task in the present README.md in the dedicated section.
 
+## Cite us
+```
+@misc{dreczkowski2023mcbo,
+      title={Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization}, 
+      author={Kamil Dreczkowski and Antoine Grosnit and Haitham Bou Ammar},
+      year={2023},
+      eprint={2306.09803},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```

@@ -11,6 +11,7 @@ Huawei, Noah's Ark Lab.
   - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
   - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
   - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
+  - [MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization](./MCBO)
 - Reinforcement Learning Research
   - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
   - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
@@ -148,6 +149,34 @@ HEBO, showing improved practical gains in the highest dimensional tasks from Bay
 Codebase associated to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
 ##### Abstract
 Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody design, and logic synthesis for electronic design automation.
+
+## [MCBO](./MCBO)
+
+<p align="center">
+    <img src="./MCBO/paper/images/all_mix_match.PNG" alt="drawing" width="500"/>
+</p>
+
+Codebase associated to: [Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
+](https://arxiv.org/abs/2306.09803).
+
+##### Abstract
+This paper introduces a modular framework for Mixed-variable and Combinatorial
+Bayesian Optimization (MCBO) to address the lack of systematic benchmarking
+and standardized evaluation in the field. Current MCBO papers often introduce
+non-diverse or non-standard benchmarks to evaluate their methods, impeding the
+proper assessment of different MCBO primitives and their combinations. Additionally, papers introducing a solution for a single MCBO primitive often omit
+benchmarking against baselines that utilize the same methods for the remaining primitives. This omission is primarily due to the significant implementation
+overhead involved, resulting in a lack of controlled assessments and an inability
+to showcase the merits of a contribution effectively. To overcome these challenges, our proposed framework enables an effortless combination of Bayesian
+Optimization components, and provides a diverse set of synthetic and real-world
+benchmarking tasks. Leveraging this flexibility, we implement 47 novel MCBO
+algorithms and benchmark them against seven existing MCBO solvers and five
+standard black-box optimization algorithms on ten tasks, conducting over 4000
+experiments. Our findings reveal a superior combination of MCBO primitives
+outperforming existing approaches and illustrate the significance of model fit and
+the use of a trust region. We make our MCBO library available under the MIT
+license at https://github.com/huawei-noah/HEBO/tree/master/MCBO.
+
 # Reinforcement Learning Research
 
 ## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
@@ -207,5 +236,5 @@ results show that the proposed approach achieves state-of-the-art performance on
 
 <strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek.
 
-<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
+<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
   
