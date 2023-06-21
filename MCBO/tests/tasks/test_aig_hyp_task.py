@@ -32,21 +32,16 @@ from mcbo.optimizers import RandomSearch
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
 
-    task_kwargs = {'designs_group_id': "sin", "operator_space_id": "basic", "objective": "both",
+    task_kwargs = {'designs_group_id': "adder", "operator_space_id": "basic", "objective": "both",
                    "seq_operators_pattern_id": "basic_w_post_map"}
-    dtype = torch.float32
-    task, search_space = task_factory('aig_optimization_hyp', dtype, **task_kwargs)
-    print(search_space.param_names)
+    dtype = torch.float64
+    task, search_space = task_factory('aig_optimization_hyp', dtype=dtype, **task_kwargs)
 
-    optimizer = RandomSearch(search_space, store_observations=True)
+    optimizer = RandomSearch(search_space, input_constraints=task.input_constraints, store_observations=True)
     print(f"{optimizer.name}_{task.name}")
 
     for i in range(10):
-        x_next = optimizer.suggest(5)
+        x_next = optimizer.suggest(2)
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
         print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f}')
-
-    # plot_convergence_curve(optimizer, task,
-    #                        os.path.join(Path(os.path.realpath(__file__)).parent.parent.parent.resolve(),
-    #                                     f'{optimizer.name}_{task.name}_test.png'), plot_per_iter=True)

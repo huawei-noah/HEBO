@@ -23,10 +23,6 @@ chmod u+x ./bbox_setup.sh
 ./bbox_setup.sh
 ```
 
-\[Optional\] If you plan to use the Antibody design task, install AbsolutNoLib by following the instructions
-from https://github.com/csi-greifflab/Absolut and include AbsolutNoLib in [./libs/Absolut/](./libs/Absolut/).
-
-
 ## Implemented Tasks
 
 ### Synthetic

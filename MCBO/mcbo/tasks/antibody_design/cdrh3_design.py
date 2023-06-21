@@ -22,6 +22,8 @@ from mcbo.tasks.antibody_design.utils import get_AbsolutNoLib_dir, download_prec
 class CDRH3Design(TaskBase):
     amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V',
                    'W', 'Y']
+    amino_acid_to_idx = {aa: i for i, aa in enumerate(amino_acids)}
+    idx_to_amino_acid = {value: key for key, value in amino_acid_to_idx.items()}
 
     @property
     def name(self) -> str:
@@ -34,10 +36,6 @@ class CDRH3Design(TaskBase):
         self.first_cpu = first_cpu
         self.antigen = antigen
         self.cdrh3_length = cdrh3_length
-        self.amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V',
-                            'W', 'Y']
-        self.amino_acid_to_idx = {aa: i for i, aa in enumerate(self.amino_acids)}
-        self.idx_to_amino_acid = {value: key for key, value in self.amino_acid_to_idx.items()}
 
         self.AbsolutNoLib_dir = get_AbsolutNoLib_dir(absolut_dir)
         self.valid_antigens = get_valid_antigens(self.AbsolutNoLib_dir)

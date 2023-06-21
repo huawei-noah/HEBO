@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(add_help=True, description='Plot mixed optimisation results.')
 
-    parser.add_argument("--design_name", "-d", required=True, help="Circuit name")
+    parser.add_argument("--design_name", "-d", default="adder", help="Circuit name")
 
     args = parser.parse_args()
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     search_space = aux[1]
 
     optimizer = GeneticAlgorithm(
-        search_space=search_space, store_observations=True, input_constraints=None
+        search_space=search_space, store_observations=True, input_constraints=task.input_constraints
     )
     print(f"{optimizer.name}_{task.name}")
 
@@ -65,21 +65,3 @@ if __name__ == "__main__":
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
         print(f'Iteration {task.num_func_evals} - Best f(x) {optimizer.best_y:.3f}')
-
-    save_path = os.path.join(Path(os.path.realpath(__file__)).parent.parent.parent.resolve(), "eda_ga25_boils_data",
-                             task_kwargs["designs_group_id"], "data.pkl")
-    task_ckpt_data = task.get_ckpt_data()
-    data = {}
-    data["objective"] = task_kwargs["objective"]
-    data["ref_count"] = task.refs_1[0]
-    data["level_ref"] = task.refs_2[0]
-    data["X"] = task_ckpt_data["X"]
-    data["Count"] = task_ckpt_data["intermediate_objs_1"][:, 0, -1]
-    data["Level"] = task_ckpt_data["intermediate_objs_2"][:, 0, -1]
-    data["operator_space_id"] = task.operator_space_id
-    data["seq_operators_pattern_id"] = task.seq_operators_pattern_id
-    data["cat_to_cmd"] = {i: task.operator_space.all_operators[i]().op_str() for i in
-                          range(len(task.operator_space.all_operators))}
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    save_w_pickle(data, save_path)

@@ -25,30 +25,19 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.utils.general_utils import time_formatter
 import torch
 
-from mcbo.optimizers import RandomSearch
-from mcbo.utils.plotting_utils import plot_convergence_curve
-import time
+from mcbo import task_factory
+from mcbo.optimizers.bo_builder import BoBuilder
 
-if __name__ == "__main__":
-    from mcbo.task_factory import task_factory
+if __name__ == '__main__':
+    task, search_space = task_factory(task_name='antibody_design', dtype=torch.float64)
+    bo_builder = BoBuilder(model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic')
 
-    task, search_space = task_factory('svm_opt', torch.float64)
+    optimizer = bo_builder.build_bo(search_space=search_space, n_init=20, device=torch.device("cuda"))
 
-    optimizer = RandomSearch(search_space, store_observations=True, input_constraints=None)
-    print(f"{optimizer.name}_{task.name}")
-
-    t = time.time()
     for i in range(100):
-        x_next = optimizer.suggest(1)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(
-            f'Iteration {i + 1:>4d} - f(x) {y_next.flatten()[-1]:.3f}- Best f(x) {optimizer.best_y:.3f} - Took {time_formatter(time.time() - t)} '
-            f'from beginning')
-
-    plot_convergence_curve(optimizer, task,
-                           os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
-                                        f'{optimizer.name}_{task.name}_test.png'), plot_per_iter=True)
+        x = optimizer.suggest(1)
+        y = task(x)
+        optimizer.observe(x, y)
+        print(f'Iteration {i + 1:3d}/{100:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y:.3f}')

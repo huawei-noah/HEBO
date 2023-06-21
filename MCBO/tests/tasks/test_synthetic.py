@@ -22,18 +22,16 @@ import os
 import sys
 from pathlib import Path
 
-import torch
-
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.utils.experiment_utils import get_task_and_search_space
+from mcbo import task_factory
 from mcbo.optimizers.manual.casmopolitan import Casmopolitan
 
 if __name__ == "__main__":
 
-    # task, search_space = task_factory('styblinski_tang', num_dims=6, variable_type='num', num_categories=150)
-    task, search_space = get_task_and_search_space(task_id='ackley', dtype=torch.float64)
+    task, search_space = task_factory('styblinski_tang', num_dims=6, variable_type='num', num_categories=150)
+    # task, search_space = get_task_and_search_space(task_id='ackley', dtype=torch.float64)
 
     # optimizer = RandomSearch(search_space, store_observations=True, input_constraints=None)
     optimizer = Casmopolitan(search_space, use_tr=False, n_init=10, input_constraints=None)
@@ -44,5 +42,5 @@ if __name__ == "__main__":
         x_next = optimizer.suggest(1)
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
-        print(i, x_next.values, y_next - task.global_optimum)
-    print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y - task.global_optimum:.3f}')
+        print(i, x_next.values, y_next)
+        print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f}')

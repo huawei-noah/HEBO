@@ -56,7 +56,7 @@ class BOSS(BoBase):
                  model_max_batch_size: int = 5000,
                  model_normalize_kernel_output: bool = True,
                  acq_name: str = 'ei',
-                 acq_optim_ga_num_iter: int = 100,
+                 acq_optim_ga_num_iter: int = 500,
                  acq_optim_ga_pop_size: int = 100,
                  acq_optim_ga_num_parents: int = 20,
                  acq_optim_ga_num_elite: int = 10,

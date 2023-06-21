@@ -35,9 +35,16 @@ import time
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
 
-    task, search_space = task_factory('xgboost_opt', torch.float32, dataset_id="mnist")
+    dtype = torch.float64
 
-    optimizer = RandomSearch(search_space, store_observations=True)
+    task, search_space = task_factory('xgboost_opt', dtype, dataset_id="mnist")
+
+    optimizer = RandomSearch(
+        search_space=search_space,
+        input_constraints=task.input_constraints,
+        store_observations=False,
+        dtype=dtype
+    )
     print(f"{optimizer.name}_{task.name}")
 
     t = time.time()
@@ -47,7 +54,3 @@ if __name__ == "__main__":
         optimizer.observe(x_next, y_next)
         print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f} - Took {time_formatter(time.time() - t)} '
               f'from beginning')
-
-    plot_convergence_curve(optimizer, task,
-                           os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
-                                        f'{optimizer.name}_{task.name}_test.png'), plot_per_iter=True)

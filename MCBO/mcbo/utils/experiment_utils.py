@@ -94,7 +94,7 @@ def run_experiment(task: TaskBase,
                 stopwatch.stop()
 
                 results_logger.append(
-                    eval_num=task.num_func_evals,
+                    eval_num=len(optimizer.data_buffer),
                     x=x_next.iloc[0].to_dict(),
                     y=y_next[0, 0],
                     y_star=optimizer.best_y,

@@ -89,7 +89,7 @@ DEFAULT_ACQ_OPTIM_SA_KWARGS = dict(
 )
 
 DEFAULT_ACQ_OPTIM_GA_KWARGS = dict(
-    ga_num_iter=100,
+    ga_num_iter=500,
     ga_pop_size=100,
     cat_ga_num_parents=20,
     cat_ga_num_elite=10,

@@ -22,14 +22,25 @@ import os
 import sys
 from pathlib import Path
 
+import torch
+
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.task_factory import task_factory
-
+from mcbo.optimizers import RandomSearch
 
 if __name__ == '__main__':
-    task, search_space = task_factory('mig_optimization', seq_len=5, ntk_name='div', objective='size')
+    from mcbo.task_factory import task_factory
 
-    x = search_space.sample(1)
-    y = task(x)
+    task_kwargs = dict(seq_len=10, ntk_name='adder', objective='size')
+    dtype = torch.float64
+    task, search_space = task_factory('mig_optimization', dtype=dtype, **task_kwargs)
+
+    optimizer = RandomSearch(search_space, input_constraints=task.input_constraints, store_observations=True)
+    print(f"{optimizer.name}_{task.name}")
+
+    for i in range(10):
+        x_next = optimizer.suggest(2)
+        y_next = task(x_next)
+        optimizer.observe(x_next, y_next)
+        print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f}')

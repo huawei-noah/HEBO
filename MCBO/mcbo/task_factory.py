@@ -16,7 +16,7 @@ from mcbo.tasks.synthetic.sfu.sfu_task import SfuTask
 from mcbo.tasks.synthetic.sfu.utils_sfu import SFU_FUNCTIONS
 
 
-def task_factory(task_name: str, dtype: torch.dtype = torch.float32, **kwargs) -> (TaskBase, SearchSpace):
+def task_factory(task_name: str, dtype: torch.dtype = torch.float64, **kwargs) -> (TaskBase, SearchSpace):
     """
     The task name specifies the task that should be returned.
 

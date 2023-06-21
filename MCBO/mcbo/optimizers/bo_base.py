@@ -9,6 +9,7 @@
 
 import copy
 import time
+import warnings
 from typing import Optional, Dict, Callable, List
 
 import numpy as np
@@ -249,11 +250,21 @@ class BoBase(OptimizerBase):
         assert np.all(is_valid), is_valid
         num_nan = np.isnan(y).sum()
         if num_nan > 0:
-            raise ValueError(f"Got {num_nan} / {len(y)} NaN observations.\n"
-                             f"X:\n"
-                             f"    {x}\n"
-                             f"Y:\n"
-                             f"    {y}")
+            warnings.warn(
+                f"Got {num_nan} / {len(y)} NaN observations.\n"
+                f"X:\n"
+                f"    {x}\n"
+                f"Y:\n"
+                f"    {y}"
+            )
+
+        filtr_ind = np.arange(len(y))[np.isnan(y).sum(-1) == 0]
+        y = y[filtr_ind]
+        x = x.iloc[filtr_ind]
+
+        if len(y) == 0:
+            return
+
         # Transform x and y to torch tensors
         x = self.search_space.transform(x)
 
