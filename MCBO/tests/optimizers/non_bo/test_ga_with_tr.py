@@ -40,8 +40,9 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 
 
 if __name__ == '__main__':
-    task, search_space = task_factory('ackley', num_dims=[10, 2], variable_type=['nominal', 'num'],
+    task = task_factory('ackley', num_dims=[10, 2], variable_type=['nominal', 'num'],
                                       num_categories=[10, None])
+    search_space = task.get_search_space()
 
     tr_manager = RandomRestartTrManager(search_space,
                                         min_num_radius=2 ** -5,

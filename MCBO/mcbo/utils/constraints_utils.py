@@ -13,7 +13,7 @@ def input_eval_from_transfx(transf_x: torch.Tensor, search_space: SearchSpace,
     Evaluate the boolean constraint function on a set of transformed inputs
 
     Args:
-        search_space: optimisation search space
+        search_space: optimization search space
         input_constraints: list of funcs taking a point as input and outputting whether the point
                                    is valid or not
     Return:

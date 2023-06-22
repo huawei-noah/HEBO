@@ -43,7 +43,7 @@ class LocalSearch(OptimizerNotBO):
                  store_observations: bool = True,
                  allow_repeating_suggestions: bool = False,
                  neighbourhood_ball_transformed_radius: int = .1,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
         """
         :param: neighbourhood_ball_normalised_radius: in the transformed space, numerical dims are mutated by sampling

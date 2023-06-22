@@ -45,7 +45,7 @@ class AcqOptimizerBase(ABC):
                  ):
         """
         Args:
-            search_space: optimisation search space
+            search_space: optimization search space
             dtype: tensor type
             input_constraints: list of funcs taking a point as input and outputting whether the point
                                        is valid or not

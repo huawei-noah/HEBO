@@ -26,7 +26,7 @@ def get_task_sp(mixed: bool) -> (TaskBase, SearchSpace):
                            task_name_suffix=task_name_suffix, lb=-1, ub=1)
         return task_factory(task_name, **task_kwargs)
     else:
-        return task_factory(task_name, torch.float32, num_dims=10, variable_type='nominal', num_categories=21)
+        return task_factory(task_name, torch.float64, num_dims=10, variable_type='nominal', num_categories=21)
 
 
 def test_sa(mixed: bool, use_tr: bool):

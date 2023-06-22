@@ -8,7 +8,8 @@ from mcbo.acq_funcs.factory import acq_factory
 if __name__ == '__main__':
     dtype = torch.float64
     device = torch.device('cpu')
-    task, search_space = task_factory('sphere', dtype, num_dims=10, variable_type='num')
+    task = task_factory('sphere', num_dims=10, variable_type='num')
+    search_space = task.get_search_space(dtype=dtype)
 
     x_train_pd = search_space.sample(1000)
     x_train = search_space.transform(x_train_pd)

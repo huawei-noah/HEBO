@@ -16,7 +16,8 @@ from mcbo.utils.plotting_utils import plot_convergence_curve
 if __name__ == '__main__':
     set_random_seed(2)
 
-    task, search_space = task_factory('levy', torch.float32, num_dims=10, variable_type='nominal', num_categories=21)
+    task = task_factory('levy', num_dims=10, variable_type='nominal', num_categories=21)
+    search_space = task.get_search_space()
 
     optimizer = RandomSearch(search_space, store_observations=True)
 

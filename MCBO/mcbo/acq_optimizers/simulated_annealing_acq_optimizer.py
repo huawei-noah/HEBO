@@ -41,11 +41,11 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
                  init_temp: float = 1.,
                  tolerance: int = 100,
                  n_restarts: int = 3,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
         """
         Args:
-            n_restarts: during acq function optimisation, run SA from `n_restarts` starting points
+            n_restarts: during acq function optimization, run SA from `n_restarts` starting points
         """
         self.num_iter = num_iter
         self.init_temp = init_temp

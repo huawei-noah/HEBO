@@ -52,7 +52,7 @@ class ComboGPModel(ModelBase):
                  n_burn_init: int = 100,
                  max_training_dataset_size: int = 1000,
                  verbose: bool = False,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu'),
                  ):
 
@@ -62,7 +62,7 @@ class ComboGPModel(ModelBase):
 
         self.noise_lb = noise_lb
         self.n_burn_init = n_burn_init
-        self.np_dtype = 'float32' if self.dtype == torch.float32 else 'float64'
+        self.np_dtype = 'float32' if self.dtype == torch.float64 else 'float64'
         self.verbose = verbose
         self.n_vertices = n_vertices
         self.adjacency_mat_list = adjacency_mat_list
@@ -532,7 +532,7 @@ class ComboEnsembleGPModel(EnsembleModelBase):
                  n_burn_init: int = 100,
                  max_training_dataset_size: int = 1000,
                  verbose: bool = False,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu'),
                  ):
 

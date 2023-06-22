@@ -72,7 +72,7 @@ class BOSS(BoBase):
                  tr_succ_tol: Optional[int] = None,
                  tr_fail_tol: Optional[int] = None,
                  tr_verbose: bool = False,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu'),
                  ):
         assert search_space.num_nominal == search_space.num_params, \

@@ -46,10 +46,11 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
-    dtype=torch.float32
-    task, search_space = task_factory('levy', torch.float32, num_dims=[2, 3, 2],
-                                      variable_type=['int', 'nominal', 'num'],
+    dtype=torch.float64
+    task = task_factory('levy', num_dims=[2, 3, 2], variable_type=['int', 'nominal', 'num'],
                                       num_categories=[None, 21, None])
+    search_space = task.get_search_space(dtype=dtype)
+
 
     task_name = "ackley"
     num_dims = [50, 3]
@@ -60,9 +61,8 @@ if __name__ == '__main__':
     lb[-3:] = -1
     task_kwargs = dict(num_dims=num_dims, variable_type=variable_type, num_categories=num_categories,
                        task_name_suffix=task_name_suffix, lb=lb, ub=1)
-    task, search_space = task_factory(task_name=task_name, dtype=dtype, **task_kwargs)
-
-    # task, search_space = task_factory('pest', dtype=torch.float32)
+    task = task_factory(task_name=task_name, **task_kwargs)
+    search_space = task.get_search_space(dtype=dtype)
 
     input_constraints = None  # [input_constraint_maker(i) for i in range(1, 4)]
 

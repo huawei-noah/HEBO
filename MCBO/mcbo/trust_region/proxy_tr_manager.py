@@ -21,7 +21,7 @@ class ProxyTrManager(TrManagerBase):
 
     def __init__(self,
                  search_space: SearchSpace,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
         super(ProxyTrManager, self).__init__(search_space, dtype)
 

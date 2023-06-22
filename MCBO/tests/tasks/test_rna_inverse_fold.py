@@ -31,8 +31,10 @@ from mcbo import task_factory
 from mcbo.optimizers.bo_builder import BoBuilder
 
 if __name__ == '__main__':
+    dtype = torch.float64
     task_kws = dict(target=65)
-    task, search_space = task_factory(task_name='rna_inverse_fold', dtype=torch.float64, **task_kws)
+    task = task_factory(task_name='rna_inverse_fold', dtype=dtype, **task_kws)
+    search_space = task.get_search_space(dtype=dtype)
     bo_builder = BoBuilder(
         model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic'
     )

@@ -41,7 +41,7 @@ class LinRegModel(ModelBase, torch.nn.Module):
                  b_prior: float = 1.,
                  sparse_horseshoe_threshold: float = 0.1,
                  n_gibbs: int = int(1e3),
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu'),
                  ):
 

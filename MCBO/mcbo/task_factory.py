@@ -16,14 +16,15 @@ from mcbo.tasks.synthetic.sfu.sfu_task import SfuTask
 from mcbo.tasks.synthetic.sfu.utils_sfu import SFU_FUNCTIONS
 
 
-def task_factory(task_name: str, dtype: torch.dtype = torch.float64, **kwargs) -> (TaskBase, SearchSpace):
+def task_factory(task_name: str, **kwargs) -> TaskBase:
     """
     The task name specifies the task that should be returned.
+    
+    Args:
+        task_name: name of the optimization task
 
-    :param task_name:
-    :param dtype:
-    :param kwargs:
-    :return:
+    Returns:
+        task: the optimization task
     """
 
     if task_name in SFU_FUNCTIONS:
@@ -105,4 +106,4 @@ def task_factory(task_name: str, dtype: torch.dtype = torch.float64, **kwargs) -
     else:
         raise NotImplementedError(f'Task {task_name} is not implemented.')
 
-    return task, task.get_search_space(dtype=dtype)
+    return task

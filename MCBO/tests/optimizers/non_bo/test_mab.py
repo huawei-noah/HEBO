@@ -42,7 +42,8 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 
 
 if __name__ == '__main__':
-    task, search_space = task_factory('levy', torch.float32, num_dims=5, variable_type='nominal', num_categories=4)
+    task = task_factory('levy', num_dims=5, variable_type='nominal', num_categories=4)
+    search_space = task.get_search_space()
     input_constraints = [input_constraint_maker(i) for i in range(1, 4)]
 
     tr_manager = RandomRestartTrManager(

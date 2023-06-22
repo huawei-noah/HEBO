@@ -45,9 +45,10 @@ if __name__ == '__main__':
     n = 100
 
     task_name_suffix = "2-nom-3 2-int 2-nom-3 2-int 2-nom-4"
-    task, search_space = task_factory('ackley', num_dims=[2, 2, 2, 2, 2],
+    task = task_factory('ackley', num_dims=[2, 2, 2, 2, 2],
                                       variable_type=['nominal', 'int', 'nominal', 'int', 'nominal'],
                                       num_categories=[5, None, 5, None, 5])
+    search_space = task.get_search_space()
 
     input_constraints = [input_constraint_maker(i) for i in range(1, 4)]
 
@@ -61,7 +62,8 @@ if __name__ == '__main__':
     task_kwargs = dict(num_dims=num_dims, variable_type=variable_type, num_categories=num_categories,
                        task_name_suffix=task_name_suffix, lb=lb, ub=1)
     input_constraints = None
-    task, search_space = task_factory(task_name=task_name, **task_kwargs)
+    task = task_factory(task_name=task_name, **task_kwargs)
+    search_space = task.get_search_space()
 
     optimizer = CoCaBO(
         search_space=search_space,

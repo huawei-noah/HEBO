@@ -61,7 +61,7 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
             'The Mixed MAB acquisition optimizer does not support permutation variables.'
 
         assert n_cand >= n_restarts, \
-            'The number of random candidates must be > number of points selected for gradient based optimisation'
+            'The number of random candidates must be > number of points selected for gradient based optimization'
 
         super(MixedMabAcqOptimizer, self).__init__(
             search_space=search_space,

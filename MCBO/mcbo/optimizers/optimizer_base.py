@@ -58,11 +58,11 @@ class OptimizerBase(ABC):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
         """
         Args:
-            search_space: optimisation search space
+            search_space: optimization search space
             dtype: tensor type
             input_constraints: list of funcs taking a point as input and outputting whether the point
                                        is valid or not

@@ -24,10 +24,11 @@ from mcbo.utils.distance_metrics import hamming_distance
 if __name__ == '__main__':
     use_tr = True
     n_init = 20
-    dtype = torch.float32
+    dtype = torch.float64
 
-    task, search_space = task_factory('levy', dtype, num_dims=[3, 3, 6], variable_type=['nominal', 'num', 'nominal'],
+    task = task_factory('levy', num_dims=[3, 3, 6], variable_type=['nominal', 'num', 'nominal'],
                                       num_categories=[5, 5, 5])
+    search_space = task.get_search_space(dtype=dtype)
 
     optimizer = CoCaBO(search_space, n_init, use_tr=use_tr, tr_init_nominal_radius=5, tr_init_num_radius=0.3)
 

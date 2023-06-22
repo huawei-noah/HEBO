@@ -93,6 +93,12 @@ def run_experiment(task: TaskBase,
                 optimizer.observe(x_next, y_next)
                 stopwatch.stop()
 
+                filtr_ind = np.arange(len(y_next))[np.isnan(y_next).sum(-1) == 0]
+                y_next = y_next[filtr_ind]
+                x_next = x_next.iloc[filtr_ind]
+                if len(x_next) == 0:
+                    continue
+
                 results_logger.append(
                     eval_num=len(optimizer.data_buffer),
                     x=x_next.iloc[0].to_dict(),
@@ -169,8 +175,8 @@ def get_task_and_search_space(task_id: str, dtype: torch.dtype = torch.float64, 
 
     if task_name is None:
         task_name = task_id
-    task, search_space = task_factory(task_name=task_name, dtype=dtype, **task_kwargs)
-    return task, search_space
+    task = task_factory(task_name=task_name, **task_kwargs)
+    return task, task.get_search_space(dtype=dtype)
 
 
 def get_opt(search_space: SearchSpace, task: TaskBase, full_opt_name: str, bo_n_init: int = 20,

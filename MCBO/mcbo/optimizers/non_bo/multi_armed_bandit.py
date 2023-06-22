@@ -54,7 +54,7 @@ class MultiArmedBandit(OptimizerNotBO):
                  resample_tol: int = 500,
                  fixed_tr_manager: Optional[TrManagerBase] = None,
                  fixed_tr_centre_nominal_dims: Optional[List] = None,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         assert search_space.num_dims == search_space.num_nominal + search_space.num_ordinal, \

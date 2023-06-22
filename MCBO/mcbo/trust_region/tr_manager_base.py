@@ -21,7 +21,7 @@ class TrManagerBase(ABC):
 
     def __init__(self,
                  search_space: SearchSpace,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  **kwargs
                  ):
         self.radii = {}

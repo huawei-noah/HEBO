@@ -27,7 +27,7 @@ used.
 ## Acknowledgements
 
 This task has been initially presented in
-[Bayesian optimisation over multiple continuous and categorical inputs](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiHqZ237ZP6AhU1_7sIHdCBA18QFnoECA4QAQ&url=https%3A%2F%2Farxiv.org%2Fabs%2F1906.08878&usg=AOvVaw05WOh0_OOBRxflDKoGBqIF)
+[Bayesian optimization over multiple continuous and categorical inputs](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiHqZ237ZP6AhU1_7sIHdCBA18QFnoECA4QAQ&url=https%3A%2F%2Farxiv.org%2Fabs%2F1906.08878&usg=AOvVaw05WOh0_OOBRxflDKoGBqIF)
 , Ru et al. 2020.
 
 Our implementation is an adaptation of

@@ -75,8 +75,9 @@ if __name__ == '__main__':
             random.seed(seed)
             torch.manual_seed(seed)
 
-            task, search_space = task_factory(task_name, num_dims=num_dims, variable_type='nominal',
+            task = task_factory(task_name, num_dims=num_dims, variable_type='nominal',
                                               num_categories=num_categories)
+            search_space = task.get_search_space()
 
             x_init = search_space.sample(pop_size)
 

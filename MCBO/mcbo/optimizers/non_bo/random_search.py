@@ -40,7 +40,7 @@ class RandomSearch(OptimizerNotBO):
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
                  store_observations: bool = False,
-                 dtype: torch.dtype = torch.float32
+                 dtype: torch.dtype = torch.float64
                  ):
         self.store_observations = store_observations
         self.x_init = search_space.sample(0)

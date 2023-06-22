@@ -30,8 +30,8 @@ from mcbo.optimizers.manual.casmopolitan import Casmopolitan
 
 if __name__ == "__main__":
 
-    task, search_space = task_factory('styblinski_tang', num_dims=6, variable_type='num', num_categories=150)
-    # task, search_space = get_task_and_search_space(task_id='ackley', dtype=torch.float64)
+    task = task_factory('styblinski_tang', num_dims=6, variable_type='num', num_categories=150)
+    search_space = task.get_search_space()
 
     # optimizer = RandomSearch(search_space, store_observations=True, input_constraints=None)
     optimizer = Casmopolitan(search_space, use_tr=False, n_init=10, input_constraints=None)

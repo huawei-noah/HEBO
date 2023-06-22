@@ -41,7 +41,7 @@ class PymooGeneticAlgoAcqOptimizer(AcqOptimizerBase):
                  ga_num_iter: int = 500,
                  ga_pop_size: int = 100,
                  ga_num_offsprings: Optional[int] = None,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         super(PymooGeneticAlgoAcqOptimizer, self).__init__(
@@ -169,7 +169,7 @@ class CategoricalGeneticAlgoAcqOptimizer(AcqOptimizerBase):
                  ga_num_elite: int = 10,
                  ga_store_x: bool = True,
                  ga_allow_repeating_x: bool = False,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         super(CategoricalGeneticAlgoAcqOptimizer, self).__init__(
@@ -287,7 +287,7 @@ class GeneticAlgoAcqOptimizer(AcqOptimizerBase):
                  cat_ga_num_elite: int = 10,
                  cat_ga_store_x: bool = False,
                  cat_ga_allow_repeating_x: bool = True,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         super(GeneticAlgoAcqOptimizer, self).__init__(

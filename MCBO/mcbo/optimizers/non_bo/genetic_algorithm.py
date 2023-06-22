@@ -97,7 +97,7 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
                  fixed_tr_manager: Optional[TrManagerBase] = None,
                  store_observations: bool = False,
                  tournament_selection: bool = True,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         super(PymooGeneticAlgorithm, self).__init__(
@@ -291,7 +291,7 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
                  store_observations: bool = True,
                  allow_repeating_suggestions: bool = False,
                  fixed_tr_manager: Optional[TrManagerBase] = None,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         assert search_space.num_nominal + search_space.num_ordinal == search_space.num_dims, \
@@ -725,7 +725,7 @@ class GeneticAlgorithm(OptimizerNotBO):
                  store_observations: bool = True,
                  cat_ga_allow_repeating_suggestions: bool = False,
                  pymoo_ga_tournament_selection: bool = True,
-                 dtype: torch.dtype = torch.float32
+                 dtype: torch.dtype = torch.float64
                  ):
 
         super(GeneticAlgorithm, self).__init__(

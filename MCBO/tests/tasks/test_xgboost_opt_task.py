@@ -37,7 +37,8 @@ if __name__ == "__main__":
 
     dtype = torch.float64
 
-    task, search_space = task_factory('xgboost_opt', dtype, dataset_id="mnist")
+    task = task_factory('xgboost_opt', dataset_id="mnist")
+    search_space = task.get_search_space(dtype=dtype)
 
     optimizer = RandomSearch(
         search_space=search_space,

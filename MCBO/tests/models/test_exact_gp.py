@@ -9,7 +9,8 @@ from mcbo.utils.plotting_utils import plot_model_prediction
 if __name__ == '__main__':
     dtype = torch.float64
     device = torch.device('cpu')
-    task, search_space = task_factory('sphere', dtype, num_dims=10, variable_type='nominal', num_categories=10)
+    task = task_factory('sphere', num_dims=10, variable_type='nominal', num_categories=10)
+    search_space = task.get_search_space(dtype=dtype)
 
     x_train_pd = search_space.sample(1000)
     x_train = search_space.transform(x_train_pd)

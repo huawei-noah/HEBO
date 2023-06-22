@@ -8,8 +8,8 @@ from mcbo.models.gp.exact_gp import ExactGPModel
 
 def test_pi():
     dtype = torch.float64
-    device = torch.device('cpu')
-    task, search_space = task_factory('ackley', dtype, num_dims=10, variable_type='num', task_name_suffix="10")
+    task = task_factory('ackley', num_dims=10, variable_type='num', task_name_suffix="10")
+    search_space = task.get_search_space(dtype=dtype)
 
     x_train_pd = search_space.sample(1000)
     x_train = search_space.transform(x_train_pd)

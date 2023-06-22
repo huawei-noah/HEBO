@@ -35,7 +35,7 @@ from mcbo.optimizers import GeneticAlgorithm
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
 
-    parser = argparse.ArgumentParser(add_help=True, description='Plot mixed optimisation results.')
+    parser = argparse.ArgumentParser(add_help=True, description='Plot mixed optimization results.')
 
     parser.add_argument("--design_name", "-d", default="adder", help="Circuit name")
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         "n_parallel": pop_size
     }
 
-    dtype = torch.float32
+    dtype = torch.float64
     aux = task_factory(task_name='aig_optimization', dtype=dtype, **task_kwargs)
     task: EDASeqOptimization = aux[0]
     search_space = aux[1]

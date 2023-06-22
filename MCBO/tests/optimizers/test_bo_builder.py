@@ -37,9 +37,9 @@ def test_bo_builder():
     from mcbo.task_factory import task_factory
     n_init = 20
 
-    task, search_space = task_factory('levy', torch.float64, num_dims=[2, 3, 2],
-                                      variable_type=['num', 'nominal', 'nominal'],
-                                      num_categories=[None, 12, 12])
+    task = task_factory('levy', num_dims=[2, 3, 2], variable_type=['num', 'nominal', 'nominal'],
+                        num_categories=[None, 12, 12])
+    search_space = task.get_search_space()
 
     input_constraints = None
 
@@ -71,7 +71,8 @@ def test_bo_builder_v_hard_coded(opt_name: str, mix: bool):
         task_kwargs = {'num_dims': dim, 'variable_type': 'nominal', 'num_categories': n_cats,
                        "task_name_suffix": None}
 
-    task, search_space = task_factory(task_name, dtype=dtype, **task_kwargs)
+    task = task_factory(task_name, **task_kwargs)
+    search_space = task.get_search_space(dtype=dtype)
 
     bo_n_init = 20
     bo_device = torch.device(f'cuda:{device_id}')

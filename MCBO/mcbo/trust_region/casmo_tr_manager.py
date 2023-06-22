@@ -44,7 +44,7 @@ class CasmopolitanTrManager(TrManagerBase):
                  restart_n_cand: int = 1000,
                  max_n_perturb_num: int = 20,
                  verbose=False,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu')
                  ):
         super(CasmopolitanTrManager, self).__init__(search_space=search_space, dtype=dtype)

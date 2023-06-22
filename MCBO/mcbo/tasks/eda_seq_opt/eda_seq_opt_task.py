@@ -456,7 +456,7 @@ class EDASeqOptimization(TaskBase):
     def search_space_params(self):
         return self.optim_space.search_space_params
 
-    def get_search_space(self, dtype: torch.dtype) -> SearchSpaceEDA:
+    def get_search_space(self, dtype: torch.dtype = torch.float64) -> SearchSpaceEDA:
         return SearchSpaceEDA(
             self.optim_space.search_space_params, dtype=dtype,
             seq_operators_pattern_id=self.seq_operators_pattern_id,

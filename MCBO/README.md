@@ -1,6 +1,11 @@
 # MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
 
-![](./paper/images/all_mix_match.PNG)
+This library provides an easy way to mix-and-match Bayesian optimization components in order to run new
+and existing mixed-variable or combinatorial Bayesian optimization. 
+
+<p align="center">
+<img src="./paper/images/all_mix_match.PNG" width="750"/>
+</p>
 
 
 ## Installation of MCBO
@@ -36,8 +41,8 @@ chmod u+x ./bbox_setup.sh
 
 - `antibody_design`: Antibody Design 
 - `rna_inverse_fold`: RNA Inverse Folding
-- `aig_optimization`: EDA Sequence Optimisation (AIG sequence optimisation)
-- `aig_optimization_hyp`: EDA Sequence and Parameter Optimisation (AIG sequence and parameter optimisation)
+- `aig_optimization`: EDA Sequence Optimisation (AIG sequence optimization)
+- `aig_optimization_hyp`: EDA Sequence and Parameter Optimisation (AIG sequence and parameter optimization)
 - `mig_optimization`: MIG Sequence Optimisation
 - `svm_opt`: SVM hyperparameter tuning and feature selection
 - `xgboost_opt`: XG-Boost hyperparameter tuning
@@ -49,9 +54,11 @@ class for the RNA inverse fold task.
 
 ```
 from mcbo.factory import task_factory
+import torch
 
 task_name = 'rna_inverse_fold'
-task, search_space = task_factory(task_id=task_id_, dtype=dtype_, absolut_dir=args.absolut_dir)
+task = task_factory(task_name=task_name)
+search_space = task.get_search_space()
 ```
 
 ## Implemented Primitives
@@ -96,13 +103,15 @@ task, search_space = task_factory(task_id=task_id_, dtype=dtype_, absolut_dir=ar
 
 - A simple script to build Casmopolitan optimizer and run it on RNA inverse fold.
 
-```
+```python
+import torch
 from mcbo import task_factory
 from mcbo.optimizers.bo_builder import BoBuilder
 
 if __name__ == '__main__':
     task_kws = dict(target=65)
-    task, search_space = task_factory(task_name='rna_inverse_fold', dtype=torch.float64, **task_kws)
+    task = task_factory(task_name='rna_inverse_fold', **task_kws)
+    search_space = task.get_search_space()
     bo_builder = BoBuilder(
         model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic'
     )
@@ -151,6 +160,9 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 - Add reference to the task in the present README.md in the dedicated section.
 
 ## Cite us
+If you use this library, please cite MCBO paper:
+> Kamil Dreczkowski, Antoine Grosnit, and Haitham Bou Ammar. Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
+
 ```
 @misc{dreczkowski2023mcbo,
       title={Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization}, 

@@ -244,13 +244,13 @@ def obj_lut(ratio_1: float, ratio_2: float, **kwargs) -> float:
 
 
 def obj_lut_sig_level(ratio_1: float, ratio_2: float, **kwargs) -> float:
-    """ Return Val_1 / Ref_1 + 2 * (sigmoid(Val_2) - .5) / Ref_1 --> main focus is on Val_1 optimisation """
+    """ Return Val_1 / Ref_1 + 2 * (sigmoid(Val_2) - .5) / Ref_1 --> main focus is on Val_1 optimization """
     ref_1 = kwargs["ref_1"]
     return ratio_1 + pseudo_sig(ratio_2) / ref_1
 
 
 def obj_level_sig_lut(ratio_1: float, ratio_2: float, **kwargs) -> float:
-    """ Return Val_2 / Ref_2 + 2 * (sigmoid(Val_1) - .5)  / Ref_2 --> main focus is on Val_2 optimisation """
+    """ Return Val_2 / Ref_2 + 2 * (sigmoid(Val_1) - .5)  / Ref_2 --> main focus is on Val_2 optimization """
     ref_2 = kwargs["ref_2"]
     return ratio_2 + pseudo_sig(ratio_1) / ref_2
 

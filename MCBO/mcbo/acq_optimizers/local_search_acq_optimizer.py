@@ -49,7 +49,7 @@ class LsAcqOptimizer(AcqOptimizerBase):
                  n_spray: int = 10,
                  max_n_ascent: float = float('inf'),
                  max_n_perturb_num: int = 20,
-                 dtype: torch.dtype = torch.float32,
+                 dtype: torch.dtype = torch.float64,
                  ):
 
         assert search_space.num_nominal + search_space.num_ordinal == search_space.num_params, \
@@ -138,7 +138,7 @@ class LsAcqOptimizer(AcqOptimizerBase):
                   **kwargs
                   ) -> torch.Tensor:
 
-        assert n_suggestions == 1, 'Greedy Ascent acquisition optimisation does not support n_suggestions > 1'
+        assert n_suggestions == 1, 'Greedy Ascent acquisition optimization does not support n_suggestions > 1'
 
         device, dtype = model.device, model.dtype
         tkwargs = dict(device=device, dtype=dtype)

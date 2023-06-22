@@ -290,7 +290,7 @@ class SearchSpaceSubSet(SearchSpace):
                  nominal_dims: bool = False,
                  ordinal_dims: bool = False,
                  permutation_dims: bool = False,
-                 dtype: torch.dtype = torch.float32):
+                 dtype: torch.dtype = torch.float64):
 
         params = []
         for param_name in search_space.param_names:

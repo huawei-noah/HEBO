@@ -8,8 +8,9 @@ from mcbo.models.gp.exact_gp import ExactGPModel
 if __name__ == '__main__':
     dtype = torch.float64
     device = torch.device('cpu')
-    task1, search_space = task_factory('levy', dtype, num_dims=10, variable_type='num')
-    task2, search_space = task_factory('sphere', dtype, num_dims=10, variable_type='num')
+    task1 = task_factory('levy', num_dims=10, variable_type='num')
+    task2 = task_factory('sphere', num_dims=10, variable_type='num')
+    search_space = task1.get_search_space(dtype=dtype)
 
     x_train_pd = search_space.sample(1000)
     x_train = search_space.transform(x_train_pd)

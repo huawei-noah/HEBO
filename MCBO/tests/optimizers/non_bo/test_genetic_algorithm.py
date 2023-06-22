@@ -36,7 +36,8 @@ from mcbo.utils.plotting_utils import plot_convergence_curve
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
-    task, search_space = task_factory('levy', torch.float32, num_dims=5, variable_type='nominal', num_categories=21)
+    task = task_factory('levy', num_dims=5, variable_type='nominal', num_categories=21)
+    search_space = task.get_search_space()
 
     optimizer = PymooGeneticAlgorithm(search_space, allow_repeating_suggestions=False)
 

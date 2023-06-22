@@ -25,10 +25,9 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.optimizers import BOiLS
+from mcbo.optimizers.manual import BOiLS
 
 import torch
-
 
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
@@ -37,17 +36,17 @@ if __name__ == '__main__':
     operator_space_id = "basic"
     seq_operators_pattern_id = "basic"
 
-    # task, search_space = task_factory(
+    # task = task_factory(
     #     task_name='aig_optimization',
-    #     dtype=torch.float32,
+    #     dtype=torch.float64,
     #     designs_group_id="i2c",
     #     operator_space_id=operator_space_id,
     #     seq_operators_pattern_id=seq_operators_pattern_id,
     #     n_parallel=1
     # )
 
-    task, search_space = task_factory('levy', torch.float32, num_dims=5, variable_type='nominal', num_categories=3)
-
+    task = task_factory('levy', num_dims=5, variable_type='nominal', num_categories=3)
+    search_space = task.get_search_space()
 
     optimizer = BOiLS(
         search_space=search_space,

@@ -79,7 +79,7 @@ class BoBase(OptimizerBase):
                  device: torch.device = torch.device('cpu')
                  ):
         """
-        Base Bayesian optimisation optimiser
+        Base Bayesian optimization optimizer
 
         Args:
             input_constraints: list of funcs taking a point as input and outputting whether the point
@@ -118,7 +118,7 @@ class BoBase(OptimizerBase):
         )
 
         self.fit_time = []  # time taken to fit the surrogate model
-        self.acq_time = []  # time taken to run acquisition function optimisation
+        self.acq_time = []  # time taken to run acquisition function optimization
         self.observe_time = []  # time taken to observe a new value
 
     def restart(self):
@@ -221,7 +221,7 @@ class BoBase(OptimizerBase):
             _ = self.model.fit(x=data_buffer.x, y=data_buffer.y)
             self.fit_time.append(time.time() - time_ref)
 
-            # Grab the current best x and y for acquisition evaluation and optimisation
+            # Grab the current best x and y for acquisition evaluation and optimization
             best_x, best_y = self.get_best_x_and_y()
             acq_evaluate_kwargs = {'best_y': best_y}
 
@@ -303,7 +303,7 @@ class BoBase(OptimizerBase):
 
     def get_best_x_and_y(self):
         """
-        :return: Returns best x and best y used for acquisition optimisation.
+        :return: Returns best x and best y used for acquisition optimization.
         """
         if self.tr_manager is None:
             x, y = self.data_buffer.x, self.data_buffer.y

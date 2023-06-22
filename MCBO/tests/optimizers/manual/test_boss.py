@@ -41,7 +41,8 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
-    task, search_space = task_factory('levy', torch.float32, num_dims=10, variable_type='nominal', num_categories=5)
+    task = task_factory('levy', num_dims=10, variable_type='nominal', num_categories=5)
+    search_space = task.get_search_space()
 
     input_constraints = [input_constraint_maker(i) for i in range(1, 4)]
 

@@ -18,7 +18,7 @@ from mcbo.search_space import SearchSpace
 
 
 class TaskBase(ABC):
-    """ Abstract class to define optimisation (** MINIMISATION **) tasks """
+    """ Abstract class to define optimization (** MINIMISATION **) tasks """
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
@@ -61,7 +61,7 @@ class TaskBase(ABC):
     def search_space_params(self) -> List[Dict[str, Any]]:
         pass
 
-    def get_search_space(self, dtype: torch.dtype) -> SearchSpace:
+    def get_search_space(self, dtype: torch.dtype=torch.float64) -> SearchSpace:
         return SearchSpace(params=self.search_space_params(), dtype=dtype)
 
     def __call__(self, x: pd.DataFrame) -> np.ndarray:

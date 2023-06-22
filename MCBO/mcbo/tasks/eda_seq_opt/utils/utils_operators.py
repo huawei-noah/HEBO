@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Tuple, Type, Union, Set, Optional
 
 ################################
-# Logic optimisation operators
+# Logic optimization operators
 ################################
 import numpy as np
 import torch

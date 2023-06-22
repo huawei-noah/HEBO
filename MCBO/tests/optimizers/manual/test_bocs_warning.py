@@ -8,12 +8,12 @@ if __name__ == '__main__':
     non_binary_search_space = SearchSpace([{'name': 'var 1', 'type': 'nominal', 'categories': ['A', 'B', 'C']},
                                            {'name': 'var 2', 'type': 'bool'},
                                            {'name': 'var 3', 'type': 'bool'},
-                                           {'name': 'var 4', 'type': 'bool'}], dtype=torch.float32)
+                                           {'name': 'var 4', 'type': 'bool'}], dtype=torch.float64)
 
     binary_search_space = SearchSpace([{'name': 'var 1', 'type': 'bool'},
                                        {'name': 'var 2', 'type': 'bool'},
                                        {'name': 'var 3', 'type': 'bool'},
-                                       {'name': 'var 4', 'type': 'bool'}], dtype=torch.float32)
+                                       {'name': 'var 4', 'type': 'bool'}], dtype=torch.float64)
 
     print('Initialising BOCS with a non-binary search space - no warning should be printed')
     BOCS(non_binary_search_space, n_init=10)
