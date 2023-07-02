@@ -1,12 +1,16 @@
 # MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
 
 This library provides an easy way to mix-and-match Bayesian optimization components in order to run new
-and existing mixed-variable or combinatorial Bayesian optimization. 
+and existing mixed-variable or combinatorial Bayesian optimization. Motivations and principles are described in 
+[this paper](https://arxiv.org/pdf/2306.09803.pdf)
 
 <p align="center">
 <img src="./paper/images/all_mix_match.PNG" width="750"/>
 </p>
 
+**Disclaimer:** the figure above shows that this library allows to build and run BO
+algorithms made of the same primitives as several published BO methods, but
+they should not be considered as their official implementations.
 
 ## Installation of MCBO
 Tested on Ubuntu 18.04 and python 3.8.
@@ -41,9 +45,9 @@ chmod u+x ./bbox_setup.sh
 
 - `antibody_design`: Antibody Design 
 - `rna_inverse_fold`: RNA Inverse Folding
-- `aig_optimization`: EDA Sequence Optimisation (AIG sequence optimization)
-- `aig_optimization_hyp`: EDA Sequence and Parameter Optimisation (AIG sequence and parameter optimization)
-- `mig_optimization`: MIG Sequence Optimisation
+- `aig_optimization`: EDA Sequence Optimization (AIG sequence optimization)
+- `aig_optimization_hyp`: EDA Sequence and Parameter Optimization (AIG sequence and parameter optimization)
+- `mig_optimization`: MIG Sequence Optimization
 - `svm_opt`: SVM hyperparameter tuning and feature selection
 - `xgboost_opt`: XG-Boost hyperparameter tuning
 
@@ -160,7 +164,7 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 - Add reference to the task in the present README.md in the dedicated section.
 
 ## Cite us
-If you use this library, please cite MCBO paper:
+If you use this library, please cite [MCBO paper](https://arxiv.org/pdf/2306.09803.pdf):
 > Kamil Dreczkowski, Antoine Grosnit, and Haitham Bou Ammar. Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
 
 ```
@@ -173,3 +177,15 @@ If you use this library, please cite MCBO paper:
       primaryClass={cs.LG}
 }
 ```
+
+## Acknowledgement
+For official implementations of the existing algorithms that our library can build and which inspired 
+some of our primitives, we refer to
+
+- BOSS: https://github.com/henrymoss/BOSS
+- COMBO: https://github.com/QUVA-Lab/COMBO/
+- Casmopolitan: https://github.com/xingchenwan/Casmopolitan
+- CoCaBO: https://github.com/rubinxin/CoCaBO_code
+- BOCS: https://github.com/baptistar/BOCS
+- BOiLS: https://github.com/huawei-noah/HEBO/tree/master/BOiLS
+- BODi: https://github.com/aryandeshwal/BODi/

@@ -312,6 +312,17 @@ class ExactGPModel(ModelBase, torch.nn.Module):
             return (self.gp.likelihood.task_noises * self.y_std ** 2).view(self.num_out).detach()
 
     def to(self, device: Optional[torch.device] = None, dtype: Optional[torch.dtype] = None):
+        """
+        Function used to move model to target device and dtype. Note that this should also change self.dtype and
+        self.device
+
+        Args:
+            device: target device
+            dtype: target dtype
+
+        Returns:
+            self
+        """
         self.device = device
         self.dtype = dtype
         if self.gp is not None:

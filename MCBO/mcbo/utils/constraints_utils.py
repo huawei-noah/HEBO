@@ -16,7 +16,7 @@ def input_eval_from_transfx(transf_x: torch.Tensor, search_space: SearchSpace,
         search_space: optimization search space
         input_constraints: list of funcs taking a point as input and outputting whether the point
                                    is valid or not
-    Return:
+    Returns:
         Array of `number of input points \times number of input constraints` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint `j`
     """
@@ -36,7 +36,7 @@ def input_eval_from_origx(x: Union[pd.DataFrame, Dict],
         x: can contain several input points as a Dataframe, can also be given as a single Dict {var_name: var_value}
         input_constraints: list of funcs taking a point as input and outputting whether the point
                                    is valid or not
-    Return:
+    Returns:
         Array of `number of input points \times number of imput constraints` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`
     """

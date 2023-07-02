@@ -73,42 +73,44 @@ class AcqOptimizerBase(ABC):
         If an optimizer does not support return batches of data, this can be handled by imposing with "assert
         n_suggestions == 1"
 
-
-        :param x:
-        :param n_suggestions:
-        :param x_observed:
-        :param model:
-        :param acq_func:
-        :param acq_evaluate_kwargs:
-        :param tr_manager: a trust region within which to perform the optimization
-        :param kwargs:
-        :return:
+        Args:
+            x: initial search point in transformed space
+            n_suggestions: number of points to suggest
+            x_observed: tensor of points in transformed space
+            model: surrogate
+            acq_func: acquisition function
+            acq_evaluate_kwargs: kwargs to give to the acquisition function
+            tr_manager: a trust region within which to perform the optimization
+            kwargs: optional keyword arguments
+        Returns:
+            opt_x: optimizers of the acquisition function.
         """
         pass
 
-    def post_observe_method(self, x: torch.Tensor, y: torch.Tensor, data_buffer: DataBuffer, n_init: int, **kwargs):
+    def post_observe_method(self, x: torch.Tensor, y: torch.Tensor, 
+                            data_buffer: DataBuffer, n_init: int, **kwargs) -> None:
         """
         Function called at the end of observe method. Can be used to update the internal state of the acquisition
         optimizer based on the observed x and y values. Use cases may include updating the weights of a multi-armed
         bandit based on previously suggested nominal variables and the observed black-box function value.
-
-        :param x:
-        :param y:
-        :param data_buffer:
-        :param n_init:
-        :param kwargs:
-        :return:
+        
+        Args:
+            x: points in transformed search space
+            y: values
+            data_buffer: dataset of already observed points and values
+            n_init: number of initial random points
+            kwargs: optional keyword arguments
         """
-
         pass
 
     def input_eval_from_transfx(self, transf_x: torch.Tensor) -> np.ndarray:
         """
         Evaluate the boolean constraint function on a set of transformed inputs
 
-        Return:
+        Returns:
             Array of `number of input points \times number of input constraint` booleans
-                specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`        """
+                specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`        
+        """
         return input_eval_from_transfx(transf_x=transf_x, search_space=self.search_space,
                                                input_constraints=self.input_constraints)
 
@@ -119,7 +121,7 @@ class AcqOptimizerBase(ABC):
         Args:
             x: can contain several input points as a Dataframe, can also be given as a single Dict {var_name: var_value}
 
-        Return:
+        Returns:
             Array of `number of input points \times number of input constraint` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`
         """

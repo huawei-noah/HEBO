@@ -111,9 +111,9 @@ DEFAULT_ACQ_OPTIM_MAB_KWARGS = dict(
 
 @dataclass
 class BoBuilder:
-    model_id: str
-    acq_opt_id: str
-    acq_func_id: str
+    model_id: str = "gp_to"
+    acq_opt_id: str = "ga"
+    acq_func_id: str = "ei"
     tr_id: Optional[str] = "basic"
     model_kwargs: Dict[str, Any] = field(default_factory=dict)
     acq_opt_kwargs: Dict[str, Any] = field(default_factory=dict)

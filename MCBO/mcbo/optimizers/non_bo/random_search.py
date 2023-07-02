@@ -54,7 +54,7 @@ class RandomSearch(OptimizerNotBO):
         n_remaining = n_suggestions
         x_next = pd.DataFrame(index=range(n_suggestions), columns=self.search_space.df_col_names, dtype=float)
 
-        # Return as many points from initialisation as possible
+        # Return as many points from initialization as possible
         if len(self.x_init) and n_remaining:
             n = min(n_suggestions, len(self.x_init))
             x_next.iloc[idx: idx + n] = self.x_init.iloc[[i for i in range(0, n)]]
@@ -69,7 +69,7 @@ class RandomSearch(OptimizerNotBO):
             )
         return x_next
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         x = self.search_space.transform(x)
 
@@ -97,6 +97,7 @@ class RandomSearch(OptimizerNotBO):
         assert x.shape[1] == self.search_space.num_dims
 
         x = self.search_space.transform(x)
+        self.x_init = self.x_init[len(x):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)

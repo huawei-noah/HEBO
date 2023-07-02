@@ -26,21 +26,12 @@ import torch
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
-
-from mcbo.optimizers import RandomSearch
+from mcbo.utils.utils_task_test import test_task
 
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
     task_kwargs = dict(seq_len=10, ntk_name='adder', objective='size')
     dtype = torch.float64
-    task, search_space = task_factory('mig_optimization', dtype=dtype, **task_kwargs)
-
-    optimizer = RandomSearch(search_space, input_constraints=task.input_constraints, store_observations=True)
-    print(f"{optimizer.name}_{task.name}")
-
-    for i in range(10):
-        x_next = optimizer.suggest(2)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f}')
+    task = task_factory('mig_optimization', dtype=dtype, **task_kwargs)
+    test_task(task=task)

@@ -1,5 +1,4 @@
 # Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
-
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the MIT license.
 
@@ -19,6 +18,7 @@ from mcbo.search_space import SearchSpace
 from mcbo.utils.constraints_utils import input_eval_from_origx, input_eval_from_transfx, \
     sample_input_valid_points
 from mcbo.utils.data_buffer import DataBuffer
+from mcbo.utils.general_utils import filter_nans
 
 
 class OptimizerBase(ABC):
@@ -85,18 +85,26 @@ class OptimizerBase(ABC):
         Should return a pandas dataframe with shape (n_suggestions, D) where
         D is the dimensionality of the problem. The column dtype may mismatch expected dtype (e.g. float for int)
 
-        :param n_suggestions: number of suggestions
-        :return: a DataFrame of suggestions
+        Args:
+            n_suggestions: number of suggestions
+
+        Returns:
+             a DataFrame of suggestions
         """
     pass
 
     def suggest(self, n_suggestions: int = 1) -> pd.DataFrame:
         """
+        **DO NOT OVERRIDE THIS, OVERRIDE `method_suggest`**
+
         Function used to suggest next query points. Should return a pandas dataframe with shape (n_suggestions, D) where
         D is the dimensionality of the problem.
 
-        :param n_suggestions:
-        :return:
+        Args:
+            n_suggestions: number of points to suggest
+            
+        Returns:
+            dataframe of suggested points.
         """
         suggestions = self.method_suggest(n_suggestions)
         # Convert the dtype of each column to proper dtype
@@ -104,41 +112,60 @@ class OptimizerBase(ABC):
         return suggestions.astype({column_name: sample.dtypes[column_name] for column_name in sample})
 
     @abstractmethod
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
         """
         Function used to store observations and to conduct any algorithm-specific computation.
 
-        :param x:
-        :param y:
-        :return:
+        Args:
+            x: points in search space
+            y: 2-d array of black-box values
         """
         pass
+
+    def observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
+        """
+        ** DO NOT OVERRIDE THIS, OVERRIDE `method_observe` **
+
+        Function used to store observations and to conduct any algorithm-specific computation.
+
+        Args:
+            x: points in search space
+            y: 2-d array of black-box values
+        """
+        assert len(x) == len(y)
+        x, y = filter_nans(x=x, y=y)
+
+        if len(x) == 0:
+            return
+        return self.method_observe(x=x, y=y)
 
     @abstractmethod
     def restart(self):
         """
         Function used to restart the internal state of the optimizer between different runs on the same task.
-        :return:
+        Returns:
         """
         pass
 
     @abstractmethod
-    def set_x_init(self, x: pd.DataFrame):
+    def set_x_init(self, x: pd.DataFrame) -> None:
         """
         Function to set query points that should be suggested during random exploration
 
-        :param x:
-        :return:
+        Args:
+            x: points to set as initial points
         """
         pass
 
     @abstractmethod
-    def initialize(self, x: pd.DataFrame, y: np.ndarray):
+    def initialize(self, x: pd.DataFrame, y: np.ndarray) -> None:
         """
         Function used to initialise an optimizer with a dataset of observations
-        :param x:
-        :param y:
-        :return:
+
+        Args:
+            x: points in search space given as a DataFrame
+            y: (2D-array) values
+        Returns:
         """
         pass
 
@@ -157,7 +184,7 @@ class OptimizerBase(ABC):
         """
         Evaluate the boolean constraint function on a set of transformed inputs
 
-        Return:
+        Returns:
             Array of `number of input points \times number of input constraint` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`        """
         return input_eval_from_transfx(transf_x=transf_x, search_space=self.search_space,
@@ -170,7 +197,7 @@ class OptimizerBase(ABC):
         Args:
             x: can contain several input points as a Dataframe, can also be given as a single Dict {var_name: var_value}
 
-        Return:
+        Returns:
             Array of `number of input points \times number of input constraint` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`
         """
@@ -187,7 +214,7 @@ class OptimizerBase(ABC):
             max_trials: max number of trials
             allow_repeat: whether the same point can be suggested several time
 
-        Return:
+        Returns:
             samples: `n_points` valid samples
         """
         return sample_input_valid_points(

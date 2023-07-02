@@ -15,9 +15,13 @@ def remove_repeating_samples(x: torch.Tensor, y: torch.Tensor):
     """
     Function that removes identical samples that have the same y values
 
-    :param x:
-    :param y:
-    :return:
+    Args:
+        x: points in transformed search space
+        y: corresponding black-box values (2D-tensor)
+
+    Returns:
+        x: points with pairwise distinct y values
+        y: corresponding black-box values (2D-tensor)
     """
     assert x.ndim == 2
     assert y.ndim == 2
@@ -48,10 +52,14 @@ def subsample_training_data(x: torch.Tensor, y: torch.Tensor, dataset_size: int)
     Function used to subsample the training dataset if its larger than dataset_size. This function obtains
     int(dataset_size / 2) of the best points and len(x) - int(dataset_size / 2) random points.
 
-    :param x:
-    :param y:
-    :param dataset_size:
-    :return:
+    Args:
+        x: input points
+        y: input values
+        dataset_size: size of dataset subsampled from (x, y)
+
+    Returns:
+        x: subsampled input points
+        y: subsampled input values
     """
     assert x.ndim == 2
     assert y.ndim == 2

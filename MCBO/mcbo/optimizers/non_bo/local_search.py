@@ -46,7 +46,8 @@ class LocalSearch(OptimizerNotBO):
                  dtype: torch.dtype = torch.float64,
                  ):
         """
-        :param: neighbourhood_ball_normalised_radius: in the transformed space, numerical dims are mutated by sampling
+        Args:
+             neighbourhood_ball_normalised_radius: in the transformed space, numerical dims are mutated by sampling
                                                       a Gaussian perturbation with std this value
         """
         assert search_space.num_permutation == 0, \
@@ -84,6 +85,7 @@ class LocalSearch(OptimizerNotBO):
         assert x.shape[1] == self.search_space.num_dims
 
         x = self.search_space.transform(x)
+        self.x_init = self.x_init[len(x):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
@@ -159,7 +161,7 @@ class LocalSearch(OptimizerNotBO):
 
         return x_next
 
-    def observe(self, x, y):
+    def method_observe(self, x, y):
 
         x = self.search_space.transform(x)
 

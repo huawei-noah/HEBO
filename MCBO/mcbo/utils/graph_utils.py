@@ -20,12 +20,14 @@ def laplacian_eigen_decomposition(search_space: SearchSpace) -> (
     """
     Function used to compute the eigen decomposition of the Laplacian of a combinatorial graph.
 
-    :param search_space: Search space used to build the combinatorial graph.
-    :return:
-    n_vertices:
-    adjacency_matrix_list:
-    fourier_frequency_list:
-    fourier_basis_list:
+    Args:
+        search_space: Search space used to build the combinatorial graph.
+
+    Returns:
+        n_vertices:
+        adjacency_matrix_list:
+        fourier_frequency_list:
+        fourier_basis_list:
     """
 
     assert search_space.num_nominal + search_space.num_ordinal == search_space.num_params, \
@@ -61,9 +63,13 @@ def laplacian_eigen_decomposition(search_space: SearchSpace) -> (
 def cartesian_neighbors(x: torch.Tensor, edge_mat_list: List[torch.Tensor]) -> torch.Tensor:
     """
     For given vertices, it returns all neighboring vertices on cartesian product of the graphs given by edge_mat_list
-    :param x: 1D Tensor
-    :param edge_mat_list:
-    :return: 2d tensor in which each row is 1-hamming distance far from x
+
+    Args:
+        x: 1D Tensor
+        edge_mat_list: list of adjacency
+
+    Returns:
+         2d tensor in which each row is 1-hamming distance far from x
     """
     neighbor_list = []
     for i in range(len(edge_mat_list)):
@@ -79,10 +85,14 @@ def cartesian_neighbors_center_attracted(x: torch.Tensor, edge_mat_list: List[to
                                          x_center: torch.Tensor) -> torch.Tensor:
     """
     For given vertices, it returns all neighboring vertices on cartesian product of the graphs given by edge_mat_list
-    :param x: 1D Tensor
-    :param edge_mat_list:
-    :param x_center: to be selected, the neighbor must have hamming(x_neigh, x_center) <= hamming(x, x_center)
-    :return: 2d tensor in which each row is 1-hamming distance far from x
+
+    Args:
+        x: 1D Tensor
+        edge_mat_list: list of adjacency
+        x_center: to be selected, the neighbor must have hamming(x_neigh, x_center) <= hamming(x, x_center)
+
+    Returns:
+         2d tensor in which each row is 1-hamming distance far from x
     """
     neighbor_list = []
     for i in range(len(edge_mat_list)):

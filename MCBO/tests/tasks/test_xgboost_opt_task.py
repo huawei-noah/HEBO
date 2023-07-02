@@ -25,33 +25,11 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.utils.general_utils import time_formatter
-import torch
-
-from mcbo.optimizers import RandomSearch
-from mcbo.utils.plotting_utils import plot_convergence_curve
-import time
+from mcbo.utils.utils_task_test import test_task
 
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
 
-    dtype = torch.float64
-
     task = task_factory('xgboost_opt', dataset_id="mnist")
-    search_space = task.get_search_space(dtype=dtype)
 
-    optimizer = RandomSearch(
-        search_space=search_space,
-        input_constraints=task.input_constraints,
-        store_observations=False,
-        dtype=dtype
-    )
-    print(f"{optimizer.name}_{task.name}")
-
-    t = time.time()
-    for i in range(10):
-        x_next = optimizer.suggest(3)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f} - Took {time_formatter(time.time() - t)} '
-              f'from beginning')
+    test_task(task=task)

@@ -46,11 +46,13 @@ class AcqBase(ABC):
 
         Important: All acq_funcs are minimized. Hence, it is often necessary to return negated acquisition values.
 
-        :param x:
-        :param model:
-        :param best_y:
-        :param kwargs:
-        :return:
+        Args:
+            x: input points in transformed space
+            model: surrogate model
+            kwargs: can contain best value observed so far best_y
+
+        Returns:
+            acquisition values at x
         """
         pass
 

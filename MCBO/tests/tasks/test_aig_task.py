@@ -25,12 +25,8 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.tasks.eda_seq_opt.eda_seq_opt_task import EDASeqOptimization
-from mcbo.utils.general_utils import save_w_pickle
-
+from mcbo.utils.utils_task_test import test_task
 import torch
-
-from mcbo.optimizers import GeneticAlgorithm
 
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
@@ -51,17 +47,5 @@ if __name__ == "__main__":
     }
 
     dtype = torch.float64
-    aux = task_factory(task_name='aig_optimization', dtype=dtype, **task_kwargs)
-    task: EDASeqOptimization = aux[0]
-    search_space = aux[1]
-
-    optimizer = GeneticAlgorithm(
-        search_space=search_space, store_observations=True, input_constraints=task.input_constraints
-    )
-    print(f"{optimizer.name}_{task.name}")
-
-    while task.num_func_evals < 500:
-        x_next = optimizer.suggest(pop_size)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(f'Iteration {task.num_func_evals} - Best f(x) {optimizer.best_y:.3f}')
+    task = task_factory(task_name='aig_optimization', dtype=dtype, **task_kwargs)
+    test_task(task=task)

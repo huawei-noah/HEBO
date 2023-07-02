@@ -97,10 +97,13 @@ class ModelBase(ABC):
         """
         Function used to fit the parameters of the model
 
-        :param x:
-        :param y:
-        :param kwargs:
-        :return:
+        Args:
+            x: points in transformed search space
+            y: values
+            kwargs: optional keyword arguments
+
+        Returns:
+            (Optional) a list of stats
         """
         pass
 
@@ -110,20 +113,27 @@ class ModelBase(ABC):
         Function used to return the mean and variance of the (possibly approximated) Gaussian predictive distribution
         for the input x. Output shape of each tensor is (N, num_out) where N is the number of input points
 
-        :param x:
-        :param kwargs:
-        :return:
+        Args:
+            x: points in transformed search space
+            kwargs: optional keyword arguments
+
+        Returns:
+            predicted mean and variance
         """
         pass
 
+    @abstractmethod
     @property
     def noise(self) -> torch.Tensor:
         """
         Return estimated noise variance, for example, GP can view noise level as a hyperparameter and optimize it via
-         MLE, another strategy could be using the MSE of training data as noise estimation Should return a float tensor
-         of shape self.num_out
+        MLE, another strategy could be using the MSE of training data as noise estimation Should return a float tensor
+        of shape self.num_out
+
+        Returns:
+            estimated noise variance
         """
-        return torch.zeros(self.num_out, dtype=self.dtype)
+        pass
 
     def sample_y(self, x: torch.Tensor, n_samples: int, **kwargs) -> torch.Tensor:
         # TODO: fix that by taking into account the covariance
@@ -140,9 +150,12 @@ class ModelBase(ABC):
         Function used to move model to target device and dtype. Note that this should also change self.dtype and
         self.device
 
-        :param device:
-        :param dtype:
-        :return:
+        Args:
+            device: target device
+            dtype: target dtype
+
+        Returns:
+            self
         """
         pass
 
@@ -152,9 +165,10 @@ class ModelBase(ABC):
         of the model based on the data that will be used to fit the model. Use cases may include training a VAE
         for latent space BO, or re-initialising the model before fitting it to the data.
 
-        :param x:
-        :param y:
-        :param kwargs:
+        Args:
+            x: points in transformed space
+            y: values
+            kwargs: optional keyword arguments
         :return:
         """
         pass
@@ -184,9 +198,10 @@ class EnsembleModelBase(ModelBase, ABC):
         """
         Function used to fit num_models models
 
-        :param x:
-        :param y:
-        :param kwargs:
+        Args:
+            x: points in transformed space
+            y: values
+            kwargs: optional keyword arguments
         :return:
         """
         pass
@@ -199,8 +214,9 @@ class EnsembleModelBase(ModelBase, ABC):
 
         If the model uses a device, this method should automatically move x to the target device.
 
-        :param x:
-        :param kwargs:
+        Args:
+            x: points in transformed space
+            kwargs: optional keyword arguments
         :return:
         """
         pass
@@ -227,23 +243,26 @@ class EnsembleModelBase(ModelBase, ABC):
         Function used to move model to target device and dtype. Note that this should also change self.dtype and
         self.device
 
-        :param device:
-        :param dtype:
-        :return: self
+        Args:
+            device: target device
+            dtype: target dtype
+
+        Returns:
+            self
         """
         self.models = [model.to(device=device, dtype=dtype) for model in self.models]
         return self
 
-    def pre_fit_method(self, x: torch.Tensor, y: torch.Tensor, **kwargs):
+    def pre_fit_method(self, x: torch.Tensor, y: torch.Tensor, **kwargs) -> None:
         """
         Function called at the before fitting the model in the suggest method. Can be used to update the internal state
-        of the model based on the the data that will be used to fit the model. Use cases may include training a VAE
+        of the model based on the data that will be used to fit the model. Use cases may include training a VAE
         for latent space BO, or re-initialising the model before fitting it to the data.
 
-        :param x:
-        :param y:
-        :param kwargs:
-        :return:
+        Args:
+            x: points in transformed space
+            y: values
+            kwargs: optional keyword arguments
         """
         for model in self.models:
             model.pre_fit_method(x, y, **kwargs)

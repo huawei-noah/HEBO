@@ -25,22 +25,9 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
+from mcbo.utils.utils_task_test import test_task
 from mcbo import task_factory
-from mcbo.optimizers.manual.casmopolitan import Casmopolitan
 
 if __name__ == "__main__":
-
     task = task_factory('styblinski_tang', num_dims=6, variable_type='num', num_categories=150)
-    search_space = task.get_search_space()
-
-    # optimizer = RandomSearch(search_space, store_observations=True, input_constraints=None)
-    optimizer = Casmopolitan(search_space, use_tr=False, n_init=10, input_constraints=None)
-
-    print(f"{optimizer.name}_{task.name}")
-
-    for i in range(110):
-        x_next = optimizer.suggest(1)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(i, x_next.values, y_next)
-        print(f'Iteration {i + 1:>4d} - Best f(x) {optimizer.best_y:.3f}')
+    test_task(task=task)

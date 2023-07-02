@@ -22,6 +22,9 @@ from mcbo.utils.training_utils import remove_repeating_samples
 
 class LinRegModel(ModelBase, torch.nn.Module):
 
+    @property
+    def noise(self) -> torch.Tensor:
+        return torch.zeros(self.num_out, dtype=self.dtype)
 
     def y_to_fit_y(self, y: torch.Tensor) -> torch.Tensor:
         return y

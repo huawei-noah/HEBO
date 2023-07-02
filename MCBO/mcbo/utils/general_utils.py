@@ -12,11 +12,13 @@ import pathlib
 import pickle
 import random
 import time
+import warnings
 from datetime import datetime
 from inspect import signature
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Tuple
 
 import matplotlib
+import pandas as pd
 from scipy.stats import t
 
 matplotlib.use('Agg')
@@ -83,7 +85,7 @@ def copy_tensor(x):
 def _filter_kwargs(function: Callable, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
     r"""Given a function, select only the arguments that are applicable.
 
-    Return:
+    Returns:
          The kwargs dict containing only the applicable kwargs."""
     return {k: v for k, v in kwargs.items() if k in signature(function).parameters}
 
@@ -325,3 +327,32 @@ def plot_mean_std(*args, n_std: Optional[float] = 1,
             ax.fill_between(X, uncertainty_lb, uncertainty_ub, alpha=alpha, color=line_plot[0].get_c())
 
     return ax
+
+
+def filter_nans(x: pd.DataFrame, y: np.ndarray) -> Tuple[pd.DataFrame, np.ndarray]:
+    """
+    Eliminate NaNs
+
+    Args:
+        x: points in search space
+        y: 2-d array of black-box values
+
+    Returns:
+        x: entries whose associated y is not NaN
+        y: black-box values that are not NaN
+    """
+    num_nan = np.isnan(y).sum()
+    if num_nan > 0:
+        warnings.warn(
+            f"Got {num_nan} / {len(y)} NaN observations.\n"
+            f"X:\n"
+            f"    {x}\n"
+            f"Y:\n"
+            f"    {y}"
+        )
+
+    filtr_ind = np.arange(len(y))[np.isnan(y).sum(-1) == 0]
+    y = y[filtr_ind]
+    x = x.iloc[filtr_ind]
+
+    return x, y

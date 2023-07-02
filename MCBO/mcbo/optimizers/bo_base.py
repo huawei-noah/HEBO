@@ -149,6 +149,7 @@ class BoBase(OptimizerBase):
         assert x.shape[1] == self.search_space.num_dims
 
         x = self.search_space.transform(x)
+        self.x_init = self.x_init[len(x):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
@@ -243,35 +244,17 @@ class BoBase(OptimizerBase):
 
         return x_next
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
         time_ref = time.time()
 
         is_valid = self.input_eval_from_origx(x=x)
         assert np.all(is_valid), is_valid
-        num_nan = np.isnan(y).sum()
-        if num_nan > 0:
-            warnings.warn(
-                f"Got {num_nan} / {len(y)} NaN observations.\n"
-                f"X:\n"
-                f"    {x}\n"
-                f"Y:\n"
-                f"    {y}"
-            )
-
-        filtr_ind = np.arange(len(y))[np.isnan(y).sum(-1) == 0]
-        y = y[filtr_ind]
-        x = x.iloc[filtr_ind]
-
-        if len(y) == 0:
-            return
 
         # Transform x and y to torch tensors
         x = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
-
-        assert len(x) == len(y)
 
         # Add data to all previously observed data and to the trust region manager
         self.data_buffer.append(x, y)
@@ -335,3 +318,8 @@ class BoBase(OptimizerBase):
             "acquisition_time": self.acq_time,
             "fit_time": self.fit_time,
         }
+
+    def set_time_from_dict(self, time_dict: Dict[str, List[float]]) -> None:
+        self.observe_time = time_dict["observation_time"]
+        self.acq_time = time_dict["acquisition_time"]
+        self.fit_time = time_dict["fit_time"]

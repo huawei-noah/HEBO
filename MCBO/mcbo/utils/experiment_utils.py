@@ -11,6 +11,7 @@ import os
 from typing import List
 
 import numpy as np
+import pandas as pd
 import torch
 
 from mcbo import RESULTS_DIR, task_factory
@@ -18,19 +19,20 @@ from mcbo.optimizers import OptimizerBase, RandomSearch, SimulatedAnnealing, Mul
     LocalSearch, BoBuilder
 from mcbo.search_space import SearchSpace
 from mcbo.tasks import TaskBase
-from mcbo.utils.general_utils import create_save_dir, current_time_formatter, set_random_seed
+from mcbo.utils.general_utils import create_save_dir, current_time_formatter, set_random_seed, load_w_pickle
 from mcbo.utils.general_utils import save_w_pickle
 from mcbo.utils.results_logger import ResultsLogger
 from mcbo.utils.stopwatch import Stopwatch
 
 
-def run_experiment(task: TaskBase,
-                   optimizers: List[OptimizerBase],
-                   random_seeds: List[int],
-                   max_num_iter: int,
-                   save_results_every: int = 100,
-                   very_verbose=False,
-                   ):
+def run_experiment(
+        task: TaskBase,
+        optimizers: List[OptimizerBase],
+        random_seeds: List[int],
+        max_num_iter: int,
+        save_results_every: int = 100,
+        very_verbose=False,
+):
     # Basic assertion checks
     assert isinstance(task, TaskBase)
     assert isinstance(optimizers, list)
@@ -41,6 +43,8 @@ def run_experiment(task: TaskBase,
         assert isinstance(seed, int)
     for optimizer in optimizers:
         assert isinstance(optimizer, OptimizerBase)
+
+    batch_suggest = 1
 
     # Create the save directory
     exp_save_dir = os.path.join(RESULTS_DIR, task.name)
@@ -62,27 +66,57 @@ def run_experiment(task: TaskBase,
         create_save_dir(optim_save_dir)
 
         for i, seed in enumerate(random_seeds):
-            save_y_path = os.path.join(optim_save_dir, f'seed_{seed}_results.csv')
-            save_x_path = os.path.join(optim_save_dir, f'seed_{seed}_x.pkl')
-            save_time_path = os.path.join(optim_save_dir, f'seed_{seed}_time.pkl')
-
-            print(
-                f'{current_time_formatter()} - Optimizer : {optimizer.name:>{max_name_len}} - Seed {seed} {i + 1:2d}/{len(random_seeds):2d}')
-
             set_random_seed(seed)
             task.restart()
             optimizer.restart()
             stopwatch.reset()
             results_logger.restart()
+            start_iter = 1
+
+            print(
+                f'{current_time_formatter()} - Optimizer : {optimizer.name:>{max_name_len}} - Seed {seed} {i + 1:2d}/{len(random_seeds):2d}')
+
+            save_y_path = os.path.join(optim_save_dir, f'seed_{seed}_results.csv')
+            save_x_path = os.path.join(optim_save_dir, f'seed_{seed}_x.pkl')
+            save_time_path = os.path.join(optim_save_dir, f'seed_{seed}_time.pkl')
+            if os.path.exists(save_y_path) and os.path.exists(save_x_path):
+                x = load_w_pickle(save_x_path)
+                x = pd.DataFrame.from_dict(x)
+
+                results = pd.read_csv((save_y_path))
+                y = results["f(x)"].values.reshape((-1, 1))
+                elapsed_time = results["Elapsed Time"].values.flatten()
+
+                for iter_num in range(len(x)):
+                    x_next = x[iter_num:iter_num + batch_suggest]
+                    y_next = y[iter_num:iter_num + batch_suggest]
+                    task.increment_n_evals(len(x_next))
+                    optimizer.observe(x=x_next, y=y_next)
+
+                    results_logger.append(
+                        eval_num=len(optimizer.data_buffer),
+                        x=x_next.iloc[0].to_dict(),
+                        y=y_next[0, 0],
+                        y_star=optimizer.best_y,
+                        elapsed_time=elapsed_time[iter_num]
+                    )
+
+                if os.path.exists(save_time_path):
+                    time_dict = load_w_pickle(save_time_path)
+                    optimizer.set_time_from_dict(time_dict)
+
+                start_iter = len(x) // batch_suggest + 1
+                print(
+                    f'{current_time_formatter()} - Loaded {len(x)} existing points... y* {optimizer.best_y:.3f}')
 
             # Main loop
-            for iter_num in range(1, max_num_iter + 1):
+            for iter_num in range(start_iter, max_num_iter + 1):
 
                 torch.cuda.empty_cache()  # Clear cached memory
 
                 # Suggest a point
                 stopwatch.start()
-                x_next = optimizer.suggest(1)
+                x_next = optimizer.suggest(batch_suggest)
                 stopwatch.stop()
 
                 # Compute the Black-box value
@@ -113,9 +147,11 @@ def run_experiment(task: TaskBase,
 
                 if iter_num % save_results_every == 0:
                     results_logger.save(save_y_path=save_y_path, save_x_path=save_x_path)
+                    # save running times
+                    if hasattr(optimizer, "get_time_dicts"):
+                        save_w_pickle(optimizer.get_time_dicts(), save_time_path)
 
             results_logger.save(save_y_path=save_y_path, save_x_path=save_x_path)
-
             # save running times
             if hasattr(optimizer, "get_time_dicts"):
                 save_w_pickle(optimizer.get_time_dicts(), save_time_path)

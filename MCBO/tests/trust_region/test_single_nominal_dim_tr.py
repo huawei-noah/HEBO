@@ -36,7 +36,7 @@ from mcbo.utils.plotting_utils import plot_convergence_curve
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
-    # task, search_space = task_factory('levy', torch.float64, num_dims=[1, 4, 1],
+    # task = task_factory('levy', torch.float64, num_dims=[1, 4, 1],
     #                                   variable_type=['int', 'nominal', 'num'],
     #                                   num_categories=[None, 21, None])
     task = task_factory('levy', num_dims=1, variable_type='nominal', num_categories=21)

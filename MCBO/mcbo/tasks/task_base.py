@@ -28,7 +28,7 @@ class TaskBase(ABC):
     @abstractmethod
     def name(self) -> str:
         """
-        Return:
+        Returns:
             A string correponding to the name of the task
         """
         return 'Task Name'
@@ -38,11 +38,13 @@ class TaskBase(ABC):
         """
         Function to compute the problem specific black-box function.
 
-        :param x: dataframe containing the points at which the black-box should be evaluated.
-        Shape: (batch_size, num_dims), where num_dims is the dimensionality of the problem and batch_size is the batch
-        size. dtype: float32.
-        :return: 2D numpy array containing evaluated black-box values at the input x. Shape: (batch_size, 1).
-        dtype: float32
+        Args:
+            x: dataframe containing the points at which the black-box should be evaluated.
+               Shape: (batch_size, num_dims), where num_dims is the dimensionality of the problem and batch_size is the
+               batch
+
+        Returns:
+             2D numpy array containing evaluated black-box values at the input x. Shape: (batch_size, 1).
         """
         pass
 
@@ -64,6 +66,9 @@ class TaskBase(ABC):
     def get_search_space(self, dtype: torch.dtype=torch.float64) -> SearchSpace:
         return SearchSpace(params=self.search_space_params(), dtype=dtype)
 
+    def increment_n_evals(self, n: int):
+        self._n_bb_evals += n
+
     def __call__(self, x: pd.DataFrame) -> np.ndarray:
-        self._n_bb_evals += len(x)
+        self.increment_n_evals(n=len(x))
         return self.evaluate(x.copy())

@@ -33,11 +33,15 @@ def from_unit_cube(x, lb, ub):
 def univariate_slice_sampling(logp, x0, dtype='float64', width=1.0, max_steps_out=10):
     """
     Univariate Slice Sampling using doubling scheme
-    :param logp: numeric(float) -> numeric(float), a log density function
-    :param x0: numeric(float)
-    :param width:
-    :param max_steps_out:
-    :return: numeric(float), sampled x1
+
+    Args:
+        logp: numeric(float) -> numeric(float), a log density function
+        x0: numeric(float)
+        width:
+        max_steps_out:
+
+    Returns:
+         numeric(float), sampled x1
     """
     assert dtype in ['float32', 'float64']
     for scaled_width in np.array([0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.2, 0.1]) * width:

@@ -24,31 +24,10 @@ from pathlib import Path
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
-
-from mcbo.utils.general_utils import time_formatter
-import torch
-
-from mcbo.optimizers import RandomSearch
-from mcbo.utils.plotting_utils import plot_convergence_curve
-import time
+from mcbo.utils.utils_task_test import test_task
 
 if __name__ == "__main__":
     from mcbo.task_factory import task_factory
 
-    task, search_space = task_factory('svm_opt', torch.float64)
-
-    optimizer = RandomSearch(search_space, store_observations=True, input_constraints=None)
-    print(f"{optimizer.name}_{task.name}")
-
-    t = time.time()
-    for i in range(100):
-        x_next = optimizer.suggest(1)
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(
-            f'Iteration {i + 1:>4d} - f(x) {y_next.flatten()[-1]:.3f}- Best f(x) {optimizer.best_y:.3f} - Took {time_formatter(time.time() - t)} '
-            f'from beginning')
-
-    plot_convergence_curve(optimizer, task,
-                           os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
-                                        f'{optimizer.name}_{task.name}_test.png'), plot_per_iter=True)
+    task = task_factory('svm_opt')
+    test_task(task=task)

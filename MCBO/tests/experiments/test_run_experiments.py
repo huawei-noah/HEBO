@@ -22,19 +22,44 @@ import os
 import sys
 from pathlib import Path
 
-ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
+ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.task_factory import task_factory
-from mcbo.optimizers.manual.casmopolitan import Casmopolitan
+import torch
 
-if __name__ == '__main__':
-    task = task_factory('ackley', num_dims=[5, 5], variable_type=['num', 'nominal'], num_categories=[None, 5])
+from mcbo import task_factory
+from mcbo.optimizers import BoBuilder
+from mcbo.utils.experiment_utils import run_experiment
 
-    optimizer = Casmopolitan(task.get_search_space(), n_init=50, model_num_kernel_ard=False)
-    n = 100
-    for i in range(n):
-        x_next = optimizer.suggest()
-        y_next = task(x_next)
-        optimizer.observe(x_next, y_next)
-        print(f'Iteration {i + 1:03d}/{n} Current value: {y_next[0, 0]:.2f} - best value: {optimizer.best_y:.2f}')
+
+def test_run_experiments():
+    n_init = 5
+    task = task_factory('rastrigin', num_dims=8, variable_type='nominal', num_categories=10)
+    bo_builder = BoBuilder(model_id="gp_to", acq_opt_id="is", acq_func_id="ei", tr_id="basic")
+    optimizer = bo_builder.build_bo(search_space=task.get_search_space(), n_init=n_init,
+                                    input_constraints=task.input_constraints, device=torch.device("cuda:0"))
+    random_seeds = [0]
+    max_num_iter = 10
+
+    run_experiment(
+        task=task,
+        optimizers=[optimizer],
+        random_seeds=random_seeds,
+        max_num_iter=max_num_iter,
+        save_results_every=1
+    )
+
+    optimizer = bo_builder.build_bo(search_space=task.get_search_space(), n_init=n_init,
+                                    input_constraints=task.input_constraints, device=torch.device("cuda:0"))
+    task.restart()
+    run_experiment(
+        task=task,
+        optimizers=[optimizer],
+        random_seeds=random_seeds,
+        max_num_iter=2 * max_num_iter,
+        save_results_every=1
+    )
+
+
+if __name__ == "__main__":
+    test_run_experiments()

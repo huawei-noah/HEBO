@@ -369,9 +369,10 @@ class DiffusionKernel(Kernel):
 
     def forward(self, X1: torch.Tensor, X2: torch.Tensor, diag=False, last_dim_is_batch=False, **params):
         """
-        :param X1: each row is a vector with vertex numbers starting from 0 for each
-        :param X2: each row is a vector with vertex numbers starting from 0 for each
-        :return:
+        Args:
+            X1: each row is a vector with vertex numbers starting from 0 for each
+            X2: each row is a vector with vertex numbers starting from 0 for each
+
         """
 
         stabilizer = 0

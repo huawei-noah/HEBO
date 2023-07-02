@@ -156,7 +156,7 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
 
         return x_next
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         if isinstance(y, torch.Tensor):
             y = y.cpu().numpy()
@@ -439,7 +439,7 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
 
         return x_next
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         x = self.search_space.transform(x)
 
@@ -765,7 +765,7 @@ class GeneticAlgorithm(OptimizerNotBO):
     def method_suggest(self, n_suggestions: int = 1) -> pd.DataFrame:
         return self.backend_ga.method_suggest(n_suggestions)
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
         self.backend_ga.observe(x, y)
         self._best_x = self.backend_ga._best_x
         self.best_y = self.backend_ga.best_y

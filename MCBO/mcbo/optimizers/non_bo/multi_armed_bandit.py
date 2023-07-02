@@ -234,7 +234,7 @@ class MultiArmedBandit(OptimizerNotBO):
 
         return seen
 
-    def observe(self, x: pd.DataFrame, y: np.ndarray):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         # Transform x and y to torch tensors
         x = self.search_space.transform(x)

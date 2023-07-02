@@ -28,16 +28,8 @@ sys.path[0] = ROOT_PROJECT
 import torch
 
 from mcbo import task_factory
-from mcbo.optimizers.bo_builder import BoBuilder
+from mcbo.utils.utils_task_test import test_task
 
 if __name__ == '__main__':
-    task, search_space = task_factory(task_name='antibody_design', dtype=torch.float64)
-    bo_builder = BoBuilder(model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic')
-
-    optimizer = bo_builder.build_bo(search_space=search_space, n_init=20, device=torch.device("cuda"))
-
-    for i in range(100):
-        x = optimizer.suggest(1)
-        y = task(x)
-        optimizer.observe(x, y)
-        print(f'Iteration {i + 1:3d}/{100:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y:.3f}')
+    task = task_factory(task_name='antibody_design', dtype=torch.float64)
+    test_task(task=task)

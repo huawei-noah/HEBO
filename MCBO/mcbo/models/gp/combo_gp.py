@@ -173,9 +173,12 @@ class ComboGPModel(ModelBase):
         Function used to move model to target device and dtype. Note that this should also change self.dtype and
         self.device
 
-        :param device:
-        :param dtype:
-        :return:
+        Args:
+            device: target device
+            dtype: target dtype
+
+        Returns:
+            self
         """
         if device is not None:
             assert isinstance(device, torch.device)

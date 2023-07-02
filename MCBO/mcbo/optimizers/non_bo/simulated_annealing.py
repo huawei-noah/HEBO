@@ -118,6 +118,7 @@ class SimulatedAnnealing(OptimizerNotBO):
         assert self.fixed_tr_manager is None, "Cannot initialize if a fixed tr_manager is set"
 
         x = self.search_space.transform(x)
+        self.x_init = self.x_init[len(x):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
@@ -214,7 +215,7 @@ class SimulatedAnnealing(OptimizerNotBO):
 
         return x_next
 
-    def observe(self, x, y):
+    def method_observe(self, x, y):
 
         x = self.search_space.transform(x)
 
