@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 from pathlib import Path
 from typing import Optional, Set
@@ -179,6 +180,7 @@ class BOExperiments:
                                            self.f_obj.idx_to_seq(x)[idx], x_best]
 
     def run(self):
+        random.seed(self.seed)
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
 
@@ -277,15 +279,6 @@ if __name__ == '__main__':
             _save_dir = os.path.join(
                 config_['save_path'],
                 f"antigen_{antigen}_kernel_{config_['kernel_type']}_seed_{seeds[t]}_cdr_constraint_True_seqlen_{11}")
-
-            # if os.path.exists(_save_dir):
-            #     print(
-            #         f"Done Experiment antigen_{antigen}_kernel_{config_['kernel_type']}_seed_{seeds[t]}_"
-            #         f"cdr_constraint_True_seqlen_{11} already exists. Skipping to next Experiment")
-            #     t += 1
-            #     continue
-            # else:
-            #     os.mkdir(_save_dir)
 
             boexp = BOExperiments(config_, args.cdr_constraints, seeds[t])
 
