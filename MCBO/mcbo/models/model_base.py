@@ -122,8 +122,8 @@ class ModelBase(ABC):
         """
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def noise(self) -> torch.Tensor:
         """
         Return estimated noise variance, for example, GP can view noise level as a hyperparameter and optimize it via
