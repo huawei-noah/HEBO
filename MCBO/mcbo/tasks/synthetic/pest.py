@@ -105,7 +105,7 @@ class PestControl(TaskBase):
     @staticmethod
     def get_search_space_params(n_stages: int) -> List[Dict[str, Any]]:
         params = []
-        for i in range(1, n_stages):
+        for i in range(1, n_stages + 1):
             params.append({'name': f'stage_{i}', 'type': 'nominal', 'categories': PestControl.categories})
         return params
 
