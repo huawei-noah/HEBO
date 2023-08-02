@@ -125,7 +125,7 @@ class LinRegModel(ModelBase, torch.nn.Module):
         else:
             raise NotImplementedError('Estimator is not implemented!')
 
-    def predict(self, x: torch.FloatTensor) -> (torch.FloatTensor, torch.FloatTensor):
+    def predict(self, x: torch.FloatTensor, **kwargs) -> (torch.FloatTensor, torch.FloatTensor):
         if self.estimator == 'bayes':
             raise NotImplementedError(
                 "The posterior distribution is non Gaussian. Look at https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf to implement this.")

@@ -10,6 +10,7 @@
 from mcbo.acq_funcs.ei import EI
 from mcbo.acq_funcs.lcb import LCB
 from mcbo.acq_funcs.pi import PI
+from mcbo.acq_funcs.additive_lcb import AddLCB
 from mcbo.acq_funcs.thompson_sampling import ThompsonSampling
 
 
@@ -17,6 +18,10 @@ def acq_factory(acq_func_id: str, **kwargs):
     if acq_func_id == 'lcb':
         beta = kwargs.get('beta', 1.96)
         acq_func = LCB(beta)
+
+    elif acq_func_id == "addlcb":
+        beta = kwargs.get('beta', 1.96)
+        acq_func = AddLCB(beta)
 
     elif acq_func_id == 'ei':
         acq_func = EI(augmented_ei=False)

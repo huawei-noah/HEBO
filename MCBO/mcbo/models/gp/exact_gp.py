@@ -260,7 +260,7 @@ class ExactGPModel(ModelBase, torch.nn.Module):
                 raise error_gp
         return pred
 
-    def predict(self, x: torch.Tensor) -> (torch.Tensor, torch.Tensor):
+    def predict(self, x: torch.Tensor, **kwargs) -> (torch.Tensor, torch.Tensor):
         num_points = len(x)
 
         if num_points < self.max_batch_size:

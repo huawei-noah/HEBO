@@ -6,12 +6,13 @@
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
-from typing import Union, List, Optional, Tuple
+from typing import Union, List, Optional, Tuple, Dict, Any
 
 import numpy as np
 import torch
 from gpytorch import settings, lazify, delazify
-from gpytorch.constraints import Interval
+from gpytorch.priors import Prior
+from gpytorch.constraints import Interval, Positive
 from gpytorch.kernels import Kernel, RBFKernel, ScaleKernel, MaternKernel
 from gpytorch.lazy import LazyEvaluatedKernelTensor
 from torch.nn import ModuleList
@@ -715,6 +716,8 @@ def get_numeric_kernel_name(kernel: Kernel) -> str:
             raise ValueError(kernel.nu)
     elif isinstance(kernel, RBFKernel):
         num_k_name = "rbf"
+    elif isinstance(kernel, DecompositionKernel):
+        num_k_name = kernel.base_kernel_num
     else:
         raise ValueError(kernel.__class__)
     return num_k_name
@@ -724,3 +727,309 @@ def get_nominal_kernel_name(kernel: Kernel) -> str:
     if isinstance(kernel, ScaleKernel):
         kernel = kernel.base_kernel
     return kernel.name
+
+
+class DecompositionKernel(Kernel):
+    r"""
+        Fast kernel for decompositions
+    """
+
+    @property
+    def outputscale(self):
+        return self.raw_outputscale_constraint.transform(self.raw_outputscale)
+
+    def _outputscale_param(self, m):
+        return m.outputscale
+
+    def _outputscale_closure(self, m, v):
+        return m._set_outputscale(v)
+
+    @outputscale.setter
+    def outputscale(self, value: Union[float, torch.tensor]):
+        self._set_outputscale(value)
+
+    def _set_outputscale(self, value: Union[float, torch.tensor]):
+        if not torch.is_tensor(value):
+            value = torch.as_tensor(value).to(self.raw_outputscale)
+        self.initialize(raw_outputscale=self.raw_outputscale_constraint.inverse_transform(value))
+
+    def __init__(
+            self,
+            decomposition: List[List[int]],
+            base_kernel_num: str,
+            base_kernel_kwargs_num: Optional[Dict[str, Any]],
+            base_kernel_nom: str,
+            base_kernel_kwargs_nom: Optional[Dict[str, Any]],
+            search_space: SearchSpace,
+            num_lengthscale_constraint: torch.nn.Module,
+            nom_lengthscale_constraint: torch.nn.Module,
+            outputscale_prior: Optional[Prior] = None,
+            outputscale_constraint: Optional[Interval] = None,
+            lengthscale_prior: Optional[Prior] = None,
+            lengthscale_constraint: Optional[Interval] = None,
+    ):
+
+        numeric_dims = search_space.cont_dims + search_space.disc_dims
+        kernel_dict = {}
+
+        self.numeric_singletons = []
+        self.nominal_singletons = []
+
+        self.all_numeric_cliques = []
+        self.all_nominal_cliques = []
+        self.mixed_cliques = []
+
+        self.clique_to_scale_ix = {}
+        self.dim_to_lengthscale_ix = {}
+
+        if base_kernel_num == "rbf":
+            base_kernel_num_class = RBFKernel
+        elif base_kernel_num == "mat52":
+            base_kernel_num_class = MaternKernel
+        else:
+            raise NotImplementedError
+
+        if base_kernel_nom == 'overlap':
+            base_kernel_nom_class = Overlap
+        elif base_kernel_kwargs_nom == "transformed_overlap":
+            base_kernel_nom_class = TransformedOverlap
+        else:
+            raise NotImplementedError
+
+        if num_lengthscale_constraint is None:
+            num_lengthscale_constraint = Positive()
+        if nom_lengthscale_constraint is None:
+            nom_lengthscale_constraint = Positive()
+
+        if base_kernel_kwargs_num is None:
+            base_kernel_kwargs_num = {}
+        if base_kernel_kwargs_nom is None:
+            base_kernel_kwargs_nom = {}
+
+        kernel_dict["numeric_singleton"] = ScaleKernel(base_kernel_num_class(ard_num_dims=1), **base_kernel_kwargs_num)
+        kernel_dict["numeric_tuple"] = ScaleKernel(base_kernel_num_class(ard_num_dims=2), **base_kernel_kwargs_num)
+        kernel_dict["nominal_singleton"] = ScaleKernel(base_kernel_nom_class(ard_num_dims=1),
+                                                       lengthscale_constraint=nom_lengthscale_constraint,
+                                                       **base_kernel_kwargs_nom)
+
+        for ix, c in enumerate(numeric_dims):
+            self.dim_to_lengthscale_ix[c] = ix
+
+        scale_ix = 0
+        for component in decomposition:
+
+            component = tuple(sorted(component))
+            if len(component) == 1:
+                self.clique_to_scale_ix[component[0]] = scale_ix
+                scale_ix += 1
+                if component[0] in numeric_dims:
+                    self.numeric_singletons.append(component[0])
+                else:
+                    self.nominal_singletons.append(component[0])
+            else:
+                if all(c in numeric_dims for c in component):
+                    self.clique_to_scale_ix[component] = scale_ix
+                    scale_ix += 1
+                    self.all_numeric_cliques.append(component)
+
+                elif not any(c in numeric_dims for c in component):
+                    self.all_nominal_cliques.append(component)
+                    kernel_dict[str(component)] = ScaleKernel(
+                        base_kernel_nom_class(ard_num_dims=len(component), active_dims=component,
+                                              lengthscale_constraint=nom_lengthscale_constraint,
+                                              **base_kernel_kwargs_nom))
+
+                else:
+                    num_dims = [c for c in component if c in numeric_dims]
+                    nom_dims = [c for c in component if c not in numeric_dims]
+                    numerical_kernel = ScaleKernel(
+                        base_kernel_num_class(ard_num_dims=len(num_dims), active_dims=tuple(sorted(num_dims)),
+                                              **base_kernel_kwargs_num))
+                    nominal_kernel = ScaleKernel(
+                        base_kernel_nom_class(ard_num_dims=len(nom_dims), active_dims=tuple(sorted(nom_dims)),
+                                              lengthscale_constraint=nom_lengthscale_constraint,
+                                              **base_kernel_kwargs_nom))
+
+                    component_kernel = MixtureKernel(search_space=search_space, numeric_kernel=numerical_kernel,
+                                                     categorical_kernel=nominal_kernel)
+
+                    self.mixed_cliques.append(component)
+                    kernel_dict[str(component)] = component_kernel
+
+        super(DecompositionKernel, self).__init__(ard_num_dims=search_space.num_dims,
+                                                  lengthscale_constraint=num_lengthscale_constraint)
+        self.kernel_dict = torch.nn.ModuleDict(kernel_dict)
+        self.numeric_dims = numeric_dims
+
+        # create lengthscale for each numerical dimension
+        self.has_lengthscale = True
+        if lengthscale_constraint is None:
+            lengthscale_constraint = Positive()
+        lengthscale_num_dims = len(numeric_dims)
+        self.register_parameter(
+            name="raw_lengthscale",
+            parameter=torch.nn.Parameter(torch.zeros(*self.batch_shape, 1, lengthscale_num_dims)),
+        )
+        if lengthscale_prior is not None:
+            if not isinstance(lengthscale_prior, Prior):
+                raise TypeError("Expected gpytorch.priors.Prior but got " + type(lengthscale_prior).__name__)
+            self.register_prior(
+                "lengthscale_prior", lengthscale_prior, lambda m: m.lengthscale, lambda m, v: m._set_lengthscale(v)
+            )
+
+        self.register_constraint("raw_lengthscale", lengthscale_constraint)
+
+        # create outputscale for each batched component
+        if outputscale_constraint is None:
+            outputscale_constraint = Positive()
+
+        self.register_parameter(name="raw_outputscale",
+                                parameter=torch.nn.Parameter(torch.ones(len(self.clique_to_scale_ix.keys()))))
+        self.register_constraint("raw_outputscale", outputscale_constraint)
+        if outputscale_prior is not None:
+            if not isinstance(outputscale_prior, Prior):
+                raise TypeError("Expected gpytorch.priors.Prior but got " + type(outputscale_prior).__name__)
+            self.register_prior(
+                "outputscale_prior", outputscale_prior, self._outputscale_param, self._outputscale_closure
+            )
+
+        self.base_kernel_num = base_kernel_num
+        self.base_kernel_nom = base_kernel_nom
+
+    @property
+    def outputscale(self) -> torch.tensor:
+        return self.raw_outputscale_constraint.transform(self.raw_outputscale)
+
+    @outputscale.setter
+    def outputscale(self, value: Union[float, torch.tensor]):
+        self._set_outputscale(value)
+
+    def _set_outputscale(self, value: Union[float, torch.tensor]):
+        if not torch.is_tensor(value):
+            value = torch.as_tensor(value).to(self.raw_outputscale)
+        self.initialize(raw_outputscale=self.raw_outputscale_constraint.inverse_transform(value))
+
+    def forward(self, x1: torch.tensor, x2: torch.tensor, diag: bool = False, last_dim_is_batch: bool = False,
+                clique: tuple = None, **params) -> torch.tensor:
+        if last_dim_is_batch:
+            raise RuntimeError("DecompositionKernel does not accept the last_dim_is_batch argument.")
+
+        if clique is not None:
+            return self.partial_forward(x1, x2, clique=clique, last_dim_is_batch=last_dim_is_batch, **params)
+
+        x1_ = x1.clone()
+        x2_ = x2.clone()
+
+        x1_[::, self.numeric_dims] = x1[::, self.numeric_dims].div(self.lengthscale)
+        x2_[::, self.numeric_dims] = x2[::, self.numeric_dims].div(self.lengthscale)
+
+        total = None
+
+        # Numeric singletons
+        if len(self.numeric_singletons) > 0:
+            x1_single_num = x1_[::, self.numeric_singletons]
+            x2_single_num = x2_[::, self.numeric_singletons]
+
+            res = self.kernel_dict["numeric_singleton"](x1_single_num, x2_single_num, diag=diag, last_dim_is_batch=True,
+                                                        **params)
+            numeric_singleton_scales = self.outputscale[[self.clique_to_scale_ix[c] for c in self.numeric_singletons]]
+            res = res.mul(numeric_singleton_scales.view(*([-1, 1] if diag else [-1, 1, 1])))
+            if total is None:
+                total = res.sum(-2 if diag else -3)
+            else:
+                total += res.sum(-2 if diag else -3)
+
+        # Numeric tuples
+        if len(self.all_numeric_cliques) > 0:
+            x1_tuple_num = x1_[::, self.all_numeric_cliques]
+            x1_tuple_num = x1_tuple_num.transpose(-3, -2)
+            x2_tuple_num = x2_[::, self.all_numeric_cliques]
+            x2_tuple_num = x2_tuple_num.transpose(-3, -2)
+
+            res = self.kernel_dict["numeric_tuple"](x1_tuple_num, x2_tuple_num, diag=diag, last_dim_is_batch=False,
+                                                    **params)
+            all_numeric_scales = self.outputscale[[self.clique_to_scale_ix[c] for c in self.all_numeric_cliques]]
+            res = res.mul(all_numeric_scales.view(*([-1, 1] if diag else [-1, 1, 1])))
+            if total is None:
+                total = res.sum(-2 if diag else -3)
+            else:
+                total += res.sum(-2 if diag else -3)
+
+        # Nominal singletons
+        if len(self.nominal_singletons) > 0:
+            x1_single_nom = x1_[::, self.nominal_singletons]
+            x2_single_nom = x2_[::, self.nominal_singletons]
+
+            res = self.kernel_dict["nominal_singleton"](x1_single_nom, x2_single_nom, diag=diag, last_dim_is_batch=True,
+                                                        **params)
+            nominal_singleton_scales = self.outputscale[[self.clique_to_scale_ix[c] for c in self.nominal_singletons]]
+            res = res.mul(nominal_singleton_scales.view(*([-1, 1] if diag else [-1, 1, 1])))
+            if total is None:
+                total = res.sum(-2 if diag else -3)
+            else:
+                total += res.sum(-2 if diag else -3)
+
+        # Mixed and nominal tuples (for now non-batched and slow)
+        for component in self.all_nominal_cliques + self.mixed_cliques:
+            if total is None:
+                total = self.kernel_dict[str(tuple(component))](x1_, x2_)
+            else:
+                total += self.kernel_dict[str(tuple(component))](x1_, x2_)
+
+        return total
+
+    def partial_forward(self, x1: torch.tensor, x2: torch.tensor, clique: Union[Tuple[int], List[int]],
+                        diag: bool = False, last_dim_is_batch: bool = False, **params) -> torch.tensor:
+        if last_dim_is_batch:
+            raise RuntimeError("DecompositionKernel does not accept the last_dim_is_batch argument.")
+
+        x1_ = x1.clone()
+        x2_ = x2.clone()
+
+        clique = tuple(sorted(clique))
+        num_dims_in_clique = []
+        ls = []
+        for d in clique:
+            if d in self.numeric_dims:
+                num_dims_in_clique.append(d)
+                ls.append(self.dim_to_lengthscale_ix[d])
+
+        if len(num_dims_in_clique) > 0:
+            x1_[::, num_dims_in_clique] /= self.lengthscale[:, ls]
+            x2_[::, num_dims_in_clique] /= self.lengthscale[:, ls]
+
+        # Singletons
+        if len(clique) == 1:
+            x1_single_num = x1_[::, clique]
+            x2_single_num = x2_[::, clique]
+
+            if clique[0] in self.numeric_singletons:
+                res = self.kernel_dict["numeric_singleton"](x1_single_num, x2_single_num, diag=diag,
+                                                            last_dim_is_batch=False, **params)
+
+            if clique[0] in self.nominal_singletons:
+                res = self.kernel_dict["nominal_singleton"](x1_single_num, x2_single_num, diag=diag,
+                                                            last_dim_is_batch=False, **params)
+
+            res *= self.outputscale[self.clique_to_scale_ix[clique[0]]]
+            return res
+
+        # Numeric tuples
+        if clique in self.all_numeric_cliques:
+            x1_tuple_num = x1_[::, clique]
+            x2_tuple_num = x2_[::, clique]
+
+            res = self.kernel_dict["numeric_tuple"](x1_tuple_num, x2_tuple_num, diag=diag, last_dim_is_batch=False,
+                                                    **params)
+            res *= self.outputscale[self.clique_to_scale_ix[clique]]
+
+            return res
+
+        # Mixed and nominal (for now non-batched and slow)
+        if clique in self.all_nominal_cliques + self.mixed_cliques:
+            return self.kernel_dict[str(tuple(sorted(clique)))](x1_, x2_)
+
+        raise ValueError(f"Clique {clique} not in decomposition.")
+
+    def get_lengthcales_numerical_dims(self) -> torch.tensor:
+        return self.lengthscale

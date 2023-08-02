@@ -82,7 +82,7 @@ def copy_tensor(x):
     return torch.empty_like(x).copy_(x)
 
 
-def _filter_kwargs(function: Callable, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def filter_kwargs(function: Callable, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
     r"""Given a function, select only the arguments that are applicable.
 
     Returns:
@@ -97,6 +97,7 @@ def save_w_pickle(obj: Any, path: str, filename: Optional[str] = None) -> None:
         path = os.path.dirname(path)
     if len(filename) < 4 or filename[-4:] != '.pkl':
         filename += '.pkl'
+    os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, filename), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 

@@ -11,3 +11,5 @@ from mcbo.acq_funcs.acq_base import AcqBase, SingleObjAcqBase
 from mcbo.acq_funcs.ei import EI
 from mcbo.acq_funcs.factory import acq_factory
 from mcbo.acq_funcs.lcb import LCB
+from mcbo.acq_funcs.additive_lcb import AddLCB
+from mcbo.acq_funcs.additive_lcb import AddLCB

@@ -115,7 +115,7 @@ class LocalSearch(OptimizerNotBO):
         if n_remaining and len(self.x_init):
             n = min(n_remaining, len(self.x_init))
             x_next.iloc[idx: idx + n] = self.x_init.iloc[idx: idx + n]
-            self.x_init = self.x_init.drop([i for i in range(idx, idx + n)]).reset_index(drop=True)
+            self.x_init = self.x_init.drop(self.x_init.index[[i for i in range(idx, idx + n)]]).reset_index(drop=True)
 
             idx += n
             n_remaining -= n

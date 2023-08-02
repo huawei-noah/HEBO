@@ -13,7 +13,8 @@ from mcbo.acq_optimizers.interleaved_search_acq_optimizer import InterleavedSear
 from mcbo.acq_optimizers.local_search_acq_optimizer import LsAcqOptimizer
 from mcbo.acq_optimizers.mixed_mab_acq_optimizer import MixedMabAcqOptimizer
 from mcbo.acq_optimizers.simulated_annealing_acq_optimizer import SimulatedAnnealingAcqOptimizer
-from mcbo.models import ModelBase, ExactGPModel, ComboEnsembleGPModel, LinRegModel
+from mcbo.acq_optimizers.message_passing_optimizer import MessagePassingOptimizer
+from mcbo.models import ModelBase, ExactGPModel, ComboEnsembleGPModel, LinRegModel, RandDecompositionGP
 from mcbo.models.gp.kernel_factory import mixture_kernel_factory, kernel_factory
 from mcbo.optimizers import BoBase
 from mcbo.search_space import SearchSpace
@@ -106,6 +107,11 @@ DEFAULT_ACQ_OPTIM_MAB_KWARGS = dict(
     num_optimizer='adam',
     cont_lr=3e-3,
     cont_n_iter=100,
+)
+
+DEFAULT_ACQ_OPTIM_MP_KWARGS = dict(
+    acq_opt_restarts=1,
+    max_eval= -4
 )
 
 
@@ -223,6 +229,26 @@ class BoBuilder:
                 device=model_kwargs["device"],
                 **lin_reg_kwargs
             )
+        elif model_id == "gp_rd":
+            gp_kwargs = DEFAULT_EXACT_GP_KWARGS.copy()
+            kernel_kwargs = DEFAULT_EXACT_GP_KERNEL_KWARGS.copy()
+            kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
+            kernel_kwargs["nominal_kernel_use_ard"] = model_kwargs.get("nominal_kernel_use_ard", True)
+            kernel_kwargs.update(model_kwargs.get("default_kernel_kwargs", {}))
+            
+            model = RandDecompositionGP(
+                search_space=search_space,
+                num_out=1,
+                dtype=model_kwargs["dtype"],
+                device=model_kwargs["device"],
+                base_kernel_num=kernel_kwargs["numeric_kernel_name"],
+                num_lengthscale_constraint=kernel_kwargs["numeric_lengthscale_constraint"],
+                base_kernel_nom=kernel_kwargs["nominal_kernel_name"],
+                nom_lengthscale_constraint=kernel_kwargs["nominal_lengthscale_constraint"],
+                base_kernel_nom_kwargs=kernel_kwargs["nominal_kernel_kwargs"],
+                base_kernel_num_kwargs=kernel_kwargs["numeric_kernel_kwargs"],
+                **gp_kwargs
+            )
         else:
             raise ValueError(model_id)
         return model
@@ -272,6 +298,14 @@ class BoBuilder:
             kwargs = DEFAULT_ACQ_OPTIM_MAB_KWARGS
             kwargs.update(acq_optim_kwargs)
             acq_optim = MixedMabAcqOptimizer(
+                search_space=search_space,
+                input_constraints=input_constraints,
+                **kwargs
+            )
+        elif acq_optim_name == "mp":
+            kwargs = DEFAULT_ACQ_OPTIM_MP_KWARGS
+            kwargs.update(acq_optim_kwargs)
+            acq_optim = MessagePassingOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
                 **kwargs
@@ -429,4 +463,5 @@ BO_ALGOS: Dict[str, BoBuilder] = dict(
     BOCS=BoBuilder(model_id="lr_sparse_hs", acq_opt_id="sa", acq_func_id="ts", tr_id=None),
     BOSS=BoBuilder(model_id="gp_ssk", acq_opt_id="ga", acq_func_id="ei", tr_id=None),
     CoCaBO=BoBuilder(model_id="gp_o", acq_opt_id="mab", acq_func_id="ei", tr_id=None),
+    RDUCB=BoBuilder(model_id="gp_rd", acq_opt_id="mp", acq_func_id="addlcb", tr_id=None)
 )

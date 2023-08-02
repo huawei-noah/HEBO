@@ -98,7 +98,7 @@ class PestControl(TaskBase):
         return np.array([self._compute(i) for i in x_])
 
     def _compute(self, x):
-        assert x.ndim == 1 and len(x) == self._n_stages
+        assert x.ndim == 1 and len(x) == self._n_stages, (x.shape, self._n_stages)
         evaluation = np.array([_pest_control_score(x, seed=self.seed)])
         return evaluation
 

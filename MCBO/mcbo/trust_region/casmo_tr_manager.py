@@ -151,8 +151,8 @@ class CasmopolitanTrManager(TrManagerBase):
 
             # Sample random points and evaluate the acquisition at these points
             x_cand_orig = sample_input_valid_points(n_points=self.restart_n_cand,
-                                                            point_sampler=self.search_space.sample,
-                                                            input_constraints=input_constraints)
+                                                    point_sampler=self.search_space.sample,
+                                                    input_constraints=input_constraints)
             x_cand = self.search_space.transform(x_cand_orig)
             with torch.no_grad():
                 acq = self.acq_func(x_cand, self.model, best_y=best_y)
@@ -165,7 +165,7 @@ class CasmopolitanTrManager(TrManagerBase):
 
         else:
             x_init.iloc[0: 1] = sample_input_valid_points(n_points=1, point_sampler=self.search_space.sample,
-                                                                  input_constraints=input_constraints)
+                                                          input_constraints=input_constraints)
             tr_centre = self.search_space.transform(x_init.iloc[0:1]).squeeze()
 
         self.restart_tr()
@@ -187,7 +187,7 @@ class CasmopolitanTrManager(TrManagerBase):
                 )
             )
             x_in_tr = sample_input_valid_points(n_points=self.n_init - 1, point_sampler=point_sampler,
-                                                        input_constraints=input_constraints)
+                                                input_constraints=input_constraints)
 
             # Store them
             x_init.iloc[1: self.n_init] = x_in_tr

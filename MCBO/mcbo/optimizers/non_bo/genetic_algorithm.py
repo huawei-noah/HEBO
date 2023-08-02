@@ -422,7 +422,7 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
         if n_remaining and len(self.x_queue):
             n = min(n_remaining, len(self.x_queue))
             x_next.iloc[idx: idx + n] = self.x_queue.iloc[idx: idx + n]
-            self.x_queue = self.x_queue.drop([i for i in range(idx, idx + n)]).reset_index(drop=True)
+            self.x_queue = self.x_queue.drop(self.x_queue.index[[i for i in range(idx, idx + n)]]).reset_index(drop=True)
 
             idx += n
             n_remaining -= n
@@ -432,7 +432,7 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
 
             n = min(n_remaining, len(self.x_queue))
             x_next.iloc[idx: idx + n] = self.x_queue.iloc[idx: idx + n]
-            self.x_queue = self.x_queue.drop([i for i in range(idx, idx + n)]).reset_index(drop=True)
+            self.x_queue = self.x_queue.drop(self.x_queue.index[[i for i in range(idx, idx + n)]]).reset_index(drop=True)
 
             idx += n
             n_remaining -= n

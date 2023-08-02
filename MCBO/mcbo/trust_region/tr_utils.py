@@ -15,7 +15,7 @@ from gpytorch.kernels import ScaleKernel, RBFKernel, MaternKernel
 from torch.quasirandom import SobolEngine
 
 from mcbo.models import ExactGPModel, ModelBase
-from mcbo.models.gp.kernels import MixtureKernel, ConditionalTransformedOverlapKernel
+from mcbo.models.gp.kernels import MixtureKernel, ConditionalTransformedOverlapKernel, DecompositionKernel
 from mcbo.search_space import SearchSpace
 from mcbo.trust_region import TrManagerBase
 from mcbo.utils.discrete_vars_utils import round_discrete_vars
@@ -37,12 +37,12 @@ def get_num_tr_bounds(
         if is_mixed:
             if isinstance(kernel, MixtureKernel):
                 valid_kernel = True
-            elif isinstance(kernel, ConditionalTransformedOverlapKernel):
+            elif isinstance(kernel, (ConditionalTransformedOverlapKernel, DecompositionKernel)):
                 valid_kernel = True
             else:
                 raise ValueError(kernel)
         elif is_numeric:
-            if isinstance(kernel, (RBFKernel, MaternKernel)):
+            if isinstance(kernel, (RBFKernel, MaternKernel, DecompositionKernel)):
                 valid_kernel = True
             else:
                 raise ValueError(kernel)
@@ -54,7 +54,7 @@ def get_num_tr_bounds(
         if kernel is not None:
 
             if is_mixed:
-                if isinstance(kernel, ConditionalTransformedOverlapKernel):
+                if isinstance(kernel, (ConditionalTransformedOverlapKernel, DecompositionKernel)):
                     weights = kernel.get_lengthcales_numerical_dims().detach()
                 elif isinstance(kernel, MixtureKernel):
                     weights = kernel.numeric_kernel.base_kernel.lengthscale.detach().cpu()

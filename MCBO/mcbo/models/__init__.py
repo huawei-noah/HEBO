@@ -9,4 +9,4 @@
 
 from mcbo.models.model_base import ModelBase, EnsembleModelBase
 from mcbo.models.linear_reagression import LinRegModel
-from mcbo.models.gp import ExactGPModel, ComboGPModel, ComboEnsembleGPModel
+from mcbo.models.gp import ExactGPModel, ComboGPModel, ComboEnsembleGPModel, RandDecompositionGP, RandEnsembleGPModel

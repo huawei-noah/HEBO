@@ -58,7 +58,8 @@ class RandomSearch(OptimizerNotBO):
         if len(self.x_init) and n_remaining:
             n = min(n_suggestions, len(self.x_init))
             x_next.iloc[idx: idx + n] = self.x_init.iloc[[i for i in range(0, n)]]
-            self.x_init = self.x_init.drop([i for i in range(0, n)], inplace=False).reset_index(drop=True)
+            self.x_init = self.x_init.drop(self.x_init.index[[i for i in range(0, n)]], inplace = False).reset_index(
+                drop=True)
 
             idx += n
             n_remaining -= n

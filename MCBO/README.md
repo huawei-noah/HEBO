@@ -2,7 +2,7 @@
 
 This library provides an easy way to mix-and-match Bayesian optimization components in order to run new
 and existing mixed-variable or combinatorial Bayesian optimization. Motivations and principles are described in 
-[this paper](https://arxiv.org/pdf/2306.09803.pdf)
+[this paper](https://arxiv.org/pdf/2306.09803.pdf).
 
 <p align="center">
 <img src="./paper/images/all_mix_match.PNG" width="750"/>
@@ -74,6 +74,7 @@ search_space = task.get_search_space()
 - `gp_hed`: GP with the Hamming embedding via dictionary kernel.
 - `gp_ssk`: GP with string subsequence kernel. 
 - `gp_diff`: GP with diffusion kernel.
+- `gp_rd`:  GP with random tree decomposition additive kernel (for very high dimension).
 - `lr_sparse_hs`: Bayesian linear regression with Hoorseshoe prior.
 
 
@@ -84,6 +85,7 @@ search_space = task.get_search_space()
 - `ls`: Exhaustive Local Search.
 - `is`: Interleaved search with Hill-Climbing and Gradient-Descent.
 - `mab`: Multi-Armed Bandit for categorical and Gradient-Descent for numerical.
+- `mp`: Message passing (compatible with `gp_rd` model)
 
 ### Acquisition functions
 
@@ -189,3 +191,4 @@ some of our primitives, we refer to
 - BOCS: https://github.com/baptistar/BOCS
 - BOiLS: https://github.com/huawei-noah/HEBO/tree/master/BOiLS
 - BODi: https://github.com/aryandeshwal/BODi/
+- RDUCB: https://github.com/huawei-noah/HEBO/tree/master/RDUCB

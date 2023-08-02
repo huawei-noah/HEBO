@@ -91,6 +91,8 @@ def run_experiment(
                     x_next = x[iter_num:iter_num + batch_suggest]
                     y_next = y[iter_num:iter_num + batch_suggest]
                     task.increment_n_evals(len(x_next))
+                    if hasattr(optimizer, "x_init") and optimizer.x_init is not None:
+                        optimizer.x_init = optimizer.x_init[len(x_next):]
                     optimizer.observe(x=x_next, y=y_next)
 
                     results_logger.append(

@@ -9,3 +9,4 @@
 
 from mcbo.models.gp.combo_gp import ComboGPModel, ComboEnsembleGPModel
 from mcbo.models.gp.exact_gp import ExactGPModel
+from mcbo.models.gp.rand_decomposition_gp import RandDecompositionGP, RandEnsembleGPModel
