@@ -150,6 +150,8 @@ class MyBOModular(BOStopper):
 
         if acquisition_optimizer_type == 'MP':
             self.acquisition_optimizer = MPAcquisitionOptimizer(domain, self.model.graph_function, [], self.fn.mlflow_logging, max_eval=max_eval, acq_opt_restarts=acq_opt_restarts)
+        elif acquisition_optimizer_type == 'MW':
+            self.acquisition_optimizer = MWAcquisitionOptimizer(additional_args['eta_factor'], additional_args['T'], -self.fn.mlflow_logging.y_opt, domain, [], self.fn.mlflow_logging, max_eval, acq_opt_restarts)
         elif acquisition_optimizer_type == 'bf':
             self.acquisition_optimizer = BruteForceAcquisitionOptimizer(domain, [], self.fn.mlflow_logging, max_eval=max_eval, acq_opt_restarts=acq_opt_restarts)
         elif acquisition_optimizer_type in {'lbfgs', "DIRECT"}:
