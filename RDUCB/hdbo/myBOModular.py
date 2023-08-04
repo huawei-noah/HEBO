@@ -7,7 +7,7 @@ from GPyOpt.util.general import normalize
 from GPyOpt.optimization.acquisition_optimizer import AcquisitionOptimizer
 from myAcquisitionModular import MyAcquisitionModular
 from myGPModel import MyGPModel
-from acquisition_optimizer import MPAcquisitionOptimizer, BruteForceAcquisitionOptimizer
+from acquisition_optimizer import MPAcquisitionOptimizer, BruteForceAcquisitionOptimizer, MWAcquisitionOptimizer
 from GPyOpt.core.evaluators.sequential import Sequential
 from GPyOpt.core.task.objective import SingleObjective
 from GPyOpt.core.task.cost import CostModel
