@@ -467,3 +467,75 @@ class RestartAcquisitionOptimizer(AcquisitionOptimizer):
                 fbest = fval
         
         return xbest, fbest
+
+
+from joblib import Parallel, delayed
+
+
+class MWAcquisitionOptimizer(AcquisitionOptimizer):
+    def __init__(self, eta_factor, T, optimal_Y, domain, X, mlflow_logging, max_eval, acq_opt_restarts=1):
+        super(MWAcquisitionOptimizer, self).__init__(domain)
+        self.eta_factor = eta_factor
+        self.T = T
+        self.optimal_Y = optimal_Y
+        self.domain = domain
+        self.mlflow_logging = mlflow_logging
+        self.max_eval = max_eval
+        self.acq_opt_restarts = acq_opt_restarts
+        
+        self.dimension = domain.dimension
+        self.edges_set = None
+        
+        self.evaluated_points = []
+        for x in X:
+                self.evaluated_points.append(x) 
+
+        self.K = [len(domain) for domain in self.domain.combined_domain]
+        self.weights = [np.ones(self.K[i])/self.K[i] for i in range(self.dimension)]
+
+        self._total_cost = 0
+
+    def optimize(self, f=None, df=None, f_df=None):
+        inital_total_cost = self._total_cost
+
+        evals = []
+        for i in range(self.acq_opt_restarts):
+            self._total_cost = inital_total_cost
+            x_best, fmin = self._optimize_helper(f)
+            total_cost = self._total_cost
+            evals.append((fmin, x_best, total_cost))
+
+        fmin, x_best, total_cost = min(evals, key=lambda x: x[0])
+        self._total_cost = total_cost
+        
+        return x_best, fmin
+    
+    def weights_update(self, i, f):
+        
+        if not self.evaluated_points:
+            x = np.array([np.array(self.domain.combined_domain[j])[np.random.choice(self.K[j], 1)] for j in range(self.dimension)]).squeeze()
+        else:
+            x = self.evaluated_points[-1]
+
+        x_list = []
+        for k in range(self.K[i]):
+
+            x[i] = self.domain.combined_domain[i][k]
+            x_list.append(x.copy())
+
+        y_hat = np.minimum(self.optimal_Y, np.array(-f(np.array(x_list))).squeeze())
+
+        self.weights[i] *= np.exp(-np.sqrt(self.eta_factor*np.log(self.K[i])/self.T)*(self.optimal_Y-y_hat))
+        self.weights[i] /= np.sum(self.weights[i])
+        
+        return self.weights[i]
+    
+    def _optimize_helper(self, f):
+        
+        self.weights = Parallel(n_jobs=-1)(delayed(self.weights_update)(i, f) for i in range(self.dimension))
+
+        x_sample = np.array([self.domain.combined_domain[i][np.argmax(np.random.multinomial(1, self.weights[i]))] for i in range(self.dimension)]).squeeze()
+        self.evaluated_points.append(x_sample)
+        f_sample = f(x_sample)
+        
+        return x_sample.reshape(1, -1), f_sample
