@@ -276,10 +276,6 @@ if __name__ == '__main__':
             print(f"Starting Trial {t + 1} for antigen {antigen}")
             config_['bbox']['antigen'] = antigen
 
-            _save_dir = os.path.join(
-                config_['save_path'],
-                f"antigen_{antigen}_kernel_{config_['kernel_type']}_seed_{seeds[t]}_cdr_constraint_True_seqlen_{11}")
-
             boexp = BOExperiments(config_, args.cdr_constraints, seeds[t])
 
             try:
