@@ -28,6 +28,8 @@ if __name__ == "__main__":
     parser.add_argument('--cuda_id', type=int, default=0, help='ID of the cuda device to use.')
     parser.add_argument('--seed', type=int, nargs="+", default=[42], help='Seed for reproducibility.')
     parser.add_argument('--absolut_path', type=str, help='Path to Absolut! (if Absolut is needed.)')
+    parser.add_argument('--resume', type=int, choices=[0, 1], default=0,
+                        help='Whether to resume from an existing run.')
     args = parser.parse_args()
 
     # TOFILL
@@ -37,7 +39,6 @@ if __name__ == "__main__":
     device = f"cuda:{args.cuda_id}"
 
     # -------- Create config
-
     config = {
         'pre_evals': args.pre_evals_csv,
         'acq': 'ei',
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         'kernel_type': 'transformed_overlap',
         'noise_variance': '1e-6',
         'search_strategy': 'local',
-        'resume': False,
+        'resume': args.resume,
         # 'bbox': {
         #     'tool': 'Absolut',
         #     'path': args.absolut_path,

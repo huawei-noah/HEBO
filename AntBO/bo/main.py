@@ -2,7 +2,7 @@ import os
 import random
 import sys
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional, Set, Any, Dict
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
@@ -32,10 +32,7 @@ def get_x_y_from_csv(csv_path):
 
 
 class BOExperiments:
-    def __init__(self,
-                 config,
-                 cdr_constraints,
-                 seed):
+    def __init__(self, config: Dict[str, Any], cdr_constraints: bool, seed: int):
         """
 
         :param config: dictionary of parameters for BO
@@ -138,17 +135,39 @@ class BOExperiments:
             seed=self.config['custom_init_seed']
         )
 
+    @property
+    def torch_rd_state_path(self) -> str:
+        return os.path.join(self.path, 'torch_rd_state.pt')
+
+    @property
+    def np_rd_state_path(self) -> str:
+        return os.path.join(self.path, "np_rd_state.pkl")
+
+    @property
+    def random_rd_state_path(self) -> str:
+        return os.path.join(self.path, "random_rd_state.pkl")
+
     def load(self):
         res_path = os.path.join(self.path, 'results.csv')
         optim_path = os.path.join(self.path, 'optim.pkl')
         if os.path.exists(optim_path):
             optim = load_w_pickle(optim_path)
+            if os.path.exists(self.torch_rd_state_path):
+                torch_random_state = torch.load(self.torch_rd_state_path)
+                torch.set_rng_state(torch_random_state)
+            if os.path.exists(self.np_rd_state_path):
+                np_rd_state = load_w_pickle(self.np_rd_state_path)
+                np.random.set_state(np_rd_state)
+            if os.path.exists(self.random_rd_state_path):
+                rd_state = load_w_pickle(self.random_rd_state_path)
+                random.setstate(rd_state)
         else:
             optim = None
         if os.path.exists(res_path):
             self.res = pd.read_csv(res_path,
                                    usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
             self.start_itern = len(self.res) - self.res['Index'].isna().sum() // self.config['batch_size']
+        print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
         return optim
 
     def save(self, optim):
@@ -156,6 +175,10 @@ class BOExperiments:
         res_path = os.path.join(self.path, 'results.csv')
         save_w_pickle(optim, optim_path)
         self.res.to_csv(res_path)
+        # save random states
+        torch.save(torch.get_rng_state(), self.torch_rd_state_path)
+        save_w_pickle(np.random.get_state(), self.np_rd_state_path)
+        save_w_pickle(random.getstate(), self.random_rd_state_path)
 
     def results(self, optim, x, itern, rtime):
         Y = np.array(optim.casmopolitan.fX)
@@ -197,21 +220,21 @@ class BOExperiments:
             optim = None
 
         if not optim:
-            optim = Optimizer(self.n_categories, min_cuda=self.config['min_cuda'],
-                              n_init=self.config['n_init'], use_ard=self.config['ard'],
-                              acq=self.config['acq'],
-                              cdr_constraints=self.cdr_constraints,
-                              normalise=self.config['normalise'],
-                              kernel_type=self.config['kernel_type'],
-                              noise_variance=float(self.config['noise_variance']),
-                              batch_size=self.config['batch_size'],
-                              alphabet_size=self.nm_AAs,
-                              **kwargs
-                              )
+            optim = Optimizer(
+                self.n_categories, min_cuda=self.config['min_cuda'],
+                n_init=self.config['n_init'], use_ard=self.config['ard'],
+                acq=self.config['acq'],
+                cdr_constraints=self.cdr_constraints,
+                normalise=self.config['normalise'],
+                kernel_type=self.config['kernel_type'],
+                noise_variance=float(self.config['noise_variance']),
+                alphabet_size=self.nm_AAs,
+                **kwargs
+            )
 
             if self.config.get("pre_evals") is not None:
                 pre_eval_x, pre_eval_y = get_x_y_from_csv(self.config.get("pre_evals"))
-                optim.suggest(len(pre_eval_x)) # exhaust init random suggestions
+                optim.suggest(len(pre_eval_x))  # exhaust init random suggestions
                 optim.batch_size = self.config['batch_size']
                 optim.casmopolitan.batch_size = optim.batch_size
                 optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
