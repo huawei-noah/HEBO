@@ -1,0 +1,66 @@
+# RL env and common variables
+repeat_run: 5
+max_traj_length: 1000
+replay_buffer_size: 100000
+seed: 42
+network_arch: '64-64'
+policy_arch: '64-64'
+qf_arch: '64-64'
+policy_log_std_multiplier: 1.0
+policy_log_std_offset: -1.0
+n_epochs: 1000
+n_initial_env_steps: 1000
+n_env_steps_per_epoch: 1000
+n_train_step_per_epoch: 1000
+eval_period: 1
+eval_n_trajs: 5
+batch_size: 256
+discount: 0.99
+use_automatic_entropy_tuning: True
+alpha_multiplier: 1.0
+backup_entropy: True
+target_entropy: 0.0
+policy_lr: 3.0e-4
+qf_lr: 3.0e-4
+optimizer_type: 'adam'
+soft_target_update_rate: 0.005 # 5e-3
+target_update_period: 1
+
+# hyperparams for stabilization
+activation_fn: 'relu'
+
+# for improved switched sac
+use_automatic_entropy_tuning_parametrized_perturbation: True
+expert_alpha_multiplier: 1.0
+
+# Local experts variables
+local_experts:
+  - 'MediumSAC'
+
+beta:
+  SAC: [ 0.0 ]
+  SAG: [ 0.0 ]
+  PIG: [ 0.5, 1, 2, 5 ]
+  PAG: [ 0.0 ]
+
+
+decay_parameter:
+  - False
+delta:
+  SAC: [ 1.0 ]
+  SAG: [ 1.0 ]
+  PIG: [ 0.5, 0.8, 0.9 ]
+  PAG: [ 1.0 ]
+
+phi:
+  SAC: [ 0.0 ]
+  SAG: [ 0.0 ]
+  PIG: [ 0.0 ]
+  PAG: [ 0.5, 0.8, 1.0, 1.5 ]
+
+# Ray variables
+metric: 'mean_avg_return'
+mode: 'max'
+
+# Save policy
+num_epoch_save: 10000

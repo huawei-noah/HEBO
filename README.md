@@ -4,17 +4,18 @@ This directory contains official implementations for Bayesian optimisation & Rei
 Huawei, Noah's Ark Lab.
 
 - Bayesian Optimisation Research
-  - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
-  - [T-LBO](./T-LBO)
-  - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
-  - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-  - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
-  - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
-  - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
-  - [MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization](./MCBO)
+    - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
+    - [T-LBO](./T-LBO)
+    - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+    - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+    - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
+    - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
+    - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
+    - [MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization](./MCBO)
 - Reinforcement Learning Research
-  - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
-  - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+    - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
+    - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
+    - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -99,24 +100,25 @@ performance improvements across all domains in which Bayesian optimisation is cu
 
 ![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
 
-Codebase associated to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
+Codebase associated
+to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
 
 ##### Abstract
 
-Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3 
+Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3
 region located at the tip of variable chains of an antibody dominates antigen-binding specificity. Therefore, it is a
 priority to design optimal antigen-specific CDRH3 regions to develop therapeutic antibodies to combat harmful pathogens.
-However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence 
-exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian 
+However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence
+exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian
 Optimisation framework enabling efficient in silico design of the CDRH3 region. Ideally, antibodies should bind to
-their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that 
-restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software 
-suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico 
+their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that
+restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software
+suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico
 in an unconstrained fashion. The results across 188 antigens demonstrate the benefit of AntBO in designing CDRH3 regions
-with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform 
-the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm 
-baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no 
-domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for 
+with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform
+the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm
+baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no
+domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for
 in vitro experimentation.
 
 ## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
@@ -125,11 +127,13 @@ in vitro experimentation.
   <img src="./RDUCB/figures/ToyProblem.PNG" width="400" /> 
 </p>
 
-Codebase associated to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
+Codebase associated
+to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
 
 ##### Abstract
 
-Learning decompositions of expensive-toevaluate black-box functions promises to scale Bayesian optimisation (BO) to high-dimensional
+Learning decompositions of expensive-toevaluate black-box functions promises to scale Bayesian optimisation (BO) to
+high-dimensional
 problems. However, the success of these techniques depends on finding proper decompositions
 that accurately represent the black-box. While previous works learn those decompositions based
 on data, we investigate data-independent decomposition sampling rules in this paper. We find
@@ -145,10 +149,26 @@ confirm the plug-and-play nature of our modelling component by integrating our m
 HEBO, showing improved practical gains in the highest dimensional tasks from Bayesmark.
 
 ## [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP/)
+
 ![regret-all](./NAP/figures/regret-all.png)
-Codebase associated to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+Codebase associated
+to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+
 ##### Abstract
-Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody design, and logic synthesis for electronic design automation.
+
+Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data
+from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function
+independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end
+differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer
+architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled
+acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is
+challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a
+combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity
+pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides
+part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method
+achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter
+optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody
+design, and logic synthesis for electronic design automation.
 
 ## [MCBO](./MCBO)
 
@@ -160,14 +180,18 @@ Codebase associated to: [Framework and Benchmarks for Combinatorial and Mixed-va
 ](https://arxiv.org/abs/2306.09803).
 
 ##### Abstract
+
 This paper introduces a modular framework for Mixed-variable and Combinatorial
 Bayesian Optimization (MCBO) to address the lack of systematic benchmarking
 and standardized evaluation in the field. Current MCBO papers often introduce
 non-diverse or non-standard benchmarks to evaluate their methods, impeding the
-proper assessment of different MCBO primitives and their combinations. Additionally, papers introducing a solution for a single MCBO primitive often omit
-benchmarking against baselines that utilize the same methods for the remaining primitives. This omission is primarily due to the significant implementation
+proper assessment of different MCBO primitives and their combinations. Additionally, papers introducing a solution for a
+single MCBO primitive often omit
+benchmarking against baselines that utilize the same methods for the remaining primitives. This omission is primarily
+due to the significant implementation
 overhead involved, resulting in a lack of controlled assessments and an inability
-to showcase the merits of a contribution effectively. To overcome these challenges, our proposed framework enables an effortless combination of Bayesian
+to showcase the merits of a contribution effectively. To overcome these challenges, our proposed framework enables an
+effortless combination of Bayesian
 Optimization components, and provides a diverse set of synthetic and real-world
 benchmarking tasks. Leveraging this flexibility, we implement 47 novel MCBO
 algorithms and benchmark them against seven existing MCBO solvers and five
@@ -179,9 +203,31 @@ license at https://github.com/huawei-noah/HEBO/tree/master/MCBO.
 
 # Reinforcement Learning Research
 
+## [Enhancing Reinforcement Learning Agents with Local Guides](./RLLG)
+
+Codebase associated
+to [paper: Enhancing Reinforcement Learning Agents with Local Guides](https://hal.science/hal-04052358/file/Final_Reinforcement_Learning_with_Local_Guides.pdf)
+
+##### Abstract
+
+This paper addresses the problem of integrating local guide policies into a Reinforcement Learning agent. For this, we
+show how
+to adapt existing algorithms to this setting before introducing a
+novel algorithm based on a noisy policy-switching procedure. This
+approach builds on a proper Approximate Policy Evaluation (APE)
+scheme to provide a perturbation that carefully leads the local
+guides towards better actions. We evaluated our method on a set
+of classical Reinforcement Learning problems, including safetycritical systems where the agent cannot enter some areas
+at the
+risk of triggering catastrophic consequences. In all the proposed
+environments, our agent proved to be efficient at leveraging those
+policies to improve the performance of any APE-based Reinforcement Learning algorithm, especially in its first learning
+stages.
+
 ## [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation](./SIMMER)
 
-Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf) and  [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
+Codebase associated to: [Sauté RL: Almost Surely Safe RL Using State Augmentation](https://arxiv.org/pdf/2202.06558.pdf)
+and  [Enhancing Safe Exploration Using Safety State Augmentation](https://arxiv.org/pdf/2206.02675.pdf).
 
 ##### Abstract for Sauté RL: Almost Surely Safe RL Using State Augmentation (ICML 2022)
 
@@ -195,32 +241,33 @@ approach has a plug-and-play nature, i.e., any RL algorithm can be "sauteed". Ad
 for policy generalization across safety constraints. We finally show that Saute RL algorithms can outperform their
 state-of-the-art counterparts when constraint satisfaction is of high importance.
 
-
-
 ##### Abstract for Effects of Safety State Augmentation on Safe Exploration (NeurIPS 2022)
-Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
- is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in 
- safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is 
- nonnegative if and only if the constraint is satisfied. The value of this state also serves as a distance toward 
- constraint violation, while its initial value indicates the available safety budget. This idea allows us to derive 
- policies for scheduling the safety budget during training. We call our approach Simmer (Safe policy IMproveMEnt for 
- RL) to reflect the careful nature of these schedules. We apply this idea to two safe RL problems: RL with constraints 
- imposed on an average cost, and RL with constraints imposed on a cost with probability one. Our experiments suggest 
- that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
-  stabilize training and improve the performance of safe RL with average constraints.
 
+Safe exploration is a challenging and important problem in model-free reinforcement learning (RL). Often the safety cost
+is sparse and unknown, which unavoidably leads to constraint violations -- a phenomenon ideally to be avoided in
+safety-critical applications. We tackle this problem by augmenting the state-space with a safety state, which is
+nonnegative if and only if the constraint is satisfied. The value of this state also serves as a distance toward
+constraint violation, while its initial value indicates the available safety budget. This idea allows us to derive
+policies for scheduling the safety budget during training. We call our approach Simmer (Safe policy IMproveMEnt for
+RL) to reflect the careful nature of these schedules. We apply this idea to two safe RL problems: RL with constraints
+imposed on an average cost, and RL with constraints imposed on a cost with probability one. Our experiments suggest
+that simmering a safe algorithm can improve safety during training for both settings. We further show that Simmer can
+stabilize training and improve the performance of safe RL with average constraints.
 
 ## [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
 
-Code associdated to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842) accepted
+Code associdated
+to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842)
+accepted
 at **NeurIPS22** conference.
 
 #### Abstract
+
 Model-based offline reinforcement learning (RL) aims to find highly rewarding policy, by leveraging a previously
 collected static dataset and a dynamics model. While learned through reuse of static dataset, the dynamics model's
 generalization ability hopefully promotes policy learning if properly utilized. To that end, several works propose to
 quantify the uncertainty of predicted dynamics, and explicitly apply it to penalize reward. However, as the dynamics and
-the reward are  intrinsically different factors in context of MDP, characterizing the impact of dynamics uncertainty
+the reward are intrinsically different factors in context of MDP, characterizing the impact of dynamics uncertainty
 through reward penalty may incur unexpected tradeoff between model utilization and risk avoidance. In this work, we
 instead maintain a belief distribution over dynamics, and evaluate/optimize policy through biased sampling from the
 belief. The sampling procedure, biased towards pessimism, is derived based on an alternating Markov game formulation
@@ -232,9 +279,9 @@ results show that the proposed approach achieves state-of-the-art performance on
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## Codebase Contributors 
+## Codebase Contributors
 
-<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek.
+<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek, Paul Daoudi, Merwan Barlier.
 
-<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang.
+<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
   
