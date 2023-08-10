@@ -89,7 +89,7 @@ def args_parse():
     del args_dict["algorithm_type"]
 
     # turn it into lambda if string
-    if type(args_dict["exploration_weight"]) == str:
-        args_dict["exploration_weight"] =  eval(args_dict["exploration_weight"])
+    #if type(args_dict["exploration_weight"]) == str:
+    #    args_dict["exploration_weight"] =  eval(args_dict["exploration_weight"])
 
     return args_dict

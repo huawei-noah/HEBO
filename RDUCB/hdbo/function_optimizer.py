@@ -900,6 +900,12 @@ class ParameterOnlyOptimizer(GraphOptimizer):
 import operator
 from functools import reduce
 
+def get_ls_wrap(ord_dim_ls):
+    return ord_dim_ls
+
+def get_ls_wrap_sum(ord_dim_ls):
+    return sum(ord_dim_ls)
+
 class GraphFunction(object):
     def __init__(self, graph, initial_kernel_params):
         self.graph = graph
@@ -932,9 +938,9 @@ class GraphFunction(object):
             self.is_ard = initial_kernel_params['ard']
         
         if self.is_ard:
-            self.ls_wrap = lambda ord_dim_ls: ord_dim_ls
+            self.ls_wrap = get_ls_wrap
         else:
-            self.ls_wrap = lambda ord_dim_ls: sum(ord_dim_ls)
+            self.ls_wrap = get_ls_wrap_sum
 
         # l_bfgs is now the default.
         self.scipy_opt = scipy.optimize.fmin_tnc

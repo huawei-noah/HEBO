@@ -464,3 +464,14 @@ class Optimal(BayesianOptimization, metaclass=Algorithm):
         return None
     def get_GraphFunction(self):
         return OptimalGraphFunction
+
+class GPMW(BayesianOptimization, metaclass=Algorithm):
+
+    __metaclass__ = Algorithm
+    def __init__(self, **kwargs):
+        self.random_graph = False
+        BayesianOptimization.__init__(self, **kwargs)
+
+    def FnOptimizer(self):
+        self.cycles = False
+        return function_optimizer.ParameterOnlyOptimizer
