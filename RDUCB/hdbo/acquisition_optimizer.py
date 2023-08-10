@@ -510,32 +510,45 @@ class MWAcquisitionOptimizer(AcquisitionOptimizer):
         
         return x_best, fmin
     
-    def weights_update(self, i, f):
-        
+    def _optimize_helper(self, f):
+
         if not self.evaluated_points:
             x = np.array([np.array(self.domain.combined_domain[j])[np.random.choice(self.K[j], 1)] for j in range(self.dimension)]).squeeze()
         else:
             x = self.evaluated_points[-1]
-
-        x_list = []
-        for k in range(self.K[i]):
-
-            x[i] = self.domain.combined_domain[i][k]
-            x_list.append(x.copy())
-
-        y_hat = np.minimum(self.optimal_Y, np.array(-f(np.array(x_list))).squeeze())
-
-        self.weights[i] *= np.exp(-np.sqrt(self.eta_factor*np.log(self.K[i])/self.T)*(self.optimal_Y-y_hat))
-        self.weights[i] /= np.sum(self.weights[i])
         
-        return self.weights[i]
-    
-    def _optimize_helper(self, f):
-        
-        self.weights = Parallel(n_jobs=-1)(delayed(self.weights_update)(i, f) for i in range(self.dimension))
+        # ugly walkaround to avoid serialising objects that cause bugs in parallel jobs
+        gp_model = f[tuple(f.keys())[0]].model
+        gp_model_detached_attributes = {}
+        for attribute in {"fn", "cfn", "additional_args"}:
+            gp_model_detached_attributes[attribute] = getattr(gp_model, attribute)
+            setattr(gp_model, attribute, None)
+
+        self.weights = Parallel(n_jobs=-1)(delayed(weights_update)(self.weights[i], self.eta_factor, self.T, self.optimal_Y, self.K[i], f, x, self.domain.combined_domain[i], i) for i in range(self.dimension))
+
 
         x_sample = np.array([self.domain.combined_domain[i][np.argmax(np.random.multinomial(1, self.weights[i]))] for i in range(self.dimension)]).squeeze()
         self.evaluated_points.append(x_sample)
         f_sample = f(x_sample)
+
+        # restoring gp model to its previous state
+        for attribute in {"fn", "cfn", "additional_args"}:
+            setattr(gp_model, attribute, gp_model_detached_attributes[attribute])
         
         return x_sample.reshape(1, -1), f_sample
+
+def weights_update(curr_weight, eta_factor, T, optimal_Y, K, f, x, combined_domain, i):
+    #print(f"Thread {i} starting")
+    x = x.copy()
+    x_list = []
+    for k in range(K):
+        x[i] = combined_domain[k]
+        x_list.append(x.copy())
+
+    y_hat = np.minimum(optimal_Y, np.array(-f(np.array(x_list))).squeeze())
+
+    curr_weight = curr_weight * np.exp(-np.sqrt(eta_factor*np.log(K)/T)*(optimal_Y-y_hat))
+    curr_weight = curr_weight / np.sum(curr_weight)
+
+    #print(f"Thread {i} finished")
+    return curr_weight

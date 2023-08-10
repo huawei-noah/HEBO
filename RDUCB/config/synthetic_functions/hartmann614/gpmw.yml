@@ -23,7 +23,7 @@ data_type:
     aug_dimension: 14
     data_random_seed: 2
     fn_noise_var: 0
-    grid_size: 150
+    grid_size: 1500
     hpo_fn: Hartmann6Aug
 n_iter: 1000
 n_rand: 10

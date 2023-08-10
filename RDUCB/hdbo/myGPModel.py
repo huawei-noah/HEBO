@@ -57,7 +57,7 @@ class MyGPModel(GPModel):
 
 
     def exploration_weight(self):
-        return self.exploration_weight_function(self.t)
+        return eval(f"({self.exploration_weight_function})(self.t)") 
     
     # Update t when the model is updated
     def updateModel(self, X_all, Y_all, X_new, Y_new, log=True):
