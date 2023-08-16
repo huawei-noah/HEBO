@@ -1,6 +1,6 @@
 # Bayesian Optimisation & Reinforcement Learning Research
 
-This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developped by
+This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developed by
 Huawei, Noah's Ark Lab.
 
 - Bayesian Optimisation Research
@@ -25,7 +25,7 @@ Further instructions are provided in the README files associated to each project
 
 <img src="./HEBO/hebo.png" alt="drawing" width="400"/>
 
-Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong>
+Bayesian optimsation library developed by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong>
 winning submission </strong> to
 the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard).
 
