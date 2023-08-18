@@ -661,7 +661,7 @@ class _MPOptimizer():
         f_x_marginal = np.zeros(new_X.shape[0])
         for m, intersection_child_var_order in zip(input_messages, intersection_child_var_orders):
             marginal_x_child = new_X[:, intersection_child_var_order]
-            fmin_child, best_x_child = map(np.ndarray,
+            fmin_child, best_x_child = map(np.array,
                                            zip(*map(lambda sub_x_child: m[tuple(sub_x_child)], marginal_x_child)))
 
             # Update the marginals and x
