@@ -25,7 +25,7 @@ from mcbo.search_space.params.step_int_param import StepIntPara
 from mcbo.search_space.search_space import SearchSpace
 from mcbo.trust_region.tr_manager_base import TrManagerBase
 from mcbo.utils.distance_metrics import hamming_distance
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 def trust_region_wrapper(x: torch.Tensor, f: AddLCB, tr_manager: TrManagerBase,
@@ -44,10 +44,10 @@ def trust_region_wrapper(x: torch.Tensor, f: AddLCB, tr_manager: TrManagerBase,
 
 
 class MessagePassingOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[5]
+    color_1: str = get_color(ind=5, color_palette=COLORS_SNS_10)
 
     @staticmethod
-    def get_color_1():
+    def get_color_1() -> str:
         return MessagePassingOptimizer.color_1
 
     @property

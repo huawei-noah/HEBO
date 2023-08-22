@@ -1,36 +1,35 @@
 # Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
-from typing import Optional, List, Callable, Dict
-
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the MIT license.
-
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
+
+from typing import Optional, List, Callable, Dict
 
 import numpy as np
 import pandas as pd
 import torch
 
-from mcbo.optimizers.optimizer_base import OptimizerBase, OptimizerNotBO
+from mcbo.optimizers.optimizer_base import OptimizerNotBO
 from mcbo.search_space import SearchSpace
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import get_color, COLORS_SNS_10
 
 
-class LocalSearch(OptimizerNotBO):
-    color_1: str = COLORS_SNS_10[7]
+class HillClimbing(OptimizerNotBO):
+    color_1: str = get_color(ind=7, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
-        return LocalSearch.color_1
+        return HillClimbing.color_1
 
     @staticmethod
     def get_color() -> str:
-        return LocalSearch.get_color_1()
+        return HillClimbing.get_color_1()
 
     @property
     def name(self) -> str:
-        return 'Local Search'
+        return 'Hill Climbing'
 
     @property
     def tr_name(self) -> str:
@@ -50,10 +49,7 @@ class LocalSearch(OptimizerNotBO):
              neighbourhood_ball_normalised_radius: in the transformed space, numerical dims are mutated by sampling
                                                       a Gaussian perturbation with std this value
         """
-        assert search_space.num_permutation == 0, \
-            'Local Search is currently not implemented for permutation variables'
-
-        super(LocalSearch, self).__init__(
+        super(HillClimbing, self).__init__(
             search_space=search_space,
             input_constraints=input_constraints,
             dtype=dtype

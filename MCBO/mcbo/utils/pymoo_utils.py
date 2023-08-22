@@ -189,7 +189,7 @@ class GenericRepair(Repair):
                 )
                 return self.search_space.inverse_transform(transf_points)
         else:
-            point_sampler = self.search_space.sample,
+            point_sampler = self.search_space.sample
 
         if len(input_constr_invalid_inds) > 0:
             # sample valid points

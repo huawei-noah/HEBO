@@ -1,17 +1,17 @@
 # Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
 from typing import List, Dict, Any
 
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the MIT license.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE. See the MIT License for more details.
-
 import numpy as np
 import pandas as pd
 
 from mcbo.tasks import TaskBase
+
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the MIT license.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the MIT License for more details.
 
 
 def spread_pests(curr_pest_frac, spread_rate, control_rate, apply_control):
@@ -103,11 +103,11 @@ class PestControl(TaskBase):
         return evaluation
 
     @staticmethod
-    def get_search_space_params(n_stages: int) -> List[Dict[str, Any]]:
+    def get_static_search_space_params(n_stages: int) -> List[Dict[str, Any]]:
         params = []
         for i in range(1, n_stages + 1):
             params.append({'name': f'stage_{i}', 'type': 'nominal', 'categories': PestControl.categories})
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params(n_stages=self._n_stages)
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params(n_stages=self._n_stages)

@@ -9,7 +9,6 @@
 
 import copy
 import time
-import warnings
 from typing import Optional, Dict, Callable, List
 
 import numpy as np
@@ -33,8 +32,10 @@ class BoBase(OptimizerBase):
         name = ""
         name += self.model.name
         name += " - "
-        if self.tr_manager is not None:
+        if self.tr_manager is not None and self.tr_name == 'basic':
             name += f"Tr-based "
+        elif self.tr_manager is not None:
+            name += self.tr_name + " "
         name += f"{self.acq_optimizer.name} acq optim"
         return name
 

@@ -28,11 +28,11 @@ from mcbo.utils.data_buffer import DataBuffer
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
 from mcbo.utils.discrete_vars_utils import round_discrete_vars
 from mcbo.utils.model_utils import add_hallucinations_and_retrain_model
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class MixedMabAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[3]
+    color_1: str = get_color(ind=3, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -50,7 +50,7 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
                  mab_resample_tol: int = 500,
                  n_cand: int = 5000,
                  n_restarts: int = 5,
-                 num_optimizer: str = 'adam',
+                 num_optimizer: str = 'sgd',
                  cont_lr: float = 1e-3,
                  cont_n_iter: int = 100,
                  dtype: torch.dtype = torch.float64,

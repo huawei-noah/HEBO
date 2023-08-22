@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 from pymoo.config import Config
 
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 Config.warnings['not_compiled'] = False
 
@@ -67,7 +67,7 @@ class PymooMixedVariableGaWithRepair(GeneticAlgorithm):
 
 
 class PymooGeneticAlgorithm(OptimizerNotBO):
-    color_1: str = COLORS_SNS_10[8]
+    color_1: str = get_color(ind=5, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -260,7 +260,7 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
 
 
 class CategoricalGeneticAlgorithm(OptimizerNotBO):
-    color_1: str = COLORS_SNS_10[8]
+    color_1: str = get_color(ind=8, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -696,7 +696,7 @@ class GeneticAlgorithm(OptimizerNotBO):
     sometimes outperform the Mixed Variable GA from pymoo by an order of magnitude. However, at the same time it can be
     approximately 50% slower.
     """
-    color_1: str = COLORS_SNS_10[8]
+    color_1: str = get_color(ind=8, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:

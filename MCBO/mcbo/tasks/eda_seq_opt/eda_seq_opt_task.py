@@ -453,7 +453,7 @@ class EDASeqOptimization(TaskBase):
     def log(self, msg: str, end=None) -> None:
         log(msg, header=f"{self.designs_group_id} | {self.objective}", end=end)
 
-    def search_space_params(self):
+    def get_search_space_params(self):
         return self.optim_space.search_space_params
 
     def get_search_space(self, dtype: torch.dtype = torch.float64) -> SearchSpaceEDA:

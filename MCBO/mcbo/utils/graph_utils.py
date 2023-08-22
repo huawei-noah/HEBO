@@ -15,7 +15,7 @@ import torch
 from mcbo.search_space import SearchSpace
 
 
-def laplacian_eigen_decomposition(search_space: SearchSpace) -> (
+def laplacian_eigen_decomposition(search_space: SearchSpace, device: torch.device) -> (
         np.ndarray, List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]):
     """
     Function used to compute the eigen decomposition of the Laplacian of a combinatorial graph.
@@ -43,11 +43,12 @@ def laplacian_eigen_decomposition(search_space: SearchSpace) -> (
         n_v = search_space.params[param].ub - search_space.params[param].lb + 1
 
         if search_space.params[param].is_ordinal:
-            adj_mat = torch.diag(torch.ones(n_v - 1, dtype=dtype), -1) + torch.diag(torch.ones(n_v - 1, dtype=dtype), 1)
+            adj_mat = torch.diag(torch.ones(n_v - 1, dtype=dtype, device=device), -1) + torch.diag(
+                torch.ones(n_v - 1, dtype=dtype, device=device), 1)
             laplacian = (torch.diag(torch.sum(adj_mat, dim=0)) - adj_mat)
 
         elif search_space.params[param].is_nominal:
-            adj_mat = torch.ones((n_v, n_v), dtype=dtype).fill_diagonal_(0)
+            adj_mat = torch.ones((n_v, n_v), dtype=dtype, device=device).fill_diagonal_(0)
             laplacian = (torch.diag(torch.sum(adj_mat, dim=0)) - adj_mat) / n_v
 
         eigval, eigvec = torch.linalg.eigh(laplacian, UPLO='U')

@@ -21,11 +21,11 @@ from mcbo.trust_region.tr_manager_base import TrManagerBase
 from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
 from mcbo.utils.data_buffer import DataBuffer
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class PymooGeneticAlgoAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[0]
+    color_1: str = get_color(ind=0, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -112,7 +112,7 @@ class PymooGeneticAlgoAcqOptimizer(AcqOptimizerBase):
             for _ in range(int(round(self.ga_num_iter / self.ga_pop_size))):
                 x_next = ga.suggest(self.ga_pop_size)
                 y_next = acq_func(self.search_space.transform(x_next), model,
-                                  **acq_evaluate_kwargs).view(-1, 1).detach().cpu()
+                                  **acq_evaluate_kwargs).view(-1, 1).detach().cpu().numpy()
                 ga.observe(x_next, y_next)
 
         valid = False
@@ -150,7 +150,7 @@ class PymooGeneticAlgoAcqOptimizer(AcqOptimizerBase):
 
 
 class CategoricalGeneticAlgoAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[0]
+    color_1: str = get_color(ind=0, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -221,7 +221,7 @@ class CategoricalGeneticAlgoAcqOptimizer(AcqOptimizerBase):
             for _ in range(int(round(self.ga_num_iter / self.ga_pop_size))):
                 x_next = ga.suggest(self.ga_pop_size)
                 y_next = acq_func(self.search_space.transform(x_next), model,
-                                  **acq_evaluate_kwargs).view(-1, 1).detach().cpu()
+                                  **acq_evaluate_kwargs).view(-1, 1).detach().cpu().numpy()
                 ga.observe(x_next, y_next)
 
         # Check if any of the elite samples was previous unobserved
@@ -267,7 +267,7 @@ class CategoricalGeneticAlgoAcqOptimizer(AcqOptimizerBase):
 
 
 class GeneticAlgoAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[0]
+    color_1: str = get_color(ind=0, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:

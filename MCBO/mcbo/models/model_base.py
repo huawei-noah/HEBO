@@ -136,7 +136,7 @@ class ModelBase(ABC):
         pass
 
     def sample_y(self, x: torch.Tensor, n_samples: int, **kwargs) -> torch.Tensor:
-        # TODO: fix that by taking into account the covariance
+        # TODO: add option to take into account the covariance
         py, ps2 = self.predict(x)
         ps = ps2.sqrt()
         samp = torch.zeros(n_samples, py.shape[0], self.num_out)
@@ -161,7 +161,7 @@ class ModelBase(ABC):
 
     def pre_fit_method(self, x: torch.Tensor, y: torch.Tensor, **kwargs):
         """
-        Function called at the before fitting the model in the suggest method. Can be used to update the internal state
+        Function called before fitting the model in the suggest method. Can be used to update the internal state
         of the model based on the data that will be used to fit the model. Use cases may include training a VAE
         for latent space BO, or re-initialising the model before fitting it to the data.
 

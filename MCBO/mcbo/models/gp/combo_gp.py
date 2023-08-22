@@ -85,9 +85,7 @@ class ComboGPModel(ModelBase):
 
         fourier_freq_list = [fourier_freq.to(self.device, self.dtype) for fourier_freq in fourier_freq_list]
         fourier_basis_list = [fourier_basis.to(self.device, self.dtype) for fourier_basis in fourier_basis_list]
-        self.kernel = DiffusionKernel(fourier_freq_list, fourier_basis_list)
-        self.kernel.log_beta = self.kernel.log_beta.to(self.device, self.dtype)
-        self.kernel.log_amp = self.kernel.log_amp.to(self.device, self.dtype)
+        self.kernel = DiffusionKernel(fourier_freq_list, fourier_basis_list).to(self.device, self.dtype)
 
         # Slice sampling is used to sample from the posterior distribution so there is no need to calculate gradients
         self.mean.constant.requires_grad = False

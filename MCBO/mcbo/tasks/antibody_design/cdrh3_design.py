@@ -91,15 +91,15 @@ class CDRH3Design(TaskBase):
         return charge, n_gly_seq, max_count
 
     @staticmethod
-    def get_search_space_params(cdrh3_length: int) -> List[Dict[str, Any]]:
+    def get_static_search_space_params(cdrh3_length: int) -> List[Dict[str, Any]]:
 
         params = [{'name': f'Amino acid {i + 1}', 'type': 'nominal', 'categories': CDRH3Design.amino_acids} for i in
                   range(cdrh3_length)]
 
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params(cdrh3_length=self.cdrh3_length)
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params(cdrh3_length=self.cdrh3_length)
 
     @property
     def input_constraints(self) -> Optional[List[Callable[[Dict], bool]]]:

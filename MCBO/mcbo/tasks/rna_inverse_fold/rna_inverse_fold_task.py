@@ -64,7 +64,7 @@ class RNAInverseFoldTask(TaskBase):
         return ''.join(self.alphabet[x])
 
     @staticmethod
-    def get_search_space_params(binary_mode: bool, target: str) -> List[Dict[str, Any]]:
+    def get_static_search_space_params(binary_mode: bool, target: str) -> List[Dict[str, Any]]:
         if binary_mode:
             params = [{'name': f'x{i + 1}', 'type': 'bool'} for i in
                       range(2 * len(target))]
@@ -74,5 +74,5 @@ class RNAInverseFoldTask(TaskBase):
 
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params(binary_mode=self.binary_mode, target=self.target)
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params(binary_mode=self.binary_mode, target=self.target)
