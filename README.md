@@ -5,13 +5,13 @@ Huawei, Noah's Ark Lab.
 
 - Bayesian Optimisation Research
     - [HEBO: Heteroscedastic Evolutionary Bayesian Optimisation](./HEBO)
-    - [T-LBO](./T-LBO)
-    - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
-    - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-    - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
-    - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
-    - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
     - [MCBO: Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization](./MCBO)
+    - [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP)
+    - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
+    - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
+    - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+    - [T-LBO](./T-LBO)
+    - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
 - Reinforcement Learning Research
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
@@ -29,97 +29,58 @@ Bayesian optimsation library developped by Huawei Noahs Ark Decision Making and 
 winning submission </strong> to
 the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard).
 
-## [T-LBO](./T-LBO)
-
-<p float="center">
-  <img src="./T-LBO/figures/LSBO.png" width="400" />
-  <img src="./T-LBO/figures/magnets.png" width="400" /> 
-</p>
-
-Codebase associated
-to: [High-Dimensional Bayesian Optimisation with Variational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
-
-##### Abstract
-
-We introduce a method based on deep metric learning to perform Bayesian optimisation over high-dimensional, structured
-input spaces using variational autoencoders (VAEs). By extending ideas from supervised deep metric learning, we address
-a longstanding problem in high-dimensional VAE Bayesian optimisation, namely how to enforce a discriminative latent
-space as an inductive bias. Importantly, we achieve such an inductive bias using just 1% of the available labelled data
-relative to previous work, highlighting the sample efficiency of our approach. As a theoretical contribution, we present
-a proof of vanishing regret for our method. As an empirical contribution, we present state-of-the-art results on
-real-world high-dimensional black-box optimisation problems including property-guided molecule generation. It is the
-hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional
-Bayesian optimisation.
-
-## [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
+## [MCBO](./MCBO)
 
 <p align="center">
-    <img src="./BOiLS/results/sample-eff-1.png" alt="drawing" width="500"/>
+    <img src="./MCBO/paper_results/images/all_mix_match.PNG" alt="drawing" width="500"/>
 </p>
 
-Codebase associated to: [BOiLS: Bayesian Optimisation for Logic Synthesis](https://arxiv.org/abs/2111.06178) accepted
-at **DATE22** conference.
+Codebase associated to: [Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
+](https://arxiv.org/abs/2306.09803).
 
 ##### Abstract
 
-Optimising the quality-of-results (QoR) of circuits during logic synthesis is a formidable challenge necessitating the
-exploration of exponentially sized search spaces. While expert-designed operations aid in uncovering effective
-sequences, the increase in complexity of logic circuits favours automated procedures. Inspired by the successes of
-machine learning, researchers adapted deep learning and reinforcement learning to logic synthesis applications. However
-successful, those techniques suffer from high sample complexities preventing widespread adoption. To enable efficient
-and scalable solutions, we propose BOiLS, the first algorithm adapting modern Bayesian optimisation to navigate the
-space of synthesis operations. BOiLS requires no human intervention and effectively trades-off exploration versus
-exploitation through novel Gaussian process kernels and trust-region constrained acquisitions. In a set of experiments
-on EPFL benchmarks, we demonstrate BOiLS's superior performance compared to state-of-the-art in terms of both sample
-efficiency and QoR values.
+This paper introduces a modular framework for Mixed-variable and Combinatorial
+Bayesian Optimization (MCBO) to address the lack of systematic benchmarking
+and standardized evaluation in the field. Current MCBO papers often introduce
+non-diverse or non-standard benchmarks to evaluate their methods, impeding the
+proper assessment of different MCBO primitives and their combinations. Additionally, papers introducing a solution for a
+single MCBO primitive often omit
+benchmarking against baselines that utilize the same methods for the remaining primitives. This omission is primarily
+due to the significant implementation
+overhead involved, resulting in a lack of controlled assessments and an inability
+to showcase the merits of a contribution effectively. To overcome these challenges, our proposed framework enables an
+effortless combination of Bayesian
+Optimization components, and provides a diverse set of synthetic and real-world
+benchmarking tasks. Leveraging this flexibility, we implement 47 novel MCBO
+algorithms and benchmark them against seven existing MCBO solvers and five
+standard black-box optimization algorithms on ten tasks, conducting over 4000
+experiments. Our findings reveal a superior combination of MCBO primitives
+outperforming existing approaches and illustrate the significance of model fit and
+the use of a trust region. We make our MCBO library available under the MIT
+license at https://github.com/huawei-noah/HEBO/tree/master/MCBO.
 
-## [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+## [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP/)
 
-<div style="text-align:center"><img src="./CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
-
-<div style="text-align:left"></>
-
+![regret-all](./NAP/figures/regret-all.png)
 Codebase associated
-to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://www.jmlr.org/papers/v22/20-1422.html)
-accepted at **JMLR**.
+to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
 
 ##### Abstract
 
-Bayesian optimisation presents a sample-efficient methodology for global optimisation. Within this framework, a crucial
-performance-determining subroutine is the maximisation of the acquisition function, a task complicated by the fact that
-acquisition functions tend to be non-convex and thus nontrivial to optimise. In this paper, we undertake a comprehensive
-empirical study of approaches to maximise the acquisition function. Additionally, by deriving novel, yet mathematically
-equivalent, compositional forms for popular acquisition functions, we recast the maximisation task as a compositional
-optimisation problem, allowing us to benefit from the extensive literature in this field. We highlight the empirical
-advantages of the compositional approach to acquisition function maximisation across 3958 individual experiments
-comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given the generality of the acquisition
-function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
-performance improvements across all domains in which Bayesian optimisation is currently being applied.
-
-## [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
-
-![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
-
-Codebase associated
-to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
-
-##### Abstract
-
-Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3
-region located at the tip of variable chains of an antibody dominates antigen-binding specificity. Therefore, it is a
-priority to design optimal antigen-specific CDRH3 regions to develop therapeutic antibodies to combat harmful pathogens.
-However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence
-exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian
-Optimisation framework enabling efficient in silico design of the CDRH3 region. Ideally, antibodies should bind to
-their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that
-restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software
-suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico
-in an unconstrained fashion. The results across 188 antigens demonstrate the benefit of AntBO in designing CDRH3 regions
-with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform
-the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm
-baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no
-domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for
-in vitro experimentation.
+Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data
+from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function
+independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end
+differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer
+architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled
+acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is
+challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a
+combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity
+pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides
+part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method
+achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter
+optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody
+design, and logic synthesis for electronic design automation.
 
 ## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
 
@@ -148,58 +109,97 @@ compared to the previous state-of-the-art on a comprehensive set of benchmarks. 
 confirm the plug-and-play nature of our modelling component by integrating our method with
 HEBO, showing improved practical gains in the highest dimensional tasks from Bayesmark.
 
-## [NAP: End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](./NAP/)
+## [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
 
-![regret-all](./NAP/figures/regret-all.png)
+![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
+
 Codebase associated
-to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
 
 ##### Abstract
 
-Meta-Bayesian optimisation (meta-BO) aims to improve the sample efficiency of Bayesian optimisation by leveraging data
-from related tasks. While previous methods successfully meta-learn either a surrogate model or an acquisition function
-independently, joint training of both components remains an open challenge. This paper proposes the first end-to-end
-differentiable meta-BO framework that generalises neural processes to learn acquisition functions via transformer
-architectures. We enable this end-to-end framework with reinforcement learning (RL) to tackle the lack of labelled
-acquisition data. Early on, we notice that training transformer-based neural processes from scratch with RL is
-challenging due to insufficient supervision, especially when rewards are sparse. We formalise this claim with a
-combinatorial analysis showing that the widely used notion of regret as a reward signal exhibits a logarithmic sparsity
-pattern in trajectory lengths. To tackle this problem, we augment the RL objective with an auxiliary task that guides
-part of the architecture to learn a valid probabilistic model as an inductive bias. We demonstrate that our method
-achieves state-of-the-art regret results against various baselines in experiments on standard hyperparameter
-optimisation tasks and also outperforms others in the real-world problems of mixed-integer programming tuning, antibody
-design, and logic synthesis for electronic design automation.
+Antibodies are canonically Y-shaped multimeric proteins capable of highly specific molecular recognition. The CDRH3
+region located at the tip of variable chains of an antibody dominates antigen-binding specificity. Therefore, it is a
+priority to design optimal antigen-specific CDRH3 regions to develop therapeutic antibodies to combat harmful pathogens.
+However, the combinatorial nature of CDRH3 sequence space makes it impossible to search for an optimal binding sequence
+exhaustively and efficiently, especially not experimentally. Here, we present AntBO: a Combinatorial Bayesian
+Optimisation framework enabling efficient in silico design of the CDRH3 region. Ideally, antibodies should bind to
+their target antigen and be free from any harmful outcomes. Therefore, we introduce the CDRH3 trust region that
+restricts the search to sequences with feasible developability scores. To benchmark AntBO, we use the Absolut! software
+suite as a black-box oracle because it can score the target specificity and affinity of designed antibodies in silico
+in an unconstrained fashion. The results across 188 antigens demonstrate the benefit of AntBO in designing CDRH3 regions
+with diverse biophysical properties. In under 200 protein designs, AntBO can suggest antibody sequences that outperform
+the best binding sequence drawn from 6.9 million experimentally obtained CDRH3s and a commonly used genetic algorithm
+baseline. Additionally, AntBO finds very-high affinity CDRH3 sequences in only 38 protein designs whilst requiring no
+domain knowledge. We conclude AntBO brings automated antibody design methods closer to what is practically viable for
+in vitro experimentation.
 
-## [MCBO](./MCBO)
+## [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
 
 <p align="center">
-    <img src="./MCBO/paper/images/all_mix_match.PNG" alt="drawing" width="500"/>
+    <img src="./BOiLS/results/sample-eff-1.png" alt="drawing" width="500"/>
 </p>
 
-Codebase associated to: [Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
-](https://arxiv.org/abs/2306.09803).
+Codebase associated to: [BOiLS: Bayesian Optimisation for Logic Synthesis](https://arxiv.org/abs/2111.06178) accepted
+at **DATE22** conference.
 
 ##### Abstract
 
-This paper introduces a modular framework for Mixed-variable and Combinatorial
-Bayesian Optimization (MCBO) to address the lack of systematic benchmarking
-and standardized evaluation in the field. Current MCBO papers often introduce
-non-diverse or non-standard benchmarks to evaluate their methods, impeding the
-proper assessment of different MCBO primitives and their combinations. Additionally, papers introducing a solution for a
-single MCBO primitive often omit
-benchmarking against baselines that utilize the same methods for the remaining primitives. This omission is primarily
-due to the significant implementation
-overhead involved, resulting in a lack of controlled assessments and an inability
-to showcase the merits of a contribution effectively. To overcome these challenges, our proposed framework enables an
-effortless combination of Bayesian
-Optimization components, and provides a diverse set of synthetic and real-world
-benchmarking tasks. Leveraging this flexibility, we implement 47 novel MCBO
-algorithms and benchmark them against seven existing MCBO solvers and five
-standard black-box optimization algorithms on ten tasks, conducting over 4000
-experiments. Our findings reveal a superior combination of MCBO primitives
-outperforming existing approaches and illustrate the significance of model fit and
-the use of a trust region. We make our MCBO library available under the MIT
-license at https://github.com/huawei-noah/HEBO/tree/master/MCBO.
+Optimising the quality-of-results (QoR) of circuits during logic synthesis is a formidable challenge necessitating the
+exploration of exponentially sized search spaces. While expert-designed operations aid in uncovering effective
+sequences, the increase in complexity of logic circuits favours automated procedures. Inspired by the successes of
+machine learning, researchers adapted deep learning and reinforcement learning to logic synthesis applications. However
+successful, those techniques suffer from high sample complexities preventing widespread adoption. To enable efficient
+and scalable solutions, we propose BOiLS, the first algorithm adapting modern Bayesian optimisation to navigate the
+space of synthesis operations. BOiLS requires no human intervention and effectively trades-off exploration versus
+exploitation through novel Gaussian process kernels and trust-region constrained acquisitions. In a set of experiments
+on EPFL benchmarks, we demonstrate BOiLS's superior performance compared to state-of-the-art in terms of both sample
+efficiency and QoR values.
+
+## [T-LBO](./T-LBO)
+
+<p float="center">
+  <img src="./T-LBO/figures/LSBO.png" width="400" />
+  <img src="./T-LBO/figures/magnets.png" width="400" /> 
+</p>
+
+Codebase associated
+to: [High-Dimensional Bayesian Optimisation with Variational Autoencoders and Deep Metric Learning](https://arxiv.org/abs/2106.03609)
+
+##### Abstract
+
+We introduce a method based on deep metric learning to perform Bayesian optimisation over high-dimensional, structured
+input spaces using variational autoencoders (VAEs). By extending ideas from supervised deep metric learning, we address
+a longstanding problem in high-dimensional VAE Bayesian optimisation, namely how to enforce a discriminative latent
+space as an inductive bias. Importantly, we achieve such an inductive bias using just 1% of the available labelled data
+relative to previous work, highlighting the sample efficiency of our approach. As a theoretical contribution, we present
+a proof of vanishing regret for our method. As an empirical contribution, we present state-of-the-art results on
+real-world high-dimensional black-box optimisation problems including property-guided molecule generation. It is the
+hope that the results presented in this paper can act as a guiding principle for realising effective high-dimensional
+Bayesian optimisation.
+
+## [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+
+<div style="text-align:center"><img src="./CompBO/image/summary-Best-performance-on-Synthetic-tasks-matern-52-3.png" alt="drawing" width="600"/>
+
+<div style="text-align:left"></>
+
+Codebase associated
+to: [Are we Forgetting about Compositional Optimisers in Bayesian Optimisation?](https://www.jmlr.org/papers/v22/20-1422.html)
+accepted at **JMLR**.
+
+##### Abstract
+
+Bayesian optimisation presents a sample-efficient methodology for global optimisation. Within this framework, a crucial
+performance-determining subroutine is the maximisation of the acquisition function, a task complicated by the fact that
+acquisition functions tend to be non-convex and thus nontrivial to optimise. In this paper, we undertake a comprehensive
+empirical study of approaches to maximise the acquisition function. Additionally, by deriving novel, yet mathematically
+equivalent, compositional forms for popular acquisition functions, we recast the maximisation task as a compositional
+optimisation problem, allowing us to benefit from the extensive literature in this field. We highlight the empirical
+advantages of the compositional approach to acquisition function maximisation across 3958 individual experiments
+comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given the generality of the acquisition
+function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
+performance improvements across all domains in which Bayesian optimisation is currently being applied.
 
 # Reinforcement Learning Research
 
@@ -283,5 +283,5 @@ results show that the proposed approach achieves state-of-the-art performance on
 
 <strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek, Paul Daoudi, Merwan Barlier.
 
-<strong> Alumni contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
+<strong> Alumni / External contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
   
