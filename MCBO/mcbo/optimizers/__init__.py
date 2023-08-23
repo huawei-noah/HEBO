@@ -9,7 +9,7 @@
 
 from mcbo.optimizers.bo_base import BoBase
 from mcbo.optimizers.manual.cocabo import CoCaBO
-from mcbo.optimizers.non_bo.local_search import LocalSearch
+from mcbo.optimizers.non_bo.hill_climbing import HillClimbing
 from mcbo.optimizers.optimizer_base import OptimizerBase
 from mcbo.optimizers.non_bo.random_search import RandomSearch
 from mcbo.optimizers.non_bo.simulated_annealing import SimulatedAnnealing

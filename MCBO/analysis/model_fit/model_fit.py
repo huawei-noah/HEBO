@@ -7,7 +7,7 @@ import torch
 from mcbo.optimizers import BoBuilder
 from mcbo.utils.general_utils import load_w_pickle, get_project_root
 from mcbo.utils.model_utils import move_model_to_device
-from mcbo.utils.experiment_utils import get_task_and_search_space
+from mcbo.utils.experiment_utils import get_task_from_id
 
 
 def get_fit_result_dir(task_id: str, data_method_source: str, surrogate_id: str, seed: int, n_observe: int):
@@ -29,7 +29,8 @@ def get_model_fit(task_id: str, data_method_source: str, surrogate_id: str, seed
         raise ValueError(data_method_source)
     result_dir = get_fit_result_dir(task_id=task_id, data_method_source=data_method_source, surrogate_id=surrogate_id,
                                     seed=seed, n_observe=n_observe)
-    task, search_space = get_task_and_search_space(task_id=task_id, dtype=dtype, absolut_dir=absolut_dir)
+    task = get_task_from_id(task_id=task_id, absolut_dir=absolut_dir)
+    search_space = task.get_search_space(dtype=dtype)
 
     all_ys = pd.read_csv(f"{get_project_root()}/results/{task.name}/{data_method_source}/seed_{seed}_results.csv")[
         "f(x)"].values.reshape(-1, 1)

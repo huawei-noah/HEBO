@@ -7,10 +7,10 @@ import torch
 
 sys.path.insert(0, str(Path(os.path.realpath(__file__)).parent.parent))
 
-from mcbo.utils.experiment_utils import run_experiment, get_task_and_search_space, get_opt
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, description='CombBopt - Combinatorial Tasks')
+    from mcbo.utils.experiment_utils import run_experiment, get_task_from_id, get_opt
+    parser = argparse.ArgumentParser(add_help=True, description='MCBO')
     parser.add_argument("--device_id", type=int, default=0, help="Cuda device id (cpu is used if id is negative)")
     parser.add_argument("--task_id", type=str, required=True, help="Name of the task")
     parser.add_argument("--optimizers_ids", type=str, nargs="+", required=True, help="Name of the methods to run")
@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     dtype_ = torch.float64
     task_id_ = args.task_id
-    task, search_space = get_task_and_search_space(task_id=task_id_, dtype=dtype_, absolut_dir=args.absolut_dir)
+    task = get_task_from_id(task_id=task_id_, absolut_dir=args.absolut_dir)
+    search_space = task.get_search_space(dtype=dtype_)
 
     bo_n_init_ = 20
     if args.device_id >= 0 and torch.cuda.is_available():
@@ -38,9 +39,8 @@ if __name__ == '__main__':
     selected_optimizers = []
     for opt_id in args.optimizers_ids:
         opt = get_opt(
-            search_space=search_space,
             task=task,
-            full_opt_name=opt_id,
+            short_opt_id=opt_id,
             bo_n_init=bo_n_init_,
             dtype=dtype_,
             bo_device=bo_device_

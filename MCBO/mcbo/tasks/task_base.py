@@ -60,11 +60,11 @@ class TaskBase(ABC):
         return None
 
     @abstractmethod
-    def search_space_params(self) -> List[Dict[str, Any]]:
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
         pass
 
-    def get_search_space(self, dtype: torch.dtype=torch.float64) -> SearchSpace:
-        return SearchSpace(params=self.search_space_params(), dtype=dtype)
+    def get_search_space(self, dtype: torch.dtype = torch.float64) -> SearchSpace:
+        return SearchSpace(params=self.get_search_space_params(), dtype=dtype)
 
     def increment_n_evals(self, n: int):
         self._n_bb_evals += n

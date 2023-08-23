@@ -363,8 +363,8 @@ class DiffusionKernel(Kernel):
 
     def __init__(self, fourier_freq_list, fourier_basis_list, **kwargs):
         super(DiffusionKernel, self).__init__(has_lengthscale=False, **kwargs)
-        self.log_amp = torch.zeros(1)
-        self.log_beta = torch.zeros(len(fourier_freq_list))
+        self.log_amp = torch.zeros(1).to(fourier_freq_list[0])
+        self.log_beta = torch.zeros(len(fourier_freq_list)).to(fourier_freq_list[0])
         self.fourier_freq_list = fourier_freq_list
         self.fourier_basis_list = fourier_basis_list
 
@@ -386,9 +386,9 @@ class DiffusionKernel(Kernel):
 
         full_gram = 1
         for i in range(len(self.fourier_freq_list)):
-            beta = torch.exp(self.log_beta[i].to(X1.dtype))
-            fourier_freq = self.fourier_freq_list[i].to(X1.dtype)
-            fourier_basis = self.fourier_basis_list[i].to(X1.dtype)
+            beta = torch.exp(self.log_beta[i].to(dtype=X1.dtype, device=X1.device))
+            fourier_freq = self.fourier_freq_list[i].to(dtype=X1.dtype, device=X1.device)
+            fourier_basis = self.fourier_basis_list[i].to(dtype=X1.dtype, device=X1.device)
 
             subvec1 = fourier_basis[X1[:, i].long()]
             subvec2 = fourier_basis[X2[:, i].long()]

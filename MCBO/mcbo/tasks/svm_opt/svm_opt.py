@@ -107,7 +107,7 @@ class SVMOptTask(TaskBase):
         return np.array(evaluations).reshape(-1, 1)
 
     @staticmethod
-    def get_search_space_params() :
+    def get_static_search_space_params()  -> List[Dict[str, Any]]:
         """ Return search space params associated to this task """
         params = []
         for i in range(50):
@@ -121,5 +121,5 @@ class SVMOptTask(TaskBase):
 
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params()
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params()

@@ -46,7 +46,8 @@ class MigSeqOpt(TaskBase):
             self.path_to_network = os.path.join(Path(__file__).parent.parent.resolve(), 'data', 'epfl_benchmark',
                                                 'random_control', ntk_name + '.aig')
 
-        self.path_to_executable = os.path.join(Path(__file__).parent.resolve(), '../../../libs/EDA/mig_task_executable')
+        self.path_to_executable = os.path.join(Path(__file__).parent.parent.parent.parent.resolve(),
+                                               'libs/EDA/mig_task_executable')
         self.temp_save_dir = os.path.join(Path(__file__).parent.resolve())
 
         self.idx_to_op = {
@@ -74,9 +75,9 @@ class MigSeqOpt(TaskBase):
             y[i] = self._black_box(x.iloc[i])
         return y
 
-    def _black_box(self, x):
+    def _black_box(self, x: pd.Series) -> float:
 
-        # Change dataframe to numpy array of indices
+        # Change pandas Series to numpy array of indices
         x = np.array([self.op_to_idx[op] for op in x.array])
 
         path_to_sequence = os.path.join(self.temp_save_dir, f"sequence_{os.getpid()}.txt")
@@ -110,7 +111,7 @@ class MigSeqOpt(TaskBase):
         return fx
 
     @staticmethod
-    def get_search_space_params(seq_len: int) -> List[Dict[str, Any]]:
+    def get_static_search_space_params(seq_len: int) -> List[Dict[str, Any]]:
 
         params = []
         for i in range(1, seq_len + 1):
@@ -118,5 +119,5 @@ class MigSeqOpt(TaskBase):
 
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params(seq_len=self.seq_len)
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params(seq_len=self.seq_len)

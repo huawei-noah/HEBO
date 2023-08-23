@@ -109,7 +109,7 @@ class COMBO(BoBase):
 
         # Eigen decomposition of the graph laplacian
         n_vertices, adjacency_mat_list, fourier_freq_list, fourier_basis_list = laplacian_eigen_decomposition(
-            search_space)
+            search_space=search_space, device=device)
 
         model = ComboEnsembleGPModel(
             search_space=search_space,

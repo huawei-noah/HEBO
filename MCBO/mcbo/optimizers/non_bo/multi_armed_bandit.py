@@ -19,11 +19,11 @@ from mcbo.trust_region.tr_manager_base import TrManagerBase
 from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
 from mcbo.utils.dependant_rounding import DepRound
 from mcbo.utils.distance_metrics import hamming_distance
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class MultiArmedBandit(OptimizerNotBO):
-    color_1: str = COLORS_SNS_10[6]
+    color_1: str = get_color(ind=6, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:

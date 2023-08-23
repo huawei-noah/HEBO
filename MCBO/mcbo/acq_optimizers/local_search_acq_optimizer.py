@@ -25,11 +25,11 @@ from mcbo.utils.discrete_vars_utils import get_discrete_choices
 from mcbo.utils.distance_metrics import hamming_distance
 from mcbo.utils.graph_utils import cartesian_neighbors, cartesian_neighbors_center_attracted
 from mcbo.utils.model_utils import add_hallucinations_and_retrain_model
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class LsAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[2]
+    color_1: str = get_color(ind=2, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:

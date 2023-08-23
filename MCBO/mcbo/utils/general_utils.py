@@ -15,11 +15,13 @@ import time
 import warnings
 from datetime import datetime
 from inspect import signature
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple, List
 
 import matplotlib
 import pandas as pd
+from joblib import Parallel, delayed
 from scipy.stats import t
+from tqdm import tqdm
 
 matplotlib.use('Agg')
 
@@ -357,3 +359,19 @@ def filter_nans(x: pd.DataFrame, y: np.ndarray) -> Tuple[pd.DataFrame, np.ndarra
     x = x.iloc[filtr_ind]
 
     return x, y
+
+
+def parallel_call_wrapper(func: Callable, func_kwargs_list: List[Dict[str, Any]], n_parallel=None):
+    if n_parallel is None:
+        n_parallel = len(os.sched_getaffinity(0)) - 1
+    if n_parallel == 1:  # do not run in parallel -> this will make debugging easier
+        return [func(**func_kwargs) for func_kwargs in tqdm(func_kwargs_list)]
+    return Parallel(n_jobs=n_parallel, backend="multiprocessing")(
+        delayed(func)(**func_kwargs) for func_kwargs in
+        tqdm(func_kwargs_list)
+    )
+
+
+def geo_mean_overflow(iterable) -> float:
+    """ Geometric mean """
+    return np.exp(np.log(iterable).mean())

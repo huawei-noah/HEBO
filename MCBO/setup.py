@@ -8,8 +8,6 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
-import setuptools
-
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 

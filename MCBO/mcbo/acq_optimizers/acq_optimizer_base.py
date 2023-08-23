@@ -34,7 +34,7 @@ class AcqOptimizerBase(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_color_1():
+    def get_color_1() -> str:
         raise NotImplementedError()
 
     def __init__(self,
@@ -139,5 +139,6 @@ class AcqOptimizerBase(ABC):
         return sample_input_valid_points(
             n_points=n_points,
             point_sampler=point_sampler,
-            input_constraints=self.input_constraints
+            input_constraints=self.input_constraints,
+            max_trials=max_trials
         )
