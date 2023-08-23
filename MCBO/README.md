@@ -146,13 +146,15 @@ python ./experiments/run_task_exps.py --device_id 0 --task_id "rna_inverse_fold"
                                       --seeds 42 43 --verbose 2
 ```
 
-## MCBO tutorials
+## How to use MCBO?
 
-We provide guides to
+In [./tutorials](./tutorials/) folder, we provide several step-by-step indications on how to use and extend the library,
+including guidance to:
 
-- Run an MCBO on a custom task.
-- Add MCBO component such as new acquisition function.
-- Testing new components against everything.
+- run an MCBO on a custom task
+- add MCBO component such as a new acquisition function or a new surrogate model
+- run a new method on set of benchmarks
+- generate result plots to visualize the evolution of the regret.
 
 ## Reproduce the results of the paper.
 

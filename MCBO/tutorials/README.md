@@ -72,7 +72,10 @@ with a full optimization loop.
 - Create a folder containing the code of the new task in the [tasks folder](../mcbo/tasks/).
 - The folder can also contain a README providing a description of the task, associated search_space, dependencies...
 - Add the new task to the [factory script](../mcbo/task_factory.py) (prefer local import of the new task class if it
-  depends on packages not listed in [requirements.txt](../requirements.txt)).
+  depends on packages not listed in [requirements.txt](../requirements.txt)). Also consider adding the task
+  to [get_task_from_id](../mcbo/utils/experiment_utils.py) and associate it to a specific `task_id` (see examples
+  of `xgboost_opt`, `antibody_design`, `pest`) to be able to run optimization on this task from command
+  line, e.g. `./experiments/run_task_exps.py --task_id $task_id --optimizers_ids gp_to__ga__ei__basic --seeds 42 43 44`
 - If you want to share the new task with the community, add reference to the task in the root [README.md](../README.md)
   in the dedicated section, and make a pull request.
 
@@ -310,8 +313,30 @@ done
 
 ```
 
-We provide the notebook (tuto_results_viz.ipynb)[./tuto_results_viz.ipynb] to show how to load and visualize the results, as well as how to compare to the baselines we
+We provide the notebook (tuto_results_viz.ipynb)[./tuto_results_viz.ipynb] to show how to load and visualize the
+results, as well as how to compare to the baselines we
 have run and for which we provide the [results](../paper_results/).
+
+###### Black-box evaluation runtime
+
+We provide a table of runtime that associates each of the bennchmark task ids to the average time it takes to evaluate
+it 200 times. If for synthetic tasks the runtime is below 1 second, it can reach 3h30 for the most time-consuming
+real-world taskk (MIG Flow synthesis), which should be taken into account when allocating the resources (e.g.
+parallelizing on the seeds of the most time-consuming black-box). Note that the evaluation of each of the black-box can
+be done on a single core.
+
+| Task ID   (C:Comb / M:Mixed) | Avg. time for 1 eval. (mm:ss) | Avg. time for 200 eval. (hh:mm:ss) | 
+|------------------------------|-------------------------------|------------------------------------| 
+| ackley        (C)            | 00:00                         | 00:00:00                           | 
+| ackley-53       (M)          | 00:00                         | 00:00:00                           | 
+| rna_inverse_fold  (C)        | 00:00                         | 00:00:00                           | 
+| pest                (C)      | 00:00                         | 00:00:01                           | 
+| aig_optimization     (C)     | 00:04                         | 00:15:32                           | 
+| xgboost_opt          (M)     | 00:05                         | 00:17:42                           | 
+| antibody_design      (C)     | 00:13                         | 00:45:00                           | 
+| svm_opt              (M)     | 00:20                         | 01:06:55                           | 
+| aig_optimization_hyp (M)     | 00:32                         | 01:48:15                           | 
+| mig_optimization     (C)     | 01:05                         | 03:37:36                           | 
 
 ---
 
@@ -349,4 +374,3 @@ check [test_runtime_estimator.py](../tests/analysis/test_runtime_estimator.py)).
 | COMBO        | 48:29                     | 39:05                  | 01:36                                |
 | BODi         | 08:34                     | 08:39                  | 00:14                                |
 | CoCaBO       | 15:11                     | 15:27                  | 00:25                                |
-

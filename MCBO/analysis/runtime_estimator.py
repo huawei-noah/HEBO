@@ -1,5 +1,5 @@
 import time
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 import scipy
@@ -11,7 +11,8 @@ from mcbo.tasks.task_base import TaskBase
 from mcbo.utils.general_utils import time_formatter
 
 
-def estimate_runtime(optimizer: BoBase, task: TaskBase, total_budget: int = 200,
+def estimate_runtime(optimizer: BoBase, task: TaskBase, one_eval_runtime: Optional[float] = None,
+                     total_budget: int = 200,
                      interpolation_num_samples: int = 5) -> Tuple[float, float, float, float]:
     """
     Estimate how long would a BO run take by simulating a few BO steps
@@ -19,6 +20,8 @@ def estimate_runtime(optimizer: BoBase, task: TaskBase, total_budget: int = 200,
     Args:
         optimizer: optimizer to test.
         task: optimization task.
+        one_eval_runtime: average runtime of a single
+                          black-box evaluation (if it is not known, the black-box will be queried once)
         total_budget: estimate runtime for this number of BO steps.
         interpolation_num_samples: number of simulated BO steps to do.
 
@@ -32,9 +35,12 @@ def estimate_runtime(optimizer: BoBase, task: TaskBase, total_budget: int = 200,
     # --- Estimate time required to evaluate the black-box function
     init_points = optimizer.suggest(n_suggestions=optimizer.n_init)
     sample = init_points.iloc[[0]]
-    time_ref = time.time()
-    _ = task(sample)
-    time_taken_to_eval_bb = time.time() - time_ref
+    if one_eval_runtime is None:
+        time_ref = time.time()
+        _ = task(sample)
+        time_taken_to_eval_bb = time.time() - time_ref
+    else:
+        time_taken_to_eval_bb = one_eval_runtime
     total_time_to_eval_bb = time_taken_to_eval_bb * total_budget
 
     if total_budget <= optimizer.n_init:

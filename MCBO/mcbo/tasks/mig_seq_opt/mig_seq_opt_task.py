@@ -46,7 +46,8 @@ class MigSeqOpt(TaskBase):
             self.path_to_network = os.path.join(Path(__file__).parent.parent.resolve(), 'data', 'epfl_benchmark',
                                                 'random_control', ntk_name + '.aig')
 
-        self.path_to_executable = os.path.join(Path(__file__).parent.resolve(), '../../../libs/EDA/mig_task_executable')
+        self.path_to_executable = os.path.join(Path(__file__).parent.parent.parent.parent.resolve(),
+                                               'libs/EDA/mig_task_executable')
         self.temp_save_dir = os.path.join(Path(__file__).parent.resolve())
 
         self.idx_to_op = {
