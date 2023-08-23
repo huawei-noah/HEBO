@@ -129,6 +129,7 @@ class BoBuilder:
     acq_opt_id: str = "ga"
     acq_func_id: str = "ei"
     tr_id: Optional[str] = "basic"
+    init_sampling_strategy: str = "uniform"
     model_kwargs: Dict[str, Any] = field(default_factory=dict)
     acq_opt_kwargs: Dict[str, Any] = field(default_factory=dict)
     tr_kwargs: Dict[str, Any] = field(default_factory=dict)
@@ -440,6 +441,18 @@ class BoBuilder:
                  input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
                  dtype: torch.dtype = torch.float64, device: torch.device = torch.device('cpu')
                  ) -> BoBase:
+        """
+
+        Args:
+            search_space: search space
+            n_init: number of initial points before building the surrogate
+            input_constraints: constraints on the values of input variables
+            dtype: torch type
+            device: torch device
+
+        Returns:
+
+        """
         self.model_kwargs["dtype"] = dtype
         self.model_kwargs["device"] = device
         self.acq_opt_kwargs["dtype"] = dtype
@@ -459,6 +472,7 @@ class BoBuilder:
             acq_optim=acq_optim,
             input_constraints=input_constraints,
             tr_manager=tr_manager,
+            init_sampling_strategy=self.init_sampling_strategy,
             dtype=dtype,
             device=device,
         )

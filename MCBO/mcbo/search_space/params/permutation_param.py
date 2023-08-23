@@ -66,3 +66,11 @@ class PermutationPara(Parameter):
     @property
     def opt_ub(self):
         raise NotImplementedError
+
+    @property
+    def transf_lb(self):
+        raise NotImplementedError
+
+    @property
+    def transf_ub(self):
+        raise NotImplementedError

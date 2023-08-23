@@ -58,8 +58,16 @@ class BoolPara(Parameter):
 
     @property
     def opt_lb(self) -> float:
-        return self.lb
+        return 0
 
     @property
     def opt_ub(self) -> float:
-        return self.ub
+        return 1
+
+    @property
+    def transfo_lb(self) -> float:
+        return 0
+
+    @property
+    def transfo_ub(self) -> float:
+        return 1

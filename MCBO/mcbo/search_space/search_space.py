@@ -18,17 +18,15 @@ from mcbo.search_space.params.int_exponent_param import IntExponentPara
 from mcbo.search_space.params.integer_param import IntegerPara
 from mcbo.search_space.params.nominal_param import NominalPara
 from mcbo.search_space.params.numeric_param import NumericPara
-from mcbo.search_space.params.ordinal_param import OrdinalPara
 from mcbo.search_space.params.param import Parameter
 from mcbo.search_space.params.permutation_param import PermutationPara
 from mcbo.search_space.params.pow_integer_param import PowIntegerPara
 from mcbo.search_space.params.pow_param import PowPara
 from mcbo.search_space.params.sigmoid_param import SigmoidPara
-from mcbo.search_space.params.step_int_param import StepIntPara
 
 
 class SearchSpace:
-    def __init__(self, params: List[dict], dtype: torch.dtype=torch.float64):
+    def __init__(self, params: List[dict], dtype: torch.dtype = torch.float64):
         super(SearchSpace, self).__init__()
 
         self.dtype = dtype
@@ -41,8 +39,6 @@ class SearchSpace:
         self.register_param_type('num', NumericPara)
         self.register_param_type('int', IntegerPara)
         self.register_param_type('nominal', NominalPara)
-        self.register_param_type('ordinal', OrdinalPara)
-        self.register_param_type('step_int', StepIntPara)
         self.register_param_type('pow_int', PowIntegerPara)
         self.register_param_type('permutation', PermutationPara)
         self.register_param_type('int_exponent', IntExponentPara)
@@ -82,6 +78,9 @@ class SearchSpace:
 
         self.opt_ub = np.array([self.params[p].opt_ub for p in self.param_names])
         self.opt_lb = np.array([self.params[p].opt_lb for p in self.param_names])
+
+        self.transfo_ub = np.array([self.params[p].transfo_ub for p in self.param_names])
+        self.transfo_lb = np.array([self.params[p].transfo_lb for p in self.param_names])
 
         self.cont_lb = [self.params[p].param_dict["lb"] for p in self.cont_names]
         self.cont_ub = [self.params[p].param_dict["ub"] for p in self.cont_names]
@@ -251,11 +250,6 @@ class SearchSpace:
     def disc_lb(self):
         dist_num_lb = [self.params[p].opt_lb for p in self.disc_names]
         return dist_num_lb
-
-    @property
-    def ordinal_lb(self):
-        ordinal_lb = [self.params[p].opt_lb for p in self.ordinal_names]
-        return ordinal_lb
 
     @property
     def nominal_lb(self):

@@ -21,7 +21,6 @@ from mcbo.search_space.params.numeric_param import NumericPara
 from mcbo.search_space.params.pow_integer_param import PowIntegerPara
 from mcbo.search_space.params.pow_param import PowPara
 from mcbo.search_space.params.sigmoid_param import SigmoidPara
-from mcbo.search_space.params.step_int_param import StepIntPara
 from mcbo.search_space.search_space import SearchSpace
 from mcbo.trust_region.tr_manager_base import TrManagerBase
 from mcbo.utils.distance_metrics import hamming_distance
@@ -112,7 +111,7 @@ class MessagePassingOptimizer(AcqOptimizerBase):
 
 def chunks(domain: list, n: int) -> list:
     """Taken from https://github.com/eric-vader/HD-BO-Additive-Models/blob/master/hdbo/acquisition_optimizer.py
-    
+
     MIT License
 
     Copyright (c) 2020 Eric Han
@@ -143,7 +142,7 @@ def chunks(domain: list, n: int) -> list:
 def make_chordal(bn: nx.Graph):
     """
     Taken from https://github.com/eric-vader/HD-BO-Additive-Models/blob/master/hdbo/acquisition_optimizer.py
-    
+
     MIT License
 
     Copyright (c) 2020 Eric Han
@@ -193,7 +192,7 @@ def make_chordal(bn: nx.Graph):
                         if [a1, a2] not in chordal_E and [a2, a1] not in chordal_E:
                             chordal_E.append([a1, a2])
                             temp_E.append([a1, a2])
-            # remove Node i from temp_V and all its links from temp_E 
+            # remove Node i from temp_V and all its links from temp_E
             temp_E2 = []
             for edge in temp_E:
                 if v not in edge:
@@ -209,7 +208,7 @@ def make_chordal(bn: nx.Graph):
 def build_clique_graph(G: nx.Graph):
     '''
     Taken from https://github.com/eric-vader/HD-BO-Additive-Models/blob/master/hdbo/acquisition_optimizer.py
-    
+
     MIT License
 
     Copyright (c) 2020 Eric Han
@@ -258,7 +257,7 @@ class _MPOptimizer():
     """
     Class for optimizing the acquisition function in the considering that is of the form : f(x1,x2,x3,x4) = f1(x1,x2) + f2(x3) + f3(x4)
     Taken from https://github.com/eric-vader/HD-BO-Additive-Models/blob/master/hdbo/acquisition_optimizer.py
-    
+
     MIT License
 
     Copyright (c) 2020 Eric Han

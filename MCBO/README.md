@@ -121,7 +121,7 @@ if __name__ == '__main__':
     task = task_factory(task_name='rna_inverse_fold', **task_kws)
     search_space = task.get_search_space()
     bo_builder = BoBuilder(
-        model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic'
+        model_id='gp_to', acq_opt_id='is', acq_func_id='ei', tr_id='basic', init_sampling_strategy="sobol_scramble"
     )
 
     optimizer = bo_builder.build_bo(search_space=search_space, n_init=20, device=torch.device("cuda"))
@@ -141,9 +141,13 @@ if __name__ == '__main__':
   we provide the `./experiments/run_task_exps.py` script calling `run_experiment` function.
 
 ```shell
+tr_id="basic"                    # can be 'none'
+init_sampling_strategy="uniform" # can be "sobol" or "sobol_scramble" to use initial sobol samples
+
 python ./experiments/run_task_exps.py --device_id 0 --task_id "rna_inverse_fold" \
-                                      --optimizers_ids gp_to__is__ei__basic gp_to__is__ei__none \
-                                      --seeds 42 43 --verbose 2
+  --optimizers_ids gp_to__is__ei__${tr_id}__${init_sampling_strategy} gp_hed__is__ei__${tr_id}__${init_sampling_strategy} \
+  --seeds 42 43 --verbose 2
+
 ```
 
 ## How to use MCBO?
@@ -184,6 +188,7 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 - [x] Allows restart from checkpoints
 - [x] Add random tree-based additive GP kernel as surrogate model
 - [x] Add message-passing acquisition function optimizer
+- [x] Add an option to use Sobol sampling instead of uniform sampling of the initial points suggested by BO.   
 - [ ] Support multi-objective acquisition functions such as MACE.
 - [ ] Add sparse-GP surrogates.
 - [ ] Add NP-based surrogates.
