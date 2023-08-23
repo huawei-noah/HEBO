@@ -95,6 +95,7 @@ search_space = task.get_search_space()
 
 ### Trust-region
 
+- `none`: No trust region.
 - `basic`: Hamming distance for categorical variables, hyperectangle limit for numerical variables.
 
 ### Non-BO baselines
