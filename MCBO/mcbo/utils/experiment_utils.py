@@ -23,7 +23,6 @@ from mcbo.utils.general_utils import save_w_pickle
 from mcbo.utils.results_logger import ResultsLogger
 from mcbo.utils.stopwatch import Stopwatch
 
-
 NON_BO_SHORT_ID_TO_OPT = {
     "rs": RandomSearch,
     "sa": SimulatedAnnealing,
@@ -31,6 +30,7 @@ NON_BO_SHORT_ID_TO_OPT = {
     "ga": GeneticAlgorithm,
     "hc": HillClimbing
 }
+
 
 def run_experiment(
         task: TaskBase,
@@ -239,18 +239,23 @@ def get_opt(task: TaskBase, short_opt_id: str, bo_n_init: int = 20,
     if short_opt_id in NON_BO_SHORT_ID_TO_OPT:
         opt = NON_BO_SHORT_ID_TO_OPT[short_opt_id](**opt_kwargs)
     else:
-        bo_opt_kwargs = dict(n_init=bo_n_init, device=bo_device, **opt_kwargs)
+        bo_opt_kwargs = dict(n_init=bo_n_init, device=bo_device,
+                             **opt_kwargs)
         bo_name_split = short_opt_id.split("__")
         model_id = bo_name_split[0]
         acq_opt_id = bo_name_split[1]
         acq_func_id = bo_name_split[2]
-        tr_id = None
-        if len(bo_name_split) > 3:
-            tr_part = bo_name_split[3]
-            if tr_part != "none":
-                tr_id = tr_part
+        tr_part = bo_name_split[3]
+        if tr_part == "none":
+            tr_id = None
+        else:
+            tr_id = tr_part
+
+        init_sampling_strategy = "uniform"  # default one
+        if len(bo_name_split) > 4:
+            init_sampling_strategy = bo_name_split[4]
         opt_builder = BoBuilder(model_id=model_id, acq_opt_id=acq_opt_id, acq_func_id=acq_func_id,
-                                tr_id=tr_id)
+                                tr_id=tr_id, init_sampling_strategy=init_sampling_strategy)
         opt = opt_builder.build_bo(
             **bo_opt_kwargs
         )

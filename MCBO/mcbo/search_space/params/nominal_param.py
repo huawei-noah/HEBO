@@ -77,3 +77,11 @@ class NominalPara(Parameter):
     @property
     def num_uniqs(self):
         return len(self.categories)
+
+    @property
+    def transfo_lb(self) -> float:
+        return -.5
+
+    @property
+    def transfo_ub(self) -> float:
+        return self.num_uniqs - .5

@@ -36,7 +36,7 @@ class PowIntegerPara(Parameter):
     def inverse_transform(self, x: torch.Tensor) -> np.ndarray:
         x = x.cpu().numpy()
         # Un-normalise
-        log_x = (self.ub - self.lb) * x + self.lb
+        log_x = (self.ub - self.lb) * x.clip(0, 1) + self.lb
         return (self.base ** log_x).round().astype(int)
 
     @property
@@ -70,3 +70,11 @@ class PowIntegerPara(Parameter):
     @property
     def opt_ub(self):
         return float(self.ub)
+
+    @property
+    def transfo_lb(self) -> float:
+        return -.5
+
+    @property
+    def transfo_ub(self) -> float:
+        return 1.5

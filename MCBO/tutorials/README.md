@@ -275,13 +275,14 @@ runs on a different GPU).
 # Should be launched at the root of the project
 model=NEW_MODEL_ID
 acq_func="ei"
+init_sampling_strategy="uniform"  # can be "sobol" or "sobol_scramble" to use initial sobol samples
 
 SEEDS="42 43 44 45 46 47 48 49 50 51" 
 ABSOLUT_EXE="./libs/Absolut/src/AbsolutNoLib"
 for task in ackley aig_optimization antibody_design mig_optimization pest rna_inverse_fold; do
   for acq_opt in ga sa; do
     for tr in "basic" "none"; do  # whether to use a basic TR or not 
-      opt_id="${model}__${acq_opt}__${acq_func}__${tr}"
+      opt_id="${model}__${acq_opt}__${acq_func}__${tr}__${init_sampling_strategy}"
       cmd="python ./experiments/run_task_exps.py --device_id 0 --absolut_dir $ABSOLUT_EXE --task_id $task \
                   --optimizers_ids $opt_id --seeds $SEEDS"
       echo $cmd
@@ -298,11 +299,12 @@ done
 # To launch at # Should be launched at the root of the project
 model=NEW_MODEL_ID
 acq_func="ei"
+init_sampling_strategy="uniform"  # can be "sobol" or "sobol_scramble" to use initial sobol samples
 
 for task in ackley-53 xgboost_opt aig_optimization_hyp svm_opt; do
   for acq_opt in ga sa; do
     for tr in "basic" "none"; do  # whether to use a basic TR or not 
-      opt_id="${model}__${acq_opt}__${acq_func}__${tr}"
+      opt_id="${model}__${acq_opt}__${acq_func}__${tr}__${init_sampling_strategy}"
       cmd="python ./experiments/run_task_exps.py --device_id 0 --absolut_dir $ABSOLUT_EXE --task_id $task \
                   --optimizers_ids $opt_id --seeds $SEEDS"
       echo $cmd
@@ -313,7 +315,7 @@ done
 
 ```
 
-We provide the notebook (tuto_results_viz.ipynb)[./tuto_results_viz.ipynb] to show how to load and visualize the
+We provide the notebook [tuto_results_viz.ipynb](./tuto_results_viz.ipynb) to show how to load and visualize the
 results, as well as how to compare to the baselines we
 have run and for which we provide the [results](../paper_results/).
 
@@ -325,18 +327,18 @@ real-world taskk (MIG Flow synthesis), which should be taken into account when a
 parallelizing on the seeds of the most time-consuming black-box). Note that the evaluation of each of the black-box can
 be done on a single core.
 
-| Task ID   (C:Comb / M:Mixed) | Avg. time for 1 eval. (mm:ss) | Avg. time for 200 eval. (hh:mm:ss) | 
-|------------------------------|-------------------------------|------------------------------------| 
-| ackley        (C)            | 00:00                         | 00:00:00                           | 
-| ackley-53       (M)          | 00:00                         | 00:00:00                           | 
-| rna_inverse_fold  (C)        | 00:00                         | 00:00:00                           | 
-| pest                (C)      | 00:00                         | 00:00:01                           | 
-| aig_optimization     (C)     | 00:04                         | 00:15:32                           | 
-| xgboost_opt          (M)     | 00:05                         | 00:17:42                           | 
-| antibody_design      (C)     | 00:13                         | 00:45:00                           | 
-| svm_opt              (M)     | 00:20                         | 01:06:55                           | 
-| aig_optimization_hyp (M)     | 00:32                         | 01:48:15                           | 
-| mig_optimization     (C)     | 01:05                         | 03:37:36                           | 
+| Task ID   (Comb (C)) / Mixed (M)) | Avg. time for 1 eval. (mm:ss) | Avg. time for 200 eval. (hh:mm:ss) | 
+|-----------------------------------|-------------------------------|------------------------------------| 
+| ackley        (C)                 | 00:00                         | 00:00:00                           | 
+| ackley-53       (M)               | 00:00                         | 00:00:00                           | 
+| rna_inverse_fold  (C)             | 00:00                         | 00:00:00                           | 
+| pest                (C)           | 00:00                         | 00:00:01                           | 
+| aig_optimization     (C)          | 00:04                         | 00:15:32                           | 
+| xgboost_opt          (M)          | 00:05                         | 00:17:42                           | 
+| antibody_design      (C)          | 00:13                         | 00:45:00                           | 
+| svm_opt              (M)          | 00:20                         | 01:06:55                           | 
+| aig_optimization_hyp (M)          | 00:32                         | 01:48:15                           | 
+| mig_optimization     (C)          | 01:05                         | 03:37:36                           | 
 
 ---
 

@@ -84,3 +84,11 @@ class SigmoidPara(Parameter):
     @property
     def opt_ub(self):
         return float(self.ub)
+
+    @property
+    def transfo_lb(self) -> float:
+        return 0
+
+    @property
+    def transfo_ub(self) -> float:
+        return 1
