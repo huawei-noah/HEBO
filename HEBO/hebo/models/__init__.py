@@ -7,4 +7,10 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+has_gpy = True
+try:
+    from numpy.testing import Tester
+except ImportError:
+    has_gpy = False
+
 from . import util, scalers, model_factory, layers, base_model

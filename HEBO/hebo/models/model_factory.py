@@ -8,12 +8,14 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import torch
+from hebo.models import has_gpy
 from .base_model import BaseModel
 from .gp.svgp import SVGP
 from .gp.svidkl import SVIDKL
 from .gp.gp import GP
-from .gp.gpy_wgp import GPyGP
-from .gp.gpy_mlp import GPyMLPGP
+if has_gpy:
+    from .gp.gpy_wgp import GPyGP
+    from .gp.gpy_mlp import GPyMLPGP
 from .rf.rf import RF
 
 from .nn.mcbn import MCBNEnsemble
@@ -29,20 +31,34 @@ try:
 except ImportError:
     has_catboost = False
 
-model_dict = {
-        'svidkl'  : SVIDKL,
-        'svgp'  : SVGP,
-        'gp'  : GP,
-        'gpy' : GPyGP,
-        'gpy_mlp' : GPyMLPGP, 
-        'rf'  : RF,
-        'deep_ensemble' : DeepEnsemble,
-        'psgld' : pSGLDEnsemble,
-        'mcbn' : MCBNEnsemble, 
-        'masked_deep_ensemble' : MaskedDeepEnsemble,
-        'fe_deep_ensemble': FeDeepEnsemble, 
-        'gumbel': GumbelDeepEnsemble, 
-        }
+if has_gpy:
+    model_dict = {
+            'svidkl'  : SVIDKL,
+            'svgp'  : SVGP,
+            'gp'  : GP,
+            'gpy' : GPyGP,
+            'gpy_mlp' : GPyMLPGP, 
+            'rf'  : RF,
+            'deep_ensemble' : DeepEnsemble,
+            'psgld' : pSGLDEnsemble,
+            'mcbn' : MCBNEnsemble, 
+            'masked_deep_ensemble' : MaskedDeepEnsemble,
+            'fe_deep_ensemble': FeDeepEnsemble, 
+            'gumbel': GumbelDeepEnsemble, 
+            }
+else:
+    model_dict = {
+            'svidkl'  : SVIDKL,
+            'svgp'  : SVGP,
+            'gp'  : GP,
+            'rf'  : RF,
+            'deep_ensemble' : DeepEnsemble,
+            'psgld' : pSGLDEnsemble,
+            'mcbn' : MCBNEnsemble, 
+            'masked_deep_ensemble' : MaskedDeepEnsemble,
+            'fe_deep_ensemble': FeDeepEnsemble, 
+            'gumbel': GumbelDeepEnsemble, 
+            }
 if has_catboost:
     model_dict['catboost'] = CatBoost
 
@@ -75,7 +91,7 @@ class MultiTaskModel(BaseModel):
         self.model_name = self.conf.get('base_model_name', 'gp')
         self.model_conf = {k : v for k, v in self.conf.items() if k != 'model_name'}
         self.models     = [model_dict[self.model_name](num_cont, num_enum, 1, **self.model_conf) for _ in range(num_out)]
-    
+
 
     def fit(self, Xc, Xe, y):
         for i in range(self.num_out):

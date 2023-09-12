@@ -16,6 +16,9 @@ from .abstract_optimizer import AbstractOptimizer
 from .hebo import HEBO
 from hebo.acquisitions.acq import Acquisition, MACE
 
+from hebo.models import has_gpy
+default_gp = 'gpy' if has_gpy else 'gp'
+
 class HEBO_VectorContextual(AbstractOptimizer):
     support_parallel_opt  = True
     support_combinatorial = True
@@ -23,7 +26,7 @@ class HEBO_VectorContextual(AbstractOptimizer):
     def __init__(self, 
             space,
             context_dict : dict, 
-            model_name   : str = 'gpy',
+            model_name   : str = default_gp,
             rand_sample  : int = None
             ):
         self.hebo         = HEBO(space, model_name, rand_sample)

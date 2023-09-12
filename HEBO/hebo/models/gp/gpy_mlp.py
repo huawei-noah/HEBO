@@ -21,6 +21,10 @@ from ..layers import EmbTransform, OneHotTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
 from ..util import filter_nan
 
+from hebo.models import has_gpy
+if not has_gpy:
+    raise ImportError('GPy can not be installed with current numpy version, use GP instead')
+
 
 class GPyMLPGP(BaseModel):
     """

@@ -15,6 +15,7 @@ import torch
 from copy import deepcopy
 from torch.quasirandom import SobolEngine
 
+from hebo.models import has_gpy
 from hebo.design_space.design_space import DesignSpace
 from hebo.models.model_factory import get_model
 from hebo.acquisitions.acq import NoisyAcq, Mean, Sigma
@@ -23,11 +24,13 @@ from .hebo import HEBO
 
 torch.set_num_threads(min(1, torch.get_num_threads()))
 
+default_gp = 'gpy' if has_gpy else 'gp'
+
 class NoisyOpt(HEBO):
     support_parallel_opt  = True
     support_combinatorial = True
     support_contextual    = True
-    def __init__(self, space, model_name = 'gpy', rand_sample = None, es = 'nsga2', model_config = None):
+    def __init__(self, space, model_name = default_gp, rand_sample = None, es = 'nsga2', model_config = None):
         """
         model_name : surrogate model to be used
         rand_iter  : iterations to perform random sampling

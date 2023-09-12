@@ -23,6 +23,9 @@ from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
 from .abstract_optimizer import AbstractOptimizer
 from .hebo import HEBO
 
+from hebo.models import has_gpy
+default_gp = 'gpy' if has_gpy else 'gp'
+
 torch.set_num_threads(min(1, torch.get_num_threads()))
 
 def gen_emb_space(eff_dim : int, scale : float) -> DesignSpace:
@@ -86,7 +89,7 @@ class HEBO_Embedding(AbstractOptimizer):
     support_contextual    = False
     def __init__(self,
             space : DesignSpace, 
-            model_name      = 'gpy',
+            model_name      = default_gp,
             eff_dim : int   = 1,
             scale   : float = 1,
             strategy : str  = 'alebo',
