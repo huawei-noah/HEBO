@@ -11,7 +11,6 @@ import numpy  as np
 import pandas as pd
 import torch
 
-from hebo.models import has_gpy
 from hebo.design_space.design_space import DesignSpace
 from hebo.models.model_factory import get_model
 from hebo.acquisitions.acq import LCB
@@ -19,15 +18,13 @@ from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
 
 from .abstract_optimizer import AbstractOptimizer
 
-default_gp = 'gpy' if has_gpy else 'gp'
-
 class BO(AbstractOptimizer):
     support_combinatorial = True
     support_contextual    = True
     def __init__(
             self,
             space : DesignSpace,
-            model_name  = default_gp,
+            model_name  = 'gpy',
             rand_sample = None,
             acq_cls     = None, 
             acq_conf    = None):

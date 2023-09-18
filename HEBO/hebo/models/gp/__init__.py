@@ -7,10 +7,4 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-
-from hebo.models import has_gpy
-
-if has_gpy:
-    from . import gp, gpy_wgp, gpy_mlp
-else:
-    from . import gp
+from . import gp, gpy_wgp, gpy_mlp

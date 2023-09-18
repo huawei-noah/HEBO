@@ -18,6 +18,7 @@ import pandas as pd
 from hebo.optimizers.noisy_opt import NoisyOpt
 from hebo.optimizers.hebo import HEBO
 from hebo.optimizers.bo import BO
+from hebo.optimizers.vcbo import VCBO
 from hebo.optimizers.general import GeneralBO
 from hebo.optimizers.evolution import Evolution
 from hebo.optimizers.hebo_contextual import HEBO_VectorContextual
@@ -34,7 +35,7 @@ from hebo.design_space.bool_param        import BoolPara
 def obj(x : pd.DataFrame) -> np.ndarray:
     return x['x0'].values.astype(float).reshape(-1, 1) ** 2
 
-@pytest.mark.parametrize('model_name', ['gp', 'rf', 'deep_ensemble']) 
+@pytest.mark.parametrize('model_name', ['gp', 'gpy', 'rf', 'deep_ensemble', 'gpy_mlp']) 
 @pytest.mark.parametrize('opt_cls', [BO, HEBO, GeneralBO, NoisyOpt, Evolution], ids = ['bo', 'hebo', 'general', 'noisy', 'evolution'])
 def test_opt(model_name, opt_cls):
     space = DesignSpace().parse([
@@ -54,6 +55,18 @@ def test_opt(model_name, opt_cls):
         if num_suggest > 11:
             break
 
+def test_vcbo():
+    space = DesignSpace().parse([
+        {'name' : 'x0', 'type' : 'num', 'lb' : -3, 'ub' : 7},
+        ])
+    opt = VCBO(space, rand_sample = 8)
+    num_suggest = 0
+    for i in range(11):
+        num_suggest = 8 if opt.support_parallel_opt else 1
+        rec = opt.suggest(n_suggestions = num_suggest)
+        num_suggest += rec.shape[0]
+        if num_suggest > 11:
+            break
 
 @pytest.mark.parametrize('start_from_mu', [True, False])
 def test_cmaes(start_from_mu):
