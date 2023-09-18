@@ -23,7 +23,7 @@ class HEBO_VectorContextual(AbstractOptimizer):
     def __init__(self, 
             space,
             context_dict : dict, 
-            model_name   : str = 'gpy',
+            model_name   : str = 'gp',
             rand_sample  : int = None
             ):
         self.hebo         = HEBO(space, model_name, rand_sample)

@@ -27,7 +27,7 @@ class NoisyOpt(HEBO):
     support_parallel_opt  = True
     support_combinatorial = True
     support_contextual    = True
-    def __init__(self, space, model_name = 'gpy', rand_sample = None, es = 'nsga2', model_config = None):
+    def __init__(self, space, model_name = 'gp', rand_sample = None, es = 'nsga2', model_config = None):
         """
         model_name : surrogate model to be used
         rand_iter  : iterations to perform random sampling

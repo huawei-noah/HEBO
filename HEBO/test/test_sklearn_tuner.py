@@ -22,7 +22,6 @@ def test_sklearn_tuner(report):
     space_cfg = [
             {'name' : 'max_depth',        'type' : 'int', 'lb' : 1, 'ub' : 20},
             {'name' : 'min_samples_leaf', 'type' : 'num', 'lb' : 1e-4, 'ub' : 0.5},
-            {'name' : 'max_features',     'type' : 'cat', 'categories' : ['auto', 'sqrt', 'log2']},
             {'name' : 'bootstrap',        'type' : 'bool'},
             {'name' : 'min_impurity_decrease', 'type' : 'pow', 'lb' : 1e-4, 'ub' : 1.0},
             ]

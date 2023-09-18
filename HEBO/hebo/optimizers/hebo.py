@@ -31,7 +31,7 @@ class HEBO(AbstractOptimizer):
     support_parallel_opt  = True
     support_combinatorial = True
     support_contextual    = True
-    def __init__(self, space, model_name = 'gpy', rand_sample = None, acq_cls = MACE, es = 'nsga2', model_config = None,
+    def __init__(self, space, model_name = 'gp', rand_sample = None, acq_cls = MACE, es = 'nsga2', model_config = None,
                  scramble_seed: Optional[int] = None ):
         """
         model_name  : surrogate model to be used
