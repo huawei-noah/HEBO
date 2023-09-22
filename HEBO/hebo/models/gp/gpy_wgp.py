@@ -19,6 +19,9 @@ import GPy
 import torch
 import torch.nn as nn
 import numpy as np
+import networkx as nx
+import random
+from disjoint_set import DisjointSet
 
 from torch import Tensor, FloatTensor, LongTensor
 
@@ -44,6 +47,8 @@ class GPyGP(BaseModel):
         self.warp         = self.conf.get('warp', True)
         self.space        = self.conf.get('space') # DesignSpace
         self.num_restarts = self.conf.get('num_restarts', 10)
+        self.rd           = self.conf.get('rd', False)
+        self.E            = self.conf.get('E', 0.2)
         if self.space is None and self.warp:
             warnings.warn('Space not provided, set warp to False')
             self.warp = False
@@ -84,12 +89,37 @@ class GPyGP(BaseModel):
         self.fit_scaler(Xc, y)
         X, y = self.trans(Xc, Xe, y)
 
-        k1  = GPy.kern.Linear(X.shape[1],   ARD = False)
-        k2  = GPy.kern.Matern32(X.shape[1], ARD = True)
-        k2.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
-        k2.variance    = 0.5
-        k2.variance.set_prior(GPy.priors.Gamma(0.5, 1), warning = False)
-        kern = k1 + k2
+        if self.rd:
+            cliques = self.get_random_graph(X.shape[1], max(1,  X.shape[1]//5))
+
+            # process first clique
+            pair = cliques[0]
+            k1  = GPy.kern.Linear(len(pair), active_dims=pair,   ARD = False)
+            k2  = GPy.kern.Matern32(len(pair), active_dims=pair, ARD = True)
+            k2.lengthscale = np.std(X, axis = 0)[pair]
+            k2.variance    = 0.5
+            k2.variance.set_prior(GPy.priors.Gamma(0.5, 1))
+            kern = k1 + k2
+
+            # process remaining cliques
+            for pair in cliques[1:]:
+                k1  = GPy.kern.Linear(len(pair), active_dims=pair,   ARD = False)
+                k2  = GPy.kern.Matern32(len(pair), active_dims=pair, ARD = True)
+                geo_mean = 1
+                for d in pair:
+                    geo_mean *= np.std(X, axis = 0)[d]
+                k2.lengthscale = geo_mean**(1/len(pair))
+                k2.variance    = 0.5
+                k2.variance.set_prior(GPy.priors.Gamma(0.5, 1))
+                kern += k1 + k2
+        else:
+            k1  = GPy.kern.Linear(X.shape[1],   ARD = False)
+            k2  = GPy.kern.Matern32(X.shape[1], ARD = True)
+            k2.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
+            k2.variance    = 0.5
+            k2.variance.set_prior(GPy.priors.Gamma(0.5, 1), warning = False)
+            kern = k1 + k2
+
         if not self.warp:
             self.gp = GPy.models.GPRegression(X, y, kern)
         else:
@@ -117,3 +147,20 @@ class GPyGP(BaseModel):
     def noise(self):
         var_normalized = self.gp.likelihood.variance[0]
         return (var_normalized * self.yscaler.std**2).view(self.num_out)
+    
+    def get_random_graph(self, size, E):
+        graph = nx.empty_graph(size)
+        disjoint_set = DisjointSet()
+        connections_made = 0
+        while connections_made < min(size - 1, max(int(E * size), 1)):
+            edge_in = random.randint(0, size - 1)
+            edge_out = random.randint(0, size - 1)
+
+            if edge_in == edge_out or disjoint_set.connected(edge_out, edge_in):
+                continue
+            else:
+                connections_made += 1
+                graph.add_edge(edge_in, edge_out)
+                disjoint_set.union(edge_in, edge_out)
+
+            return list(nx.find_cliques(graph))
