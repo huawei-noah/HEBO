@@ -7,16 +7,20 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+import random
+
+import networkx as nx
 import numpy as np
 import torch
 import torch.nn as nn
+from disjoint_set import DisjointSet
+from gpytorch.kernels import (AdditiveKernel, MaternKernel, ProductKernel,
+                              ScaleKernel)
+from gpytorch.priors import GammaPrior
 from torch import FloatTensor, LongTensor
 
-
-from gpytorch.kernels import MaternKernel, ScaleKernel, ProductKernel
-from gpytorch.priors  import GammaPrior
-
 from ..layers import EmbTransform
+
 
 class DummyFeatureExtractor(nn.Module):
     def __init__(self, num_cont, num_enum, num_uniqs = None, emb_sizes = None):
@@ -63,3 +67,59 @@ def default_kern(x, xe, y, total_dim = None, ard_kernel = True, fe = None, max_x
             kernel = ScaleKernel(MaternKernel(nu = 1.5))
         kernel.outputscale = y[torch.isfinite(y)].var()
         return kernel
+    
+def default_kern_rd(x, xe, y, total_dim = None, ard_kernel = True, fe = None, max_x = 1000, E=0.2):
+    '''
+    Get a default kernel with random decompositons. 0 <= E <=1 specifies random tree conectivity.
+    '''
+    kernels = []
+    random_graph = get_random_graph(total_dim, E)
+    for clique in random_graph:
+        if fe is None:
+            num_dims  = tuple(dim for dim in clique if dim < x.shape[1])
+            enum_dims = tuple(dim for dim in clique if x.shape[1] <= dim < total_dim)
+            clique_kernels = []
+            if len(num_dims) > 0:
+                ard_num_dims = len(num_dims) if ard_kernel else None
+                num_kernel       = MaternKernel(nu = 1.5, ard_num_dims = ard_num_dims, active_dims = num_dims)
+                if ard_kernel:
+                    lscales = num_kernel.lengthscale.detach().clone().view(1, -1)
+                    if len(num_dims) > 1 :
+                        for dim_no, dim_name in enumerate(num_dims):
+                            idx = np.random.choice(num_dims, min(len(num_dims), max_x), replace = False)
+                            lscales[0, dim_no] = torch.pdist(x[idx, dim_name].view(-1, 1)).median().clamp(min = 0.02)
+                    num_kernel.lengthscale = lscales
+                clique_kernels.append(num_kernel)
+            if len(enum_dims) > 0:
+                enum_kernel = MaternKernel(nu = 1.5, active_dims = enum_dims)
+                clique_kernels.append(enum_kernel)
+            
+            kernel = ScaleKernel(ProductKernel(*clique_kernels), outputscale_prior = GammaPrior(0.5, 0.5))
+        else:
+            if ard_kernel:
+                kernel = ScaleKernel(MaternKernel(nu = 1.5, ard_num_dims = total_dim, active_dims=tuple(clique)))
+            else:
+                kernel = ScaleKernel(MaternKernel(nu = 1.5, active_dims=tuple(clique)))
+            
+        kernels.append(kernel)
+
+    final_kern = ScaleKernel(AdditiveKernel(*kernels), outputscale_prior = GammaPrior(0.5, 0.5))
+    final_kern.outputscale = y[torch.isfinite(y)].var()
+    return final_kern
+    
+def get_random_graph(size, E):
+    graph = nx.empty_graph(size)
+    disjoint_set = DisjointSet()
+    connections_made = 0
+    while connections_made < min(size - 1, max(int(E * size), 1)):
+        edge_in = random.randint(0, size - 1)
+        edge_out = random.randint(0, size - 1)
+
+        if edge_in == edge_out or disjoint_set.connected(edge_out, edge_in):
+            continue
+        else:
+            connections_made += 1
+            graph.add_edge(edge_in, edge_out)
+            disjoint_set.union(edge_in, edge_out)
+
+        return list(nx.find_cliques(graph))
