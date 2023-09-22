@@ -37,8 +37,6 @@ def test_opt_cont(model_name, opt_cls):
             y[np.argmax(y.reshape(-1))] = np.inf
         opt.observe(rec, y)
         num_suggest += rec.shape[0]
-        if num_suggest > 30:
-            break
 
 @pytest.mark.parametrize('model_name', ['gp']) 
 @pytest.mark.parametrize('opt_cls', [HEBO], ids = ['hebo'])
@@ -63,5 +61,3 @@ def test_opt_mixed(model_name, opt_cls):
             y[np.argmax(y.reshape(-1))] = np.inf
         opt.observe(rec, y)
         num_suggest += rec.shape[0]
-        if num_suggest > 16:
-            break
