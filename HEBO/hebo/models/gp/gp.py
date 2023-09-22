@@ -153,7 +153,6 @@ class GPyTorchModel(gpytorch.models.ExactGP):
         super().__init__((x, xe), y.squeeze(), lik)
         self.fe   = deepcopy(conf.get('fe',   DummyFeatureExtractor(x.shape[1], xe.shape[1], conf.get('num_uniqs'), conf.get('emb_sizes'))))
         self.mean = deepcopy(conf.get('mean', ConstantMean()))
-        print("Creating GP model")
         if conf.get("rd", False):
             self.cov  = deepcopy(conf.get('kern', default_kern_rd(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'), E=conf.get("E", 0.2))))
         else:
