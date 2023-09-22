@@ -90,7 +90,7 @@ class GPyGP(BaseModel):
         X, y = self.trans(Xc, Xe, y)
 
         if self.rd:
-            cliques = self.get_random_graph(X.shape[1], max(1,  X.shape[1]//5))
+            cliques = self.get_random_graph(X.shape[1], self.E)
 
             # process first clique
             pair = cliques[0]
