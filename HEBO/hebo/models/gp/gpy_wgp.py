@@ -13,15 +13,12 @@ warnings.filterwarnings('ignore', category = RuntimeWarning)
 from ..base_model import BaseModel
 from ..layers import EmbTransform, OneHotTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
-from ..util import filter_nan
+from ..util import filter_nan, get_random_graph
 
 import GPy
 import torch
 import torch.nn as nn
 import numpy as np
-import networkx as nx
-import random
-from disjoint_set import DisjointSet
 
 from torch import Tensor, FloatTensor, LongTensor
 
@@ -90,7 +87,7 @@ class GPyGP(BaseModel):
         X, y = self.trans(Xc, Xe, y)
 
         if self.rd:
-            cliques = self.get_random_graph(X.shape[1], self.E)
+            cliques = get_random_graph(X.shape[1], self.E)
 
             # process first clique
             pair = cliques[0]
@@ -147,20 +144,3 @@ class GPyGP(BaseModel):
     def noise(self):
         var_normalized = self.gp.likelihood.variance[0]
         return (var_normalized * self.yscaler.std**2).view(self.num_out)
-    
-    def get_random_graph(self, size, E):
-        graph = nx.empty_graph(size)
-        disjoint_set = DisjointSet()
-        connections_made = 0
-        while connections_made < min(size - 1, max(int(E * size), 1)):
-            edge_in = random.randint(0, size - 1)
-            edge_out = random.randint(0, size - 1)
-
-            if edge_in == edge_out or disjoint_set.connected(edge_out, edge_in):
-                continue
-            else:
-                connections_made += 1
-                graph.add_edge(edge_in, edge_out)
-                disjoint_set.union(edge_in, edge_out)
-
-            return list(nx.find_cliques(graph))

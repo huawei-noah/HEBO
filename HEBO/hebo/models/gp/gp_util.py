@@ -7,19 +7,16 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-import random
-
-import networkx as nx
 import numpy as np
 import torch
 import torch.nn as nn
-from disjoint_set import DisjointSet
 from gpytorch.kernels import (AdditiveKernel, MaternKernel, ProductKernel,
                               ScaleKernel)
 from gpytorch.priors import GammaPrior
 from torch import FloatTensor, LongTensor
 
 from ..layers import EmbTransform
+from ..util import get_random_graph
 
 
 class DummyFeatureExtractor(nn.Module):
@@ -106,20 +103,3 @@ def default_kern_rd(x, xe, y, total_dim = None, ard_kernel = True, fe = None, ma
     final_kern = ScaleKernel(AdditiveKernel(*kernels), outputscale_prior = GammaPrior(0.5, 0.5))
     final_kern.outputscale = y[torch.isfinite(y)].var()
     return final_kern
-    
-def get_random_graph(size, E):
-    graph = nx.empty_graph(size)
-    disjoint_set = DisjointSet()
-    connections_made = 0
-    while connections_made < min(size - 1, max(int(E * size), 1)):
-        edge_in = random.randint(0, size - 1)
-        edge_out = random.randint(0, size - 1)
-
-        if edge_in == edge_out or disjoint_set.connected(edge_out, edge_in):
-            continue
-        else:
-            connections_made += 1
-            graph.add_edge(edge_in, edge_out)
-            disjoint_set.union(edge_in, edge_out)
-
-        return list(nx.find_cliques(graph))
