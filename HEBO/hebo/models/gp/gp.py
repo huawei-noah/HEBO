@@ -28,7 +28,7 @@ from ..layers import EmbTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
 from ..nn.sgld import pSGLD
 
-from .gp_util import DummyFeatureExtractor, default_kern
+from .gp_util import DummyFeatureExtractor, default_kern, default_kern_rd
 
 class GP(BaseModel):
     support_grad = True
@@ -153,7 +153,10 @@ class GPyTorchModel(gpytorch.models.ExactGP):
         super().__init__((x, xe), y.squeeze(), lik)
         self.fe   = deepcopy(conf.get('fe',   DummyFeatureExtractor(x.shape[1], xe.shape[1], conf.get('num_uniqs'), conf.get('emb_sizes'))))
         self.mean = deepcopy(conf.get('mean', ConstantMean()))
-        self.cov  = deepcopy(conf.get('kern', default_kern(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'))))
+        if conf.get("rd", False):
+            self.cov  = deepcopy(conf.get('kern', default_kern_rd(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'), E=conf.get("E", 0.2))))
+        else:
+            self.cov  = deepcopy(conf.get('kern', default_kern(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'))))
 
     def forward(self, x, xe):
         x_all = self.fe(x, xe)

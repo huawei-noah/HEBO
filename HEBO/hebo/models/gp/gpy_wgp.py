@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore', category = RuntimeWarning)
 from ..base_model import BaseModel
 from ..layers import EmbTransform, OneHotTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
-from ..util import filter_nan
+from ..util import filter_nan, get_random_graph
 
 import GPy
 import torch
@@ -44,6 +44,8 @@ class GPyGP(BaseModel):
         self.warp         = self.conf.get('warp', True)
         self.space        = self.conf.get('space') # DesignSpace
         self.num_restarts = self.conf.get('num_restarts', 10)
+        self.rd           = self.conf.get('rd', False)
+        self.E            = self.conf.get('E', 0.2)
         if self.space is None and self.warp:
             warnings.warn('Space not provided, set warp to False')
             self.warp = False
@@ -84,12 +86,37 @@ class GPyGP(BaseModel):
         self.fit_scaler(Xc, y)
         X, y = self.trans(Xc, Xe, y)
 
-        k1  = GPy.kern.Linear(X.shape[1],   ARD = False)
-        k2  = GPy.kern.Matern32(X.shape[1], ARD = True)
-        k2.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
-        k2.variance    = 0.5
-        k2.variance.set_prior(GPy.priors.Gamma(0.5, 1), warning = False)
-        kern = k1 + k2
+        if self.rd:
+            cliques = get_random_graph(X.shape[1], self.E)
+
+            # process first clique
+            pair = cliques[0]
+            k1  = GPy.kern.Linear(len(pair), active_dims=pair,   ARD = False)
+            k2  = GPy.kern.Matern32(len(pair), active_dims=pair, ARD = True)
+            k2.lengthscale = np.std(X, axis = 0)[pair]
+            k2.variance    = 0.5
+            k2.variance.set_prior(GPy.priors.Gamma(0.5, 1))
+            kern = k1 + k2
+
+            # process remaining cliques
+            for pair in cliques[1:]:
+                k1  = GPy.kern.Linear(len(pair), active_dims=pair,   ARD = False)
+                k2  = GPy.kern.Matern32(len(pair), active_dims=pair, ARD = True)
+                geo_mean = 1
+                for d in pair:
+                    geo_mean *= np.std(X, axis = 0)[d]
+                k2.lengthscale = geo_mean**(1/len(pair))
+                k2.variance    = 0.5
+                k2.variance.set_prior(GPy.priors.Gamma(0.5, 1))
+                kern += k1 + k2
+        else:
+            k1  = GPy.kern.Linear(X.shape[1],   ARD = False)
+            k2  = GPy.kern.Matern32(X.shape[1], ARD = True)
+            k2.lengthscale = np.std(X, axis = 0).clip(min = 0.02)
+            k2.variance    = 0.5
+            k2.variance.set_prior(GPy.priors.Gamma(0.5, 1), warning = False)
+            kern = k1 + k2
+
         if not self.warp:
             self.gp = GPy.models.GPRegression(X, y, kern)
         else:
