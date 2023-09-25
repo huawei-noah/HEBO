@@ -76,8 +76,9 @@ class MessagePassingOptimizer(AcqOptimizerBase):
         weights = None
         if tr_manager is not None:
             weights = model.kernel.lengthscale
-            weights = weights[0] / weights.mean()
-            weights = weights / torch.pow(torch.prod(weights), 1 / len(weights))
+            if weights.nelement() > 0:
+                weights = weights[0] / weights.mean()
+                weights = weights / torch.pow(torch.prod(weights), 1 / len(weights))
 
         optimizer = _MPOptimizer(
             domain=self.search_space,
