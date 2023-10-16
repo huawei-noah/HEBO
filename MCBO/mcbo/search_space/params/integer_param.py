@@ -33,7 +33,7 @@ class IntegerPara(Parameter):
         if isinstance(x, torch.Tensor):
             x = x.cpu().numpy()
         # Un-normalise
-        x = (self.ub - self.lb) * x + self.lb
+        x = (self.ub - self.lb) * x.clip(0, 1) + self.lb
         return x.round().astype(int)
 
     @property
@@ -67,3 +67,11 @@ class IntegerPara(Parameter):
     @property
     def opt_ub(self):
         return float(self.ub)
+
+    @property
+    def transfo_lb(self) -> float:
+        return -.5
+
+    @property
+    def transfo_ub(self) -> float:
+        return 1.5

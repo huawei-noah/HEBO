@@ -24,7 +24,7 @@ class BO(AbstractOptimizer):
     def __init__(
             self,
             space : DesignSpace,
-            model_name  = 'gpy',
+            model_name  = 'gp',
             rand_sample = None,
             acq_cls     = None, 
             acq_conf    = None):

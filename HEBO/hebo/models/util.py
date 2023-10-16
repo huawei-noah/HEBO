@@ -7,8 +7,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+import random
+
+import networkx as nx
 import torch
-from torch import nn, FloatTensor, LongTensor
+from disjoint_set import DisjointSet
+from torch import FloatTensor, LongTensor, nn
+
 
 def filter_nan(x : FloatTensor, xe : LongTensor, y : FloatTensor, keep_rule = 'any') -> (FloatTensor, LongTensor, FloatTensor):
     assert x  is None or torch.isfinite(x).all()
@@ -30,3 +35,20 @@ def construct_hidden(dim, num_layers, num_hiddens, act = nn.ReLU()) -> nn.Module
         layers.append(nn.Linear(num_hiddens, num_hiddens))
         layers.append(act)
     return nn.Sequential(*layers)
+
+def get_random_graph(size, E):
+    graph = nx.empty_graph(size)
+    disjoint_set = DisjointSet()
+    connections_made = 0
+    while connections_made < min(size - 1, max(int(E * size), 1)):
+        edge_in = random.randint(0, size - 1)
+        edge_out = random.randint(0, size - 1)
+
+        if edge_in == edge_out or disjoint_set.connected(edge_out, edge_in):
+            continue
+        else:
+            connections_made += 1
+            graph.add_edge(edge_in, edge_out)
+            disjoint_set.union(edge_in, edge_out)
+
+        return list(nx.find_cliques(graph))

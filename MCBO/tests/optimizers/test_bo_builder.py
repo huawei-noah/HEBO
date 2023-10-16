@@ -21,6 +21,7 @@
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 
@@ -33,7 +34,7 @@ from mcbo.optimizers.manual import Casmopolitan, BOiLS, COMBO, BODi, BOCS, BOSS,
 from mcbo.optimizers.bo_builder import BO_ALGOS
 
 
-def test_bo_builder():
+def test_bo_builder(opt_name: Optional[str] = None):
     from mcbo.task_factory import task_factory
     n_init = 20
 
@@ -43,11 +44,67 @@ def test_bo_builder():
 
     input_constraints = None
 
+    if opt_name is not None:
+        BO_ALGOS[opt_name].build_bo(search_space=search_space, n_init=n_init, input_constraints=input_constraints)
+        return 0
+
     for k, v in BO_ALGOS.items():
         try:
             v.build_bo(search_space=search_space, n_init=n_init, input_constraints=input_constraints)
         except Exception as e:
             print(k, e.args)
+    return 0
+
+
+def test_bo_builder_run(opt_name: str, mix: bool):
+    from mcbo.task_factory import task_factory
+    n_evals = 200
+    dtype = torch.float64
+
+    task_name = "ackley"
+    if mix:
+        num_dims = [10, 5]
+        variable_type = ['nominal', 'num']
+        num_categories = [3, None]
+        task_name_suffix = " 10-nom-3 5-num"
+        lb = np.zeros(15)
+        lb[-5:] = -1
+        task_kwargs = dict(num_dims=num_dims, variable_type=variable_type, num_categories=num_categories,
+                           task_name_suffix=task_name_suffix, lb=lb, ub=1)
+    else:
+        n_cats = 11
+        dim = 20
+        task_kwargs = {'num_dims': dim, 'variable_type': 'nominal', 'num_categories': n_cats,
+                       "task_name_suffix": None}
+
+    task = task_factory(task_name, **task_kwargs)
+    search_space = task.get_search_space(dtype=dtype)
+
+    bo_n_init = 20
+    bo_device = torch.device(f'cuda:{device_id}')
+    opt_kwargs = dict(search_space=search_space, dtype=dtype, input_constraints=task.input_constraints)
+    custom_builder = BO_ALGOS[opt_name]
+
+    np.random.seed(0)
+    torch.manual_seed(0)
+    custom_opt = custom_builder.build_bo(
+        search_space=search_space,
+        n_init=bo_n_init,
+        input_constraints=task.input_constraints,
+        dtype=dtype,
+        device=bo_device
+    )
+
+    np.random.seed(0)
+    torch.manual_seed(0)
+    print(custom_opt.name)
+    for i in range(n_evals):
+        x_next = custom_opt.suggest(1)
+        y_next = task(x_next)
+        custom_opt.observe(x_next, y_next)
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {custom_opt.best_y:.3f}')
+
+    return 0
 
 
 def test_bo_builder_v_hard_coded(opt_name: str, mix: bool):
@@ -144,4 +201,5 @@ def test_all_builder_v_hard_coded():
 
 if __name__ == "__main__":
     device_id = 0
-    test_all_builder_v_hard_coded()
+    test_bo_builder_run(opt_name="COMBO", mix=False)
+    # test_all_builder_v_hard_coded()

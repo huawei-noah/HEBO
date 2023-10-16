@@ -86,7 +86,7 @@ class HEBO_Embedding(AbstractOptimizer):
     support_contextual    = False
     def __init__(self,
             space : DesignSpace, 
-            model_name      = 'gpy',
+            model_name      = 'gp',
             eff_dim : int   = 1,
             scale   : float = 1,
             strategy : str  = 'alebo',

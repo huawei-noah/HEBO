@@ -8,3 +8,4 @@ GPy>=1.9.9
 catboost>=0.24.4
 xgboost
 lightgbm
+disjoint-set

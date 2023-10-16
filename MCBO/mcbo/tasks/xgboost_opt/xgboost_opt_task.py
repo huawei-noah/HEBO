@@ -141,7 +141,7 @@ class XGBoostTask(TaskBase):
         return task_type
 
     @staticmethod
-    def get_search_space_params(dataset_id: str) -> List[Dict[str, Any]]:
+    def get_static_search_space_params(dataset_id: str) -> List[Dict[str, Any]]:
         task_type = XGBoostTask.get_task_type(dataset_id)
 
         if task_type == 'clf':
@@ -165,8 +165,8 @@ class XGBoostTask(TaskBase):
 
         return params
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
-        return self.get_search_space_params(dataset_id=self.dataset_id)
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
+        return self.get_static_search_space_params(dataset_id=self.dataset_id)
 
     def results_path(self) -> str:
         return self.get_result_path(dataset_id=self.dataset_id)

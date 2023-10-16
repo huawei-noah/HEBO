@@ -49,7 +49,7 @@ class SfuTask(TaskBase):
             **sfu_function_params
         )
 
-    def search_space_params(self) -> List[Dict[str, Any]]:
+    def get_search_space_params(self) -> List[Dict[str, Any]]:
         return _sfu_search_space_params_factory(
             variable_type=self.variable_type,
             num_dims=self.num_dims,

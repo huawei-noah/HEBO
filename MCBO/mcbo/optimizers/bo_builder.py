@@ -11,9 +11,10 @@ from mcbo.acq_optimizers import AcqOptimizerBase
 from mcbo.acq_optimizers.genetic_algorithm_acq_optimizer import GeneticAlgoAcqOptimizer
 from mcbo.acq_optimizers.interleaved_search_acq_optimizer import InterleavedSearchAcqOptimizer
 from mcbo.acq_optimizers.local_search_acq_optimizer import LsAcqOptimizer
-from mcbo.acq_optimizers.mixed_mab_acq_optimizer import MixedMabAcqOptimizer
-from mcbo.acq_optimizers.simulated_annealing_acq_optimizer import SimulatedAnnealingAcqOptimizer
 from mcbo.acq_optimizers.message_passing_optimizer import MessagePassingOptimizer
+from mcbo.acq_optimizers.mixed_mab_acq_optimizer import MixedMabAcqOptimizer
+from mcbo.acq_optimizers.random_search_acq_optimizer import RandomSearchAcqOptimizer
+from mcbo.acq_optimizers.simulated_annealing_acq_optimizer import SimulatedAnnealingAcqOptimizer
 from mcbo.models import ModelBase, ExactGPModel, ComboEnsembleGPModel, LinRegModel, RandDecompositionGP
 from mcbo.models.gp.kernel_factory import mixture_kernel_factory, kernel_factory
 from mcbo.optimizers import BoBase
@@ -23,7 +24,7 @@ from mcbo.trust_region.casmo_tr_manager import CasmopolitanTrManager
 from mcbo.utils.graph_utils import laplacian_eigen_decomposition
 
 # ------ MODEL KWs -------------------
-DEFAULT_EXACT_GP_KERNEL_KWARGS: Dict[str, Any] = dict(
+DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS: Dict[str, Any] = dict(
     numeric_kernel_name='mat52',
     numeric_kernel_use_ard=True,
     numeric_lengthscale_constraint=None,
@@ -32,7 +33,7 @@ DEFAULT_EXACT_GP_KERNEL_KWARGS: Dict[str, Any] = dict(
     numeric_kernel_kwargs=None,
 )
 
-DEFAULT_EXACT_GP_KWARGS: Dict[str, Any] = dict(
+DEFAULT_MODEL_EXACT_GP_KWARGS: Dict[str, Any] = dict(
     noise_prior=None,
     noise_constr=None,
     noise_lb=1e-5,
@@ -46,7 +47,7 @@ DEFAULT_EXACT_GP_KWARGS: Dict[str, Any] = dict(
     verbose=False
 )
 
-DEFAULT_DIFF_GP_KWARGS: Dict[str, Any] = dict(
+DEFAULT_MODEL_DIFF_GP_KWARGS: Dict[str, Any] = dict(
     n_models=10,
     noise_lb=1e-5,
     n_burn=0,
@@ -55,7 +56,7 @@ DEFAULT_DIFF_GP_KWARGS: Dict[str, Any] = dict(
     verbose=False
 )
 
-DEFAULT_LIN_REG_KWARGS = dict(
+DEFAULT_MODEL_LIN_REG_KWARGS = dict(
     order=2,
     estimator='sparse_horseshoe',
     a_prior=2,
@@ -104,15 +105,22 @@ DEFAULT_ACQ_OPTIM_MAB_KWARGS = dict(
     mab_resample_tol=500,
     n_cand=5000,
     n_restarts=5,
-    num_optimizer='adam',
+    num_optimizer='sgd',
     cont_lr=3e-3,
     cont_n_iter=100,
 )
 
 DEFAULT_ACQ_OPTIM_MP_KWARGS = dict(
     acq_opt_restarts=1,
-    max_eval= -4
+    max_eval=-4
 )
+
+DEFAULT_ACQ_OPTIM_RS_KWARGS = dict(
+    num_samples=300,
+)
+
+
+# ------ BoBuilder -------------------
 
 
 @dataclass
@@ -121,6 +129,7 @@ class BoBuilder:
     acq_opt_id: str = "ga"
     acq_func_id: str = "ei"
     tr_id: Optional[str] = "basic"
+    init_sampling_strategy: str = "uniform"
     model_kwargs: Dict[str, Any] = field(default_factory=dict)
     acq_opt_kwargs: Dict[str, Any] = field(default_factory=dict)
     tr_kwargs: Dict[str, Any] = field(default_factory=dict)
@@ -129,8 +138,8 @@ class BoBuilder:
     @staticmethod
     def get_model(search_space: SearchSpace, model_id: str, **model_kwargs) -> ModelBase:
         if model_id in ["gp_to", "gp_o", "gp_hed", "gp_ssk"]:
-            gp_kwargs = DEFAULT_EXACT_GP_KWARGS.copy()
-            kernel_kwargs = DEFAULT_EXACT_GP_KERNEL_KWARGS.copy()
+            gp_kwargs = DEFAULT_MODEL_EXACT_GP_KWARGS.copy()
+            kernel_kwargs = DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS.copy()
             kernel_kwargs.update(model_kwargs.get("default_kernel_kwargs", {}))
 
             if model_id == "gp_to":
@@ -205,10 +214,10 @@ class BoBuilder:
                 **gp_kwargs
             )
         elif model_id == "gp_diff":
-            gp_kwargs = DEFAULT_DIFF_GP_KWARGS.copy()
+            gp_kwargs = DEFAULT_MODEL_DIFF_GP_KWARGS.copy()
             gp_kwargs.update(model_kwargs.get("gp_kwargs", {}))
             n_vertices, adjacency_mat_list, fourier_freq_list, fourier_basis_list = laplacian_eigen_decomposition(
-                search_space=search_space)
+                search_space=search_space, device=model_kwargs["device"])
             model = ComboEnsembleGPModel(
                 search_space=search_space,
                 fourier_freq_list=fourier_freq_list,
@@ -220,7 +229,7 @@ class BoBuilder:
                 **gp_kwargs
             )
         elif model_id == "lr_sparse_hs":
-            lin_reg_kwargs = DEFAULT_LIN_REG_KWARGS.copy()
+            lin_reg_kwargs = DEFAULT_MODEL_LIN_REG_KWARGS.copy()
             lin_reg_kwargs.update(model_kwargs.get("lin_reg_kwargs", {}))
             assert lin_reg_kwargs["estimator"] == 'sparse_horseshoe'
             model = LinRegModel(
@@ -230,12 +239,12 @@ class BoBuilder:
                 **lin_reg_kwargs
             )
         elif model_id == "gp_rd":
-            gp_kwargs = DEFAULT_EXACT_GP_KWARGS.copy()
-            kernel_kwargs = DEFAULT_EXACT_GP_KERNEL_KWARGS.copy()
+            gp_kwargs = DEFAULT_MODEL_EXACT_GP_KWARGS.copy()
+            kernel_kwargs = DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS.copy()
             kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
             kernel_kwargs["nominal_kernel_use_ard"] = model_kwargs.get("nominal_kernel_use_ard", True)
             kernel_kwargs.update(model_kwargs.get("default_kernel_kwargs", {}))
-            
+
             model = RandDecompositionGP(
                 search_space=search_space,
                 num_out=1,
@@ -254,7 +263,7 @@ class BoBuilder:
         return model
 
     @staticmethod
-    def get_acq_optim(search_space: SearchSpace, acq_optim_name: str,
+    def get_acq_optim(search_space: SearchSpace, acq_optim_name: str, device,
                       input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
                       **acq_optim_kwargs) -> AcqOptimizerBase:
         if acq_optim_name == "is":
@@ -269,8 +278,8 @@ class BoBuilder:
             kwargs = DEFAULT_ACQ_OPTIM_LS_KWARGS
             kwargs.update(acq_optim_kwargs)
 
-            n_vertices, adjacency_mat_list, fourier_freq_list, fourier_basis_list = laplacian_eigen_decomposition(
-                search_space)
+            n_vertices, adjacency_mat_list, _, _ = laplacian_eigen_decomposition(
+                search_space, device=device)
             acq_optim = LsAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
@@ -306,6 +315,14 @@ class BoBuilder:
             kwargs = DEFAULT_ACQ_OPTIM_MP_KWARGS
             kwargs.update(acq_optim_kwargs)
             acq_optim = MessagePassingOptimizer(
+                search_space=search_space,
+                input_constraints=input_constraints,
+                **kwargs
+            )
+        elif acq_optim_name == "rs":
+            kwargs = DEFAULT_ACQ_OPTIM_RS_KWARGS
+            kwargs.update(acq_optim_kwargs)
+            acq_optim = RandomSearchAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
                 **kwargs
@@ -347,12 +364,14 @@ class BoBuilder:
                     tr_min_num_radius = 2 ** -5
                 else:
                     assert 0 < tr_min_num_radius <= 1, \
-                        'Numeric variables are normalised to the interval [0, 1]. Please specify appropriate Trust Region Bounds'
+                        ('Numeric variables are normalised to the interval [0, 1].'
+                         ' Please specify appropriate Trust Region Bounds')
                 if tr_max_num_radius is None:
                     tr_max_num_radius = 1
                 else:
                     assert 0 < tr_max_num_radius <= 1, \
-                        'Numeric variables are normalised to the interval [0, 1]. Please specify appropriate Trust Region Bounds'
+                        ('Numeric variables are normalised to the interval [0, 1].'
+                         ' Please specify appropriate Trust Region Bounds')
                 if tr_init_num_radius is None:
                     tr_init_num_radius = 0.8 * tr_max_num_radius
                 else:
@@ -422,13 +441,25 @@ class BoBuilder:
                  input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
                  dtype: torch.dtype = torch.float64, device: torch.device = torch.device('cpu')
                  ) -> BoBase:
+        """
+
+        Args:
+            search_space: search space
+            n_init: number of initial points before building the surrogate
+            input_constraints: constraints on the values of input variables
+            dtype: torch type
+            device: torch device
+
+        Returns:
+
+        """
         self.model_kwargs["dtype"] = dtype
         self.model_kwargs["device"] = device
         self.acq_opt_kwargs["dtype"] = dtype
 
         model = self.get_model(search_space=search_space, model_id=self.model_id, **self.model_kwargs)
         acq_func = acq_factory(self.acq_func_id, **self.acq_func_kwargs)
-        acq_optim = self.get_acq_optim(search_space=search_space, acq_optim_name=self.acq_opt_id,
+        acq_optim = self.get_acq_optim(search_space=search_space, acq_optim_name=self.acq_opt_id, device=device,
                                        input_constraints=input_constraints, **self.acq_opt_kwargs)
         tr_manager = self.get_tr_manager(tr_id=self.tr_id, search_space=search_space, model=model,
                                          n_init=n_init, **self.tr_kwargs)
@@ -441,6 +472,7 @@ class BoBuilder:
             acq_optim=acq_optim,
             input_constraints=input_constraints,
             tr_manager=tr_manager,
+            init_sampling_strategy=self.init_sampling_strategy,
             dtype=dtype,
             device=device,
         )

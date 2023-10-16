@@ -3,19 +3,15 @@ from typing import Optional, Dict, Any, Tuple, Union, Callable, List
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.ticker import FixedLocator
 from scipy.stats import t
 
+import mcbo.utils.plot_resource_utils
 from mcbo.utils.general_utils import plot_mean_std
+from mcbo.utils.plot_resource_utils import COLORS, MARKERS
 
 POINT_TO_INCH = 0.0138889
-
-# Colorblind
-COLORS = sns.color_palette("bright") + sns.color_palette("colorblind")
-
-MARKERS = ['o', 'v', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X', '^', '<', '>']
 
 DEFAULT_MARKER_KWARGS = dict(
     markersize=15,
@@ -258,9 +254,7 @@ def plot_curves_with_ranked_legends(
         max_x = max(max_x, x[-1])
         min_x = min(min_x, x[0])
 
-        markers_on = [i for i in range(0, len(x), math.ceil(len(x) // 4))]
-        if (len(x) - 1) not in markers_on:
-            markers_on.append(len(x) - 1)
+        markers_on = np.round(np.linspace(0, len(x) - 1, 5)).astype(int)
 
         marker = data_marker.get(data_key)
         color = data_color.get(data_key)
@@ -459,14 +453,14 @@ def plot_task_regrets(
         if y.ndim == 1:
             y = y.reshape(1, -1)
 
-        markers_on = [i for i in range(0, len(x), math.ceil(len(x) // 4))]
+        markers_on = np.round(np.linspace(0, len(x) - 1, 5)).astype(int)
         marker = data_marker.get(data_key)
         color = data_color.get(data_key)
         ax = plot_mean_std(
             x, y, lb=data_lb[data_key], ub=data_ub[data_key],
             linewidth=linewidth, ax=ax, color=color, alpha=alpha, n_std=n_std,
             ci_level=ci_level, show_std_error=show_std_error,
-            label=data_key_to_label(data_key),
+            label=data_key_to_label_map(data_key),
             marker=marker, markevery=markers_on, **marker_kwargs
         )
 

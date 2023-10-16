@@ -81,5 +81,23 @@ class Parameter(ABC):
     def opt_ub(self) -> float:
         pass
 
+    @property
+    @abstractmethod
+    def transfo_lb(self) -> float:
+        """
+        Should be such that, sampling uniformly in [transfo_lb, transfo_ub] and applying
+            inverse transform should have the same distribution as sampling directly uniformly in the original space
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def transfo_ub(self) -> float:
+        """
+        Should be such that, sampling uniformly in [transfo_lb, transfo_ub] and applying
+            inverse transform should have the same distribution as sampling directly uniformly in the original space
+        """
+        pass
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

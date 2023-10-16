@@ -9,7 +9,6 @@
 
 import copy
 import time
-import warnings
 from typing import Optional, Dict, Callable, List
 
 import numpy as np
@@ -33,9 +32,15 @@ class BoBase(OptimizerBase):
         name = ""
         name += self.model.name
         name += " - "
-        if self.tr_manager is not None:
+        if self.tr_manager is not None and self.tr_name == 'basic':
             name += f"Tr-based "
+        elif self.tr_manager is not None:
+            name += self.tr_name + " "
         name += f"{self.acq_optimizer.name} acq optim"
+        if self.init_sampling_strategy == "uniform":
+            pass
+        else:
+            name += f" - sample {self.init_sampling_strategy}"
         return name
 
     @property
@@ -75,6 +80,7 @@ class BoBase(OptimizerBase):
                  acq_optim: AcqOptimizerBase,
                  input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
                  tr_manager: Optional[TrManagerBase] = None,
+                 init_sampling_strategy: str = "uniform",
                  dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu')
                  ):
@@ -84,6 +90,7 @@ class BoBase(OptimizerBase):
         Args:
             input_constraints: list of funcs taking a point as input and outputting whether the point
                                        is valid or not
+            init_sampling_strategy: strategy to sample the first points to suggest (uniform, sobol, or sobol_scramble)
 
         """
 
@@ -110,8 +117,10 @@ class BoBase(OptimizerBase):
         self.acq_optimizer = acq_optim
         self.tr_manager = tr_manager
 
+        self.init_sampling_strategy = init_sampling_strategy
         self.n_init = n_init
-        point_sampler = self.search_space.sample
+
+        point_sampler = self.get_point_sampler()
         self.x_init = self.sample_input_valid_points(
             n_points=self.n_init,
             point_sampler=point_sampler
@@ -121,12 +130,31 @@ class BoBase(OptimizerBase):
         self.acq_time = []  # time taken to run acquisition function optimization
         self.observe_time = []  # time taken to observe a new value
 
+    def get_point_sampler(self) -> Callable[[int], pd.DataFrame]:
+        if self.init_sampling_strategy == "uniform":
+            point_sampler = self.search_space.sample
+        elif self.init_sampling_strategy == "sobol_scramble":
+            soboleng = torch.quasirandom.SobolEngine(dimension=self.search_space.num_dims, scramble=True)
+            point_sampler = lambda n_samples: self.search_space.inverse_transform(
+                x=soboleng.draw(n_samples) * (
+                        self.search_space.transfo_ub - self.search_space.transfo_lb) + self.search_space.transfo_lb
+            )
+        elif self.init_sampling_strategy == "sobol":
+            soboleng = torch.quasirandom.SobolEngine(dimension=self.search_space.num_dims, scramble=False)
+            point_sampler = lambda n_samples: self.search_space.inverse_transform(
+                x=soboleng.draw(n_samples) * (
+                        self.search_space.transfo_ub - self.search_space.transfo_lb) + self.search_space.transfo_lb
+            )
+        else:
+            raise ValueError(self.init_sampling_strategy)
+        return point_sampler
+
     def restart(self):
         self.observe_time = []
         self.acq_time = []
         self.fit_time = []
         self._restart()
-        point_sampler = self.search_space.sample
+        point_sampler = self.get_point_sampler()
         self.x_init = self.sample_input_valid_points(
             n_points=self.n_init,
             point_sampler=point_sampler
@@ -193,7 +221,7 @@ class BoBase(OptimizerBase):
         if len(self.x_init) and n_remaining:
             n = min(n_suggestions, len(self.x_init))
             x_next.iloc[idx: idx + n] = self.x_init.iloc[[i for i in range(0, n)]]
-            self.x_init = self.x_init.drop(self.x_init.index[[i for i in range(0, n)]], inplace = False).reset_index(
+            self.x_init = self.x_init.drop(self.x_init.index[[i for i in range(0, n)]], inplace=False).reset_index(
                 drop=True)
             idx += n
             n_remaining -= n

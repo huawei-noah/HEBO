@@ -23,7 +23,7 @@ class AddLCB(LCB):
                  model: RandDecompositionGP,
                  **kwargs
                  ) -> torch.Tensor:
-        val = 0
+        val = torch.tensor(0)
         for clique in model.graph:
             val += self.partial_evaluate(x, model, clique, **kwargs)
 

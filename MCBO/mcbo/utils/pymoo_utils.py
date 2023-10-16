@@ -19,7 +19,6 @@ from mcbo.search_space.params.bool_param import BoolPara
 from mcbo.search_space.params.integer_param import IntegerPara
 from mcbo.search_space.params.nominal_param import NominalPara
 from mcbo.search_space.params.numeric_param import NumericPara
-from mcbo.search_space.params.ordinal_param import OrdinalPara
 from mcbo.search_space.params.pow_param import PowPara
 from mcbo.trust_region.tr_manager_base import TrManagerBase
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
@@ -43,7 +42,7 @@ class PymooProblem(Problem):
                     param.transform(param.param_dict.get('ub')).item()))
             elif isinstance(param, IntegerPara):
                 vars[name] = Integer(bounds=(param.lb, param.ub))
-            elif isinstance(param, (NominalPara, OrdinalPara)):
+            elif isinstance(param, (NominalPara,)):
                 vars[name] = Choice(options=np.arange(len(param.categories)))
             elif isinstance(param, BoolPara):
                 vars[name] = Binary()  # TODO: debug this
@@ -62,7 +61,7 @@ class PymooProblem(Problem):
             x_pd_dict[self.search_space.param_names[i]] = []
             for j in range(len(x)):
                 val = x[j][var_name]
-                if isinstance(param, (OrdinalPara, NominalPara)):
+                if isinstance(param, (NominalPara,)):
                     val = param.categories[val]
                 if isinstance(param, PowPara):
                     val = param.inverse_transform(torch.tensor([val])).item()
@@ -77,7 +76,7 @@ class PymooProblem(Problem):
             for j, param_name in enumerate(self.search_space.param_names):
                 val = x.iloc[i][param_name]
                 param = self.search_space.params[param_name]
-                if isinstance(param, (OrdinalPara, NominalPara)):
+                if isinstance(param, NominalPara):
                     val = param.categories.index(val)
                 if isinstance(param, PowPara):
                     val = param.transform(val).item()
@@ -189,7 +188,7 @@ class GenericRepair(Repair):
                 )
                 return self.search_space.inverse_transform(transf_points)
         else:
-            point_sampler = self.search_space.sample,
+            point_sampler = self.search_space.sample
 
         if len(input_constr_invalid_inds) > 0:
             # sample valid points

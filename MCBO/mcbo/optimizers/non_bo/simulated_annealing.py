@@ -6,7 +6,7 @@
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -18,11 +18,11 @@ from mcbo.trust_region import TrManagerBase
 from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
 from mcbo.utils.distance_metrics import hamming_distance
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class SimulatedAnnealing(OptimizerNotBO):
-    color_1: str = COLORS_SNS_10[9]
+    color_1: str = get_color(ind=9, color_palette=COLORS_SNS_10)
 
     @staticmethod
     def get_color_1() -> str:
@@ -57,9 +57,9 @@ class SimulatedAnnealing(OptimizerNotBO):
                  dtype: torch.dtype = torch.float64,
                  ):
         """
-        :param: fixed_tr_manager: the SA will evolve within the TR defined by the fixed_tr_manager
-        :param: neighbourhood_ball_normalised_radius: in the transformed space, numerical dims are mutated by sampling
-                                                      a Gaussian perturbation with std this value
+        Args:
+            fixed_tr_manager: the SA will evolve within the TR defined by the fixed_tr_manager
+            store_observations: whether to store observed points
         """
         assert search_space.num_permutation == 0, \
             'Simulated Annealing is currently not implemented for permutation variables'
@@ -215,7 +215,7 @@ class SimulatedAnnealing(OptimizerNotBO):
 
         return x_next
 
-    def method_observe(self, x, y):
+    def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         x = self.search_space.transform(x)
 
@@ -325,7 +325,7 @@ class SimulatedAnnealing(OptimizerNotBO):
         """ As some elements are not pickled, need to reinstantiate them """
         self.search_space = search_space
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
         to_remove = ["search_space"]  # fields to remove when pickling this object
         for attr in to_remove:

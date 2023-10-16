@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -16,13 +16,20 @@ import torch
 
 from mcbo import RESULTS_DIR, task_factory
 from mcbo.optimizers import OptimizerBase, RandomSearch, SimulatedAnnealing, MultiArmedBandit, GeneticAlgorithm, \
-    LocalSearch, BoBuilder
-from mcbo.search_space import SearchSpace
+    HillClimbing, BoBuilder, BoBase
 from mcbo.tasks import TaskBase
 from mcbo.utils.general_utils import create_save_dir, current_time_formatter, set_random_seed, load_w_pickle
 from mcbo.utils.general_utils import save_w_pickle
 from mcbo.utils.results_logger import ResultsLogger
 from mcbo.utils.stopwatch import Stopwatch
+
+NON_BO_SHORT_ID_TO_OPT = {
+    "rs": RandomSearch,
+    "sa": SimulatedAnnealing,
+    "mab": MultiArmedBandit,
+    "ga": GeneticAlgorithm,
+    "hc": HillClimbing
+}
 
 
 def run_experiment(
@@ -103,7 +110,7 @@ def run_experiment(
                         elapsed_time=elapsed_time[iter_num]
                     )
 
-                if os.path.exists(save_time_path):
+                if os.path.exists(save_time_path) and isinstance(optimizer, BoBase):
                     time_dict = load_w_pickle(save_time_path)
                     optimizer.set_time_from_dict(time_dict)
 
@@ -161,7 +168,7 @@ def run_experiment(
     print(f'{current_time_formatter()} - Experiment finished.')
 
 
-def get_task_and_search_space(task_id: str, dtype: torch.dtype = torch.float64, **task_kwargs):
+def get_task_from_id(task_id: str, **task_kwargs) -> TaskBase:
     task_name = None
     if task_id == "rna_inverse_fold":
         task_kwargs = {'target': 65}
@@ -214,38 +221,76 @@ def get_task_and_search_space(task_id: str, dtype: torch.dtype = torch.float64, 
     if task_name is None:
         task_name = task_id
     task = task_factory(task_name=task_name, **task_kwargs)
-    return task, task.get_search_space(dtype=dtype)
+    return task
 
 
-def get_opt(search_space: SearchSpace, task: TaskBase, full_opt_name: str, bo_n_init: int = 20,
+def get_bo_short_opt_id(model_id: str, acq_opt_id: str, acq_func_id: str, tr_id: Optional[str] = None) -> str:
+    if tr_id is None:
+        tr_id = "none"
+    components = [model_id, acq_opt_id, acq_func_id, tr_id]
+    return "__".join(components)
+
+
+def get_opt(task: TaskBase, short_opt_id: str, bo_n_init: int = 20,
             dtype: torch.dtype = torch.float64,
-            bo_device=torch.device("cpu")):
-    opt_kwargs = dict(search_space=search_space, dtype=dtype,
+            bo_device=torch.device("cpu")) -> OptimizerBase:
+    opt_kwargs = dict(search_space=task.get_search_space(dtype=dtype), dtype=dtype,
                       input_constraints=task.input_constraints)
-    if full_opt_name == "rs":
-        opt = RandomSearch(**opt_kwargs)
-    elif full_opt_name == "sa":
-        opt = SimulatedAnnealing(**opt_kwargs)
-    elif full_opt_name == "mab":
-        opt = MultiArmedBandit(**opt_kwargs)
-    elif full_opt_name == "ga":
-        opt = GeneticAlgorithm(**opt_kwargs)
-    elif full_opt_name == "ls":
-        opt = LocalSearch(**opt_kwargs)
+    if short_opt_id in NON_BO_SHORT_ID_TO_OPT:
+        opt = NON_BO_SHORT_ID_TO_OPT[short_opt_id](**opt_kwargs)
     else:
-        bo_opt_kwargs = dict(n_init=bo_n_init, device=bo_device, **opt_kwargs)
-        bo_name_split = full_opt_name.split("__")
+        bo_opt_kwargs = dict(n_init=bo_n_init, device=bo_device,
+                             **opt_kwargs)
+        bo_name_split = short_opt_id.split("__")
         model_id = bo_name_split[0]
         acq_opt_id = bo_name_split[1]
         acq_func_id = bo_name_split[2]
-        tr_id = None
-        if len(bo_name_split) > 3:
-            assert bo_name_split[3] == "tr"
-            tr_id = "basic"
+        tr_part = bo_name_split[3]
+        if tr_part == "none":
+            tr_id = None
+        else:
+            tr_id = tr_part
+
+        init_sampling_strategy = "uniform"  # default one
+        if len(bo_name_split) > 4:
+            init_sampling_strategy = bo_name_split[4]
         opt_builder = BoBuilder(model_id=model_id, acq_opt_id=acq_opt_id, acq_func_id=acq_func_id,
-                                tr_id=tr_id)
+                                tr_id=tr_id, init_sampling_strategy=init_sampling_strategy)
         opt = opt_builder.build_bo(
             **bo_opt_kwargs
         )
 
     return opt
+
+
+def get_opt_results(task_id: str, opt_short_name: str, seeds: List[int], **task_kwargs) -> str:
+    task = get_task_from_id(task_id=task_id, **task_kwargs)
+    opt = get_opt(task=task, short_opt_id=opt_short_name)
+
+    columns = ['Task', 'Optimizer', 'Model', 'Acq opt', 'Acq func', 'TR', 'Seed', 'Eval Num', 'f(x)', 'f(x*)',
+               'Elapsed Time']
+    results = pd.DataFrame(columns=columns)
+
+    optname = opt.name
+
+    sub_folder_dir = os.path.join(RESULTS_DIR, task.name, optname)
+
+    for seed in seeds:
+        res_path = os.path.join(sub_folder_dir, f'seed_{seed}_results.csv')
+        if not os.path.exists(res_path):
+            print(task_id, opt_short_name, seed)
+            continue
+        df = pd.read_csv(res_path)
+        n_rows = len(df['Eval Num'])
+        df['Optimizer'] = [opt.name for _ in range(n_rows)]
+        df['Task'] = [task.name for _ in range(n_rows)]
+        df['Seed'] = [seed for _ in range(n_rows)]
+        df['Model'] = [opt.model_name for _ in range(n_rows)]
+        df['Acq opt'] = [opt.acq_opt_name for _ in range(n_rows)]
+        df['Acq func'] = [opt.acq_func_name for _ in range(n_rows)]
+        df['TR'] = [opt.tr_name for _ in range(n_rows)]
+
+        df = df[columns]
+        results = pd.concat([results, df], ignore_index=True, sort=False)
+
+    return results

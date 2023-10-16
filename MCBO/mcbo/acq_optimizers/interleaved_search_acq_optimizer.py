@@ -24,14 +24,14 @@ from mcbo.utils.discrete_vars_utils import get_discrete_choices
 from mcbo.utils.discrete_vars_utils import round_discrete_vars
 from mcbo.utils.distance_metrics import hamming_distance
 from mcbo.utils.model_utils import add_hallucinations_and_retrain_model
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[1]
+    color_1: str = get_color(ind=1, color_palette=COLORS_SNS_10)
 
     @staticmethod
-    def get_color_1():
+    def get_color_1() -> str:
         return InterleavedSearchAcqOptimizer.color_1
 
     @property

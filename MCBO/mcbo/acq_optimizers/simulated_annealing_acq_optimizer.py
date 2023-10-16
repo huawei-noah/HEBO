@@ -20,14 +20,14 @@ from mcbo.trust_region import TrManagerBase
 from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
 from mcbo.utils.data_buffer import DataBuffer
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
-from mcbo.utils.plot_resource_utils import COLORS_SNS_10
+from mcbo.utils.plot_resource_utils import COLORS_SNS_10, get_color
 
 
 class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
-    color_1: str = COLORS_SNS_10[4]
+    color_1: str = get_color(ind=4, color_palette=COLORS_SNS_10)
 
     @staticmethod
-    def get_color_1():
+    def get_color_1() -> str:
         return SimulatedAnnealingAcqOptimizer.color_1
 
     @property
@@ -118,15 +118,9 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
 
         return best_x
 
-    def _optimize(self, x: torch.Tensor,
-                  n_suggestions: int,
-                  x_observed: torch.Tensor,
-                  model: ModelBase,
-                  acq_func: AcqBase,
-                  acq_evaluate_kwargs: dict,
-                  tr_manager: Optional[TrManagerBase],
-                  **kwargs
-                  ) -> Tuple[torch.Tensor, float]:
+    def _optimize(self, x: torch.Tensor, n_suggestions: int, x_observed: torch.Tensor, model: ModelBase,
+                  acq_func: AcqBase, acq_evaluate_kwargs: dict,
+                  tr_manager: Optional[TrManagerBase], **kwargs) -> Tuple[torch.Tensor, float]:
         """
         Optimize acquisition function from starting point `x`
 
@@ -159,10 +153,10 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
                     x=self.search_space.transform(x_next).to(dtype),
                     model=model,
                     **acq_evaluate_kwargs
-                ).view(-1, 1).detach().cpu()
+                ).view(-1, 1).detach().cpu().numpy()
                 sa.observe(x_next, y_next)
 
-        # Check if any of the elite samples was previous unobserved
+        # Check if any of the samples was previous unobserved
         valid = False
         x_sa, y_sa = sa.data_buffer.x, sa.data_buffer.y
         indices = y_sa.flatten().argsort()

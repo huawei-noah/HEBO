@@ -12,8 +12,6 @@ from .base_model import BaseModel
 from .gp.svgp import SVGP
 from .gp.svidkl import SVIDKL
 from .gp.gp import GP
-from .gp.gpy_wgp import GPyGP
-from .gp.gpy_mlp import GPyMLPGP
 from .rf.rf import RF
 
 from .nn.mcbn import MCBNEnsemble
@@ -33,8 +31,6 @@ model_dict = {
         'svidkl'  : SVIDKL,
         'svgp'  : SVGP,
         'gp'  : GP,
-        'gpy' : GPyGP,
-        'gpy_mlp' : GPyMLPGP, 
         'rf'  : RF,
         'deep_ensemble' : DeepEnsemble,
         'psgld' : pSGLDEnsemble,
