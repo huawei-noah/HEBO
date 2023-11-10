@@ -9,7 +9,7 @@ PyYAML~=6.0
 scipy~=1.8.0
 setuptools~=68.0.0
 requests~=2.27.1
-seaborn~=0.11.2
+seaborn>=0.11.2
 scikit-learn~=1.0.2
 pymoo==0.6.0
 xgboost==1.6.2
