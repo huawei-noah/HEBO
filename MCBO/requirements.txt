@@ -14,7 +14,7 @@ scikit-learn~=1.0.2
 pymoo==0.6.0
 xgboost==1.6.2
 scikit_posthocs>=0.7.0
-tqdm~=4.61.1
+tqdm>=4.61.1
 sklearn==0.0
 scikit-posthocs @ git+https://github.com/maximtrp/scikit-posthocs.git
 disjoint_set>=0.7.4
