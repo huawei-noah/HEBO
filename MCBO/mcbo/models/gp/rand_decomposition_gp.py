@@ -28,7 +28,7 @@ class RandDecompositionGP(ExactGPModel):
 
     @property
     def name(self) -> str:
-        name = "GP"
+        name = "GPRD"
         name += f" ({self.base_kernel_num}_{self.base_kernel_nom})"
         return name
 
