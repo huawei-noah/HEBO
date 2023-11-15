@@ -364,8 +364,6 @@ class _MPOptimizer():
         for no, param in enumerate(params):
             if type(param) in {SigmoidPara, PowPara, NumericPara, IntExponentPara, IntegerPara, PowIntegerPara}:
                 LB, UB = 0, 1
-            elif type(param) in {StepIntPara}:
-                LB, UB = 0, param.num_step
 
             if self.tr_manager is not None and type(param) not in {BoolPara, NominalPara}:
                 assert self.model.kernel.numeric_dims[numerical_dim_no] == no
@@ -387,9 +385,6 @@ class _MPOptimizer():
                 # parameter is an integer
                 incr = (UB - LB) / (int(param.ub - param.lb))
                 domain = [LB + i * incr for i in range(int(param.ub - param.lb) + 1)]
-            elif type(param) == StepIntPara:
-                # parameter is a step integer
-                domain = [i for i in range(LB, math.floor(UB + 1))]
             elif type(param) == BoolPara:
                 # parameter is a boolean
                 self.nominal_dims.append(no)
