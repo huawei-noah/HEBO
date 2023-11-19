@@ -12,6 +12,7 @@ Huawei, Noah's Ark Lab.
     - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
     - [T-LBO](./T-LBO)
     - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
+    - [AIRBO: Efficient Robust Bayesian Optimisation for Arbitrary Uncertain Inputs](./CompBO)
 - Reinforcement Learning Research
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
@@ -201,6 +202,25 @@ comprising synthetic optimisation tasks as well as tasks from Bayesmark. Given t
 function maximisation subroutine, we posit that the adoption of compositional optimisers has the potential to yield
 performance improvements across all domains in which Bayesian optimisation is currently being applied.
 
+## [AIRBO](./AIRBO)
+
+:<p float="center">
+  <img src="./AIRBO/figures/thumbnail.png" width="300" />
+  <img src="./AIRBO/figures/modeling_performance.png" width="400" />
+  <img src="./AIRBO/figures/opt_performance.png" width="300" />
+</p>
+
+
+
+Codebase associated
+to: [Efficient Robust Bayesian Optimization for Arbitrary Uncertain Inputs](https://arxiv.org/abs/2310.20145)
+
+##### Abstract
+
+Bayesian Optimization (BO) is a sample-efficient optimization algorithm widely employed across various applications. In some challenging BO tasks, input uncertainty arises due to the inevitable randomness in the optimization process, such as machining errors, execution noise, or contextual variability. This uncertainty deviates the input from the intended value before evaluation, resulting in significant performance fluctuations in the final result. In this paper, we introduce a novel robust Bayesian Optimization algorithm, AIRBO, which can effectively identify a robust optimum that performs consistently well under arbitrary input uncertainty. Our method directly models the uncertain inputs of arbitrary distributions by empowering the Gaussian Process with the Maximum Mean Discrepancy (MMD) and further accelerates the posterior inference via Nystrom approximation. Rigorous theoretical regret bound is established under MMD estimation error and extensive experiments on synthetic functions and real problems demonstrate that our approach can handle various input uncertainties and achieve state-of-the-art performance.
+
+
+
 # Reinforcement Learning Research
 
 ## [Enhancing Reinforcement Learning Agents with Local Guides](./RLLG)
@@ -284,4 +304,4 @@ results show that the proposed approach achieves state-of-the-art performance on
 <strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek, Paul Daoudi, Merwan Barlier.
 
 <strong> Alumni / External contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
-  
+
