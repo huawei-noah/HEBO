@@ -41,6 +41,9 @@ class AcqOptimizerBase(ABC):
                  search_space: SearchSpace,
                  dtype: torch.dtype,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  **kwargs
                  ):
         """
@@ -49,11 +52,26 @@ class AcqOptimizerBase(ABC):
             dtype: tensor type
             input_constraints: list of funcs taking a point as input and outputting whether the point
                                        is valid or not
+            obj_dims: dimensions in ys corresponding to objective values to minimize
+            out_constr_dims: dimensions in ys corresponding to inequality constraints
+            out_upper_constr_vals: values of upper bounds for inequality constraints
+
         """
         self.search_space = search_space
         self.dtype = dtype
         self.input_constraints = input_constraints
         self.kwargs = kwargs
+        if obj_dims is None:
+            obj_dims = np.array([0])
+        if out_constr_dims is None:
+            out_constr_dims = []
+            out_upper_constr_vals = []
+        self.obj_dims = obj_dims
+        self.out_constr_dims = out_constr_dims
+        self.out_upper_constr_vals = out_upper_constr_vals
+        assert len(self.obj_dims) == 1, "Do not support multi-obj for now"
+        assert len(self.out_constr_dims) == 0, "Do not support constraints for now"
+        assert len(self.out_upper_constr_vals) == 0, "Do not support constraints for now"
 
     @abstractmethod
     def optimize(self,
@@ -87,7 +105,7 @@ class AcqOptimizerBase(ABC):
         """
         pass
 
-    def post_observe_method(self, x: torch.Tensor, y: torch.Tensor, 
+    def post_observe_method(self, x: torch.Tensor, y: torch.Tensor,
                             data_buffer: DataBuffer, n_init: int, **kwargs) -> None:
         """
         Function called at the end of observe method. Can be used to update the internal state of the acquisition
@@ -112,7 +130,7 @@ class AcqOptimizerBase(ABC):
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`        
         """
         return input_eval_from_transfx(transf_x=transf_x, search_space=self.search_space,
-                                               input_constraints=self.input_constraints)
+                                       input_constraints=self.input_constraints)
 
     def input_eval_from_origx(self, x: Union[pd.DataFrame, Dict]) -> np.ndarray:
         """
@@ -128,7 +146,7 @@ class AcqOptimizerBase(ABC):
         return input_eval_from_origx(x=x, input_constraints=self.input_constraints)
 
     def sample_input_valid_points(self, n_points: int, point_sampler: Callable[[int], pd.DataFrame],
-                                          max_trials: int = 100) -> pd.DataFrame:
+                                  max_trials: int = 100) -> pd.DataFrame:
         """ Get valid points in original space
 
         Args:

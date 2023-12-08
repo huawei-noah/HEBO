@@ -7,14 +7,14 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from typing import Union, Optional, List, Callable, Dict
+from typing import Union, Optional, List, Callable, Dict, Any
 
+import numpy as np
 import pandas as pd
 import torch
 
 from mcbo.acq_funcs import AcqBase
 from mcbo.models import ModelBase
-from mcbo.models.gp.combo_gp import ComboGPModel, ComboEnsembleGPModel
 from mcbo.search_space import SearchSpace
 from mcbo.trust_region import TrManagerBase
 from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
@@ -22,7 +22,7 @@ from mcbo.utils.constraints_utils import sample_input_valid_points
 from mcbo.utils.data_buffer import DataBuffer
 from mcbo.utils.discrete_vars_utils import get_discrete_choices
 from mcbo.utils.distance_metrics import hamming_distance
-from mcbo.utils.model_utils import move_model_to_device
+from mcbo.utils.model_utils import move_model_to_device, model_can_be_fit
 
 
 class CasmopolitanTrManager(TrManagerBase):
@@ -30,6 +30,10 @@ class CasmopolitanTrManager(TrManagerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  model: ModelBase,
+                 constr_models: List[ModelBase],
+                 obj_dims: Union[List[int], np.ndarray],
+                 out_constr_dims: Union[List[int], np.ndarray],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  acq_func: AcqBase,
                  n_init: int,
                  min_num_radius: Union[int, float],
@@ -47,10 +51,16 @@ class CasmopolitanTrManager(TrManagerBase):
                  dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu')
                  ):
-        super(CasmopolitanTrManager, self).__init__(search_space=search_space, dtype=dtype)
+        super(CasmopolitanTrManager, self).__init__(
+            search_space=search_space,
+            dtype=dtype,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
+        )
 
-        if not self.search_space.num_cont + self.search_space.num_disc + self.search_space.num_nominal \
-               == self.search_space.num_dims:
+        num_ok_dims = self.search_space.num_cont + self.search_space.num_disc + self.search_space.num_nominal
+        if not num_ok_dims == self.search_space.num_dims:
             raise NotImplementedError(
                 'The Casmopolitan Trust region manager only supports continuous, discrete and nominal variables. '
                 'If you wish to use the Casmopolitan Trust region manager with ordinal variables,'
@@ -70,6 +80,7 @@ class CasmopolitanTrManager(TrManagerBase):
 
         self.verbose = verbose
         self.model = model
+        self.constr_models = constr_models
         self.acq_func = acq_func
         self.n_init = n_init
         self.restart_n_cand = restart_n_cand
@@ -82,12 +93,19 @@ class CasmopolitanTrManager(TrManagerBase):
 
         self.succ_count = 0
         self.fail_count = 0
-        self.guided_restart_buffer = DataBuffer(num_dims=self.search_space.num_dims, num_out=1,
-                                                dtype=self.data_buffer.dtype)
+        self.guided_restart_buffer = DataBuffer(
+            num_dims=self.search_space.num_dims,
+            dtype=self.data_buffer.dtype,
+            obj_dims=self.obj_dims,
+            out_constr_dims=self.out_constr_dims,
+            out_upper_constr_vals=self.out_upper_constr_vals
+        )
         assert self.is_numeric or self.search_space.num_nominal > 0
 
     def adjust_counts(self, y: torch.Tensor):
-        if y.min() < self.data_buffer.y.min():  # Originally we had np.min(fX_next) <= tr_min - 1e-3 * abs(tr_min)
+        best_y_ind = self.get_best_y_ind(y)
+        if self.is_better_than_current(
+                new_y=y[best_y_ind], current_y=self.data_buffer.best_y):
             self.succ_count += 1
             self.fail_count = 0
         else:
@@ -135,19 +153,23 @@ class CasmopolitanTrManager(TrManagerBase):
         x_init = pd.DataFrame(index=range(n_init), columns=self.search_space.df_col_names, dtype=float)
 
         # Note, it's not possible to fit the COMBO GP with a single sample
-        if not isinstance(self.model, (ComboGPModel, ComboEnsembleGPModel)) or len(self.guided_restart_buffer) >= 1:
-
+        if self.can_fit_all_models():
             tr_x, tr_y = self.data_buffer.x, self.data_buffer.y
 
             # store best observed point within current trust region
-            best_idx, best_y = self.data_buffer.y_argmin, self.data_buffer.y_min
+            best_idx, best_y = self.data_buffer.best_index, self.data_buffer.best_y
+            assert not torch.any(torch.isnan(best_y)), best_y
             self.guided_restart_buffer.append(tr_x[best_idx: best_idx + 1], tr_y[best_idx: best_idx + 1])
 
             # Determine the device to run on
-            move_model_to_device(self.model, self.guided_restart_buffer, self.device)
+            for model in [self.model] + self.constr_models:
+                move_model_to_device(model, self.guided_restart_buffer, self.device)
 
             # Fit the model
-            self.model.fit(self.guided_restart_buffer.x, self.guided_restart_buffer.y)
+            self.model.fit(x=self.guided_restart_buffer.x, y=self.guided_restart_buffer.y[:, self.obj_dims])
+            for i, constr_model in enumerate(self.constr_models):
+                constr_model.fit(x=self.guided_restart_buffer.x,
+                                 y=self.guided_restart_buffer.y[:, [self.out_constr_dims[i]]])
 
             # Sample random points and evaluate the acquisition at these points
             x_cand_orig = sample_input_valid_points(n_points=self.restart_n_cand,
@@ -155,7 +177,8 @@ class CasmopolitanTrManager(TrManagerBase):
                                                     input_constraints=input_constraints)
             x_cand = self.search_space.transform(x_cand_orig)
             with torch.no_grad():
-                acq = self.acq_func(x_cand, self.model, best_y=best_y)
+                acq = self.acq_func(x=x_cand, model=self.model, constr_models=self.constr_models,
+                                    out_upper_constr_vals=self.out_upper_constr_vals, best_y=best_y)
 
             # The new trust region centre is the point with the lowest acquisition value
             best_idx = acq.argmin()
@@ -173,20 +196,22 @@ class CasmopolitanTrManager(TrManagerBase):
         # Sample remaining points in the trust region of the new centre
         if self.n_init - 1 > 0:
             # Sample the remaining points
-            point_sampler = lambda n_points: self.search_space.inverse_transform(
-                sample_numeric_and_nominal_within_tr(
-                    x_centre=tr_centre,
-                    search_space=self.search_space,
-                    tr_manager=self,
-                    n_points=n_points,
-                    numeric_dims=self.numeric_dims,
-                    discrete_choices=self.discrete_choices,
-                    max_n_perturb_num=self.max_n_perturb_num,
-                    model=self.model,
-                    return_numeric_bounds=False
+            def aux_point_sampler(n_points: int) -> pd.DataFrame:
+                return self.search_space.inverse_transform(
+                    sample_numeric_and_nominal_within_tr(
+                        x_centre=tr_centre,
+                        search_space=self.search_space,
+                        tr_manager=self,
+                        n_points=n_points,
+                        numeric_dims=self.numeric_dims,
+                        discrete_choices=self.discrete_choices,
+                        max_n_perturb_num=self.max_n_perturb_num,
+                        model=self.model,
+                        return_numeric_bounds=False
+                    )
                 )
-            )
-            x_in_tr = sample_input_valid_points(n_points=self.n_init - 1, point_sampler=point_sampler,
+
+            x_in_tr = sample_input_valid_points(n_points=self.n_init - 1, point_sampler=aux_point_sampler,
                                                 input_constraints=input_constraints)
 
             # Store them
@@ -194,35 +219,52 @@ class CasmopolitanTrManager(TrManagerBase):
 
         # update data_buffer with previously observed points that are in the same trust region
         x_observed, y_observed = observed_data_buffer.x, observed_data_buffer.y
-        for i in range(len(observed_data_buffer)):
+        filter_nan = torch.isnan(y_observed).sum(-1) == 0
+        x_observed = x_observed[filter_nan]
+        y_observed = y_observed[filter_nan]
+        for i in range(len(x_observed)):
             x = x_observed[i:i + 1]
 
-            in_tr = True
-            # Check the numeric and hamming distance
-            if 'numeric' in self.radii:
-                in_tr = ((tr_centre[self.numeric_dims] - x[0, self.numeric_dims]).abs() < self.radii['numeric']).all()
-            if 'nominal' in self.radii:
-                in_tr = in_tr and (hamming_distance(tr_centre[self.search_space.nominal_dims].unsqueeze(0),
-                                                    x[:, self.search_space.nominal_dims],
-                                                    False).squeeze() <= self.get_nominal_radius()).item()
-
-            if in_tr:
+            if self.point_is_in_tr(x=x, tr_centre=tr_centre):
                 self.data_buffer.append(x, y_observed[i:i + 1])
 
         return x_init
 
-    def restart(self):
+    def point_is_in_tr(self, x: torch.Tensor, tr_centre: torch.Tensor) -> bool:
+        """
+        Returns whether transformed input `x` is in TR or not
+        """
+        assert x.shape[0] == 1, x.shape
+        in_tr = True
+        # Check the numeric and hamming distance
+        if 'numeric' in self.radii:
+            in_tr = ((tr_centre[self.numeric_dims] - x[0, self.numeric_dims]).abs() < self.radii['numeric']).all()
+        if 'nominal' in self.radii:
+            in_tr = in_tr and (hamming_distance(tr_centre[self.search_space.nominal_dims].unsqueeze(0),
+                                                x[:, self.search_space.nominal_dims],
+                                                False).squeeze() <= self.get_nominal_radius()).item()
+        return in_tr
+
+    def restart(self) -> None:
         self.restart_tr()
         self.guided_restart_buffer.restart()
 
-    def restart_tr(self):
+    def restart_tr(self) -> None:
         super(CasmopolitanTrManager, self).restart_tr()
         self.succ_count = 0
         self.fail_count = 0
 
-    def __getstate__(self):
+    def can_fit_all_models(self) -> bool:
+        fit_models = model_can_be_fit(x=self.data_buffer.x, y=self.data_buffer.y[:, self.obj_dims], model=self.model)
+        for i, constr_model in enumerate(self.constr_models):
+            fit_models = fit_models and model_can_be_fit(x=self.data_buffer.x,
+                                                         y=self.data_buffer.y[:, [self.out_constr_dims[i]]],
+                                                         model=constr_model)
+        return fit_models
+
+    def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
-        to_remove = ["model", "search_space"]  # fields to remove when pickling this object
+        to_remove = ["model", "constr_models", "search_space"]  # fields to remove when pickling this object
         for attr in to_remove:
             if attr in d:
                 del d[attr]

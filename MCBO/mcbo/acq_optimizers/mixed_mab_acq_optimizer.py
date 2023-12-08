@@ -9,7 +9,7 @@
 
 import copy
 import warnings
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -45,6 +45,9 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  batch_size: int = 1,
                  max_n_iter: int = 200,
                  mab_resample_tol: int = 500,
@@ -66,7 +69,11 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
         super(MixedMabAcqOptimizer, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            out_constr_dims=out_constr_dims
+
         )
 
         self.n_cats = [int(ub + 1) for ub in search_space.nominal_ub]
@@ -92,6 +99,9 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
         self.mab = MultiArmedBandit(
             search_space=self.mab_search_space,
             input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
             batch_size=batch_size,
             max_n_iter=max_n_iter,
             noisy_black_box=True,
@@ -128,8 +138,8 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
         self.mab.update_fixed_tr_manager(fixed_tr_manager=tr_manager)
 
         if self.batch_size != n_suggestions:
-            warnings.warn('batch_size used for initialising the algorithm is not equal to n_suggestions received by' + \
-                          ' the acquisition optimizer. If the batch size is known in advance, consider initialising' + \
+            warnings.warn('batch_size used for initialising the algorithm is not equal to n_suggestions received by' +
+                          ' the acquisition optimizer. If the batch size is known in advance, consider initialising' +
                           ' the acquisition optimizer with the correct batch size for better performance.')
 
         x_next = torch.zeros((0, self.search_space.num_dims), dtype=self.dtype)
@@ -137,6 +147,7 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
         if n_suggestions > 1:
             # create a local copy of the model
             model = copy.deepcopy(model)
+            model.search_space = self.search_space
         else:
             model = model
 
@@ -159,8 +170,8 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
                     return self.input_constraints[i](x_.iloc[0].to_dict())
 
                 self.mab.input_constraints = [lambda x_nom_ord_, i=i_: input_on_cat(x_nom_ord_, i) for
-                                                      i_ in
-                                                      range(len(self.input_constraints))]
+                                              i_ in
+                                              range(len(self.input_constraints))]
 
             x_cat = self.mab_search_space.transform(self.mab.suggest(n_suggestions))
 
@@ -205,6 +216,7 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
         # Make a copy of the acquisition function if necessary to avoid changing original model parameters
         if n_suggestions > 1:
             model = copy.deepcopy(model)
+            model.search_space = self.search_space
 
         output = torch.zeros((0, self.search_space.num_numeric), dtype=self.dtype)
 
@@ -293,7 +305,7 @@ class MixedMabAcqOptimizer(AcqOptimizerBase):
                     for _ in range(self.cont_n_iter):
                         optimizer.zero_grad()
                         x_cand = self.reconstruct_x(x_numeric_, x_cat_)
-                        acq_x = acq_func(x_cand, model, **acq_evaluate_kwargs)
+                        acq_x = acq_func(x=x_cand, model=model, **acq_evaluate_kwargs)
                         x_numeric_copy = x_numeric_.clone()
 
                         try:

@@ -22,7 +22,7 @@ import os
 import sys
 from pathlib import Path
 
-ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
+ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
 import os.path
@@ -45,13 +45,13 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
 
-    # task = task_factory('levy', num_dims=[1, 4, 1],
-    #                                   variable_type=['int', 'nominal', 'num'],
-    #                                   num_categories=[None, 21, None])
+    task = task_factory('levy', num_dims=[1, 4, 1],
+                                      variable_type=['int', 'nominal', 'num'],
+                                      num_categories=[None, 21, None])
     # task = task_factory('levy', num_dims=10, variable_type='nominal', num_categories=21)
 
     # input_constraints = [input_constraint_maker(i) for i in range(1, 4)]
-    task = task_factory('pest')
+    # task = task_factory('pest')
     search_space = task.get_search_space()
 
     input_constraints = None  # [input_constraint_maker(i) for i in range(1, 4)]

@@ -51,7 +51,7 @@ class RandDecompositionGP(ExactGPModel):
             optimizer: str = 'adam',
             max_cholesky_size: int = 2000,
             max_training_dataset_size: int = 1000,
-            max_batch_size: int = 1000,
+            max_batch_size: int = 200,
             verbose: bool = False,
             print_every: int = 10,
             dtype: torch.dtype = torch.float32,

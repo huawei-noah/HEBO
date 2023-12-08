@@ -56,6 +56,10 @@ class AcqBase(ABC):
         """
         pass
 
+    @abstractmethod
+    def __call__(self, x: torch.Tensor, model: Union[ModelBase, EnsembleModelBase], **kwargs) -> torch.Tensor:
+        pass
+
 
 class ConstrAcqBase(AcqBase, ABC):
 
@@ -107,9 +111,13 @@ class ConstrAcqBase(AcqBase, ABC):
             acq = acq_values.mean(dim=1)
 
         else:
-            acq = self.evaluate(x=x.to(device, dtype), model=model,
-                                constr_models=constr_models, out_upper_constr_vals=out_upper_constr_vals,
-                                **kwargs)
+            acq = self.evaluate(
+                x=x.to(device, dtype),
+                model=model,
+                constr_models=constr_models,
+                out_upper_constr_vals=out_upper_constr_vals,
+                **kwargs
+            )
 
         if ndim == 1:
             acq = acq.squeeze(0)

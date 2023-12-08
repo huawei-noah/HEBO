@@ -102,7 +102,7 @@ def test_bo_builder_run(opt_name: str, mix: bool):
         x_next = custom_opt.suggest(1)
         y_next = task(x_next)
         custom_opt.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {custom_opt.best_y:.3f}')
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {custom_opt.best_y[0]:.3f}')
 
     return 0
 
@@ -174,7 +174,7 @@ def test_bo_builder_v_hard_coded(opt_name: str, mix: bool):
         x_next = custom_opt.suggest(1)
         y_next = task(x_next)
         custom_opt.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {custom_opt.best_y:.3f}')
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {custom_opt.best_y[0]:.3f}')
 
     np.random.seed(0)
     torch.manual_seed(0)
@@ -182,7 +182,7 @@ def test_bo_builder_v_hard_coded(opt_name: str, mix: bool):
         x_next = hard_coded_opt.suggest(1)
         y_next = task(x_next)
         hard_coded_opt.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {hard_coded_opt.best_y:.3f}')
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {hard_coded_opt.best_y[0]:.3f}')
 
     assert np.allclose(custom_opt.data_buffer.y.flatten().numpy(), hard_coded_opt.data_buffer.y.flatten().numpy()), (
         custom_opt.data_buffer.y.flatten().numpy(), hard_coded_opt.data_buffer.y.flatten().numpy())
@@ -201,5 +201,5 @@ def test_all_builder_v_hard_coded():
 
 if __name__ == "__main__":
     device_id = 0
-    test_bo_builder_run(opt_name="COMBO", mix=False)
+    test_bo_builder_run(opt_name="Casmopolitan", mix=True)
     # test_all_builder_v_hard_coded()

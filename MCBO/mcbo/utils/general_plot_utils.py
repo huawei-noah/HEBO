@@ -1,13 +1,11 @@
 from typing import Optional, Dict, Any, Tuple, Union, Callable, List
 
-import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.ticker import FixedLocator
 from scipy.stats import t
 
-import mcbo.utils.plot_resource_utils
 from mcbo.utils.general_utils import plot_mean_std
 from mcbo.utils.plot_resource_utils import COLORS, MARKERS
 

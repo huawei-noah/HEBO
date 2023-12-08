@@ -1,12 +1,5 @@
 # Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
-
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the MIT license.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE. See the MIT License for more details.
-
+import time
 from abc import ABC, abstractmethod
 from typing import Optional, List, Callable, Dict, Any
 
@@ -17,19 +10,27 @@ import torch
 from mcbo.search_space import SearchSpace
 
 
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the MIT license.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the MIT License for more details.
+
+
 class TaskBase(ABC):
     """ Abstract class to define optimization (** MINIMISATION **) tasks """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.kwargs = kwargs
         self._n_bb_evals = 0
+        self.last_eval_time = None
 
     @property
     @abstractmethod
     def name(self) -> str:
         """
         Returns:
-            A string correponding to the name of the task
+            A string corresponding to the name of the task
         """
         return 'Task Name'
 
@@ -49,10 +50,10 @@ class TaskBase(ABC):
         pass
 
     @property
-    def num_func_evals(self):
+    def num_func_evals(self) -> int:
         return self._n_bb_evals
 
-    def restart(self):
+    def restart(self) -> None:
         self._n_bb_evals = 0
 
     @property
@@ -70,5 +71,8 @@ class TaskBase(ABC):
         self._n_bb_evals += n
 
     def __call__(self, x: pd.DataFrame) -> np.ndarray:
+        time_ref = time.time()
         self.increment_n_evals(n=len(x))
-        return self.evaluate(x.copy())
+        y = self.evaluate(x.copy())
+        self.last_eval_time = time.time() - time_ref
+        return y

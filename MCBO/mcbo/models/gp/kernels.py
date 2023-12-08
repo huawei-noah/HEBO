@@ -769,7 +769,10 @@ class DecompositionKernel(Kernel):
             lengthscale_constraint: Optional[Interval] = None,
     ):
 
-        numeric_dims = search_space.cont_dims + search_space.disc_dims
+        numeric_dims = []
+        for p in range(len(search_space.params)):
+            if p in search_space.cont_dims or p in search_space.disc_dims:
+                numeric_dims.append(p)
         kernel_dict = {}
 
         self.numeric_singletons = []

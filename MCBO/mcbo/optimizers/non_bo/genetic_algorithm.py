@@ -7,7 +7,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Any, Union
 
 import numpy as np
 import pandas as pd
@@ -92,6 +92,9 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  pop_size=50,
                  n_offsprings=None,
                  fixed_tr_manager: Optional[TrManagerBase] = None,
@@ -103,7 +106,10 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
         super(PymooGeneticAlgorithm, self).__init__(
             search_space=search_space,
             input_constraints=input_constraints,
-            dtype=dtype
+            dtype=dtype,
+            obj_dims=obj_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            out_constr_dims=out_constr_dims
         )
 
         self.store_observations = store_observations
@@ -285,6 +291,9 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  pop_size: int = 40,
                  num_parents: int = 20,
                  num_elite: int = 10,
@@ -298,7 +307,12 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
             'Genetic Algorithm currently supports only nominal variables'
 
         super(CategoricalGeneticAlgorithm, self).__init__(
-            search_space=search_space, dtype=dtype, input_constraints=input_constraints
+            search_space=search_space,
+            dtype=dtype,
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
 
         self.pop_size = pop_size
@@ -672,8 +686,8 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
                     categories = np.array(
                         [j for j in range(int(self.lb[idx]), int(self.ub[idx]) + 1) if j != x[i, idx]])
                     cand[idx] = np.random.choice(categories)
-                    if hamming_distance(self.tr_center.unsqueeze(0), cand.unsqueeze(0), False) <= self.tr_manager.radii[
-                        'nominal']:
+                    dist_to_center = hamming_distance(self.tr_center.unsqueeze(0), cand.unsqueeze(0), False)
+                    if dist_to_center <= self.tr_manager.radii['nominal']:
                         done = True
                         x_[i] = cand
 
@@ -719,6 +733,9 @@ class GeneticAlgorithm(OptimizerNotBO):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  pop_size: int = 40,
                  pymoo_ga_n_offsprings: Optional[int] = None,
                  fixed_tr_manager: Optional[TrManagerBase] = None,
@@ -733,13 +750,22 @@ class GeneticAlgorithm(OptimizerNotBO):
         super(GeneticAlgorithm, self).__init__(
             search_space=search_space,
             input_constraints=input_constraints,
-            dtype=dtype
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            dtype=dtype,
         )
+
+        assert len(self.out_constr_dims) == 0, "Do not support multi-obj / constraints yet"
+        assert len(self.obj_dims) == 1, "Do not support multi-obj / constraints yet"
 
         if search_space.num_nominal == search_space.num_dims:
             self.backend_ga = CategoricalGeneticAlgorithm(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
+                out_constr_dims=out_constr_dims,
                 pop_size=pop_size,
                 num_parents=cat_ga_num_parents,
                 num_elite=cat_ga_num_elite,
@@ -753,6 +779,9 @@ class GeneticAlgorithm(OptimizerNotBO):
             self.backend_ga = PymooGeneticAlgorithm(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 pop_size=pop_size,
                 n_offsprings=pymoo_ga_n_offsprings,
                 fixed_tr_manager=fixed_tr_manager,
@@ -772,15 +801,15 @@ class GeneticAlgorithm(OptimizerNotBO):
         self._best_x = self.backend_ga._best_x
         self.best_y = self.backend_ga.best_y
 
-    def restart(self):
+    def restart(self) -> None:
         self.backend_ga.restart()
 
-    def set_x_init(self, x: pd.DataFrame):
+    def set_x_init(self, x: pd.DataFrame) -> None:
         self.backend_ga.set_x_init(x)
 
-    def initialize(self, x: pd.DataFrame, y: np.ndarray):
+    def initialize(self, x: pd.DataFrame, y: np.ndarray) -> None:
         self.backend_ga.initialize(x, y)
 
     @property
-    def best_x(self):
+    def best_x(self) -> Any:
         return self.backend_ga.best_x
