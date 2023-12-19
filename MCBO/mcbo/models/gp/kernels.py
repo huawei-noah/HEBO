@@ -767,13 +767,34 @@ class DecompositionKernel(Kernel):
             outputscale_constraint: Optional[Interval] = None,
             lengthscale_prior: Optional[Prior] = None,
             lengthscale_constraint: Optional[Interval] = None,
+            hed: bool = False,
+            hed_kwargs: dict = {},
     ):
+        
+        self.search_space = search_space
+        kernel_dict = {}
+
+        if hed:
+            self.hed_kwargs = hed_kwargs
+            n_cats_per_dim = [len(self.search_space.params[param_name].categories) for param_name in
+                          self.search_space.nominal_names]
+
+            hed_num_embedders = self.hed_kwargs.get('hed_num_embedders', 128)
+            kernel_dict["base_kernel_hed"] = HEDKernel(
+                base_kernel=RBFKernel(), # base kernel irrelevant when using decompostions
+                hed_num_embedders=hed_num_embedders,
+                n_cats_per_dim=n_cats_per_dim,
+                active_dims=search_space.nominal_dims
+            )
+        else:
+            hed_num_embedders = 0
+
+        hed_dims = [search_space.num_dims + i for i in range(hed_num_embedders)]
 
         numeric_dims = []
-        for p in range(len(search_space.params)):
-            if p in search_space.cont_dims or p in search_space.disc_dims:
+        for p in range(len(search_space.params) + len(hed_dims)):
+            if p in search_space.cont_dims or p in search_space.disc_dims or p in hed_dims:
                 numeric_dims.append(p)
-        kernel_dict = {}
 
         self.numeric_singletons = []
         self.nominal_singletons = []
@@ -863,6 +884,7 @@ class DecompositionKernel(Kernel):
                                                   lengthscale_constraint=num_lengthscale_constraint)
         self.kernel_dict = torch.nn.ModuleDict(kernel_dict)
         self.numeric_dims = numeric_dims
+        self.hed_dims = hed_dims
 
         # create lengthscale for each numerical dimension
         self.has_lengthscale = True
@@ -899,6 +921,13 @@ class DecompositionKernel(Kernel):
         self.base_kernel_num = base_kernel_num
         self.base_kernel_nom = base_kernel_nom
 
+        self.hed = hed
+
+        if self.hed:
+            assert len(self.nominal_singletons) == 0
+            assert len(self.all_nominal_cliques) == 0
+            assert len(self.mixed_cliques) == 0
+
     @property
     def outputscale(self) -> torch.tensor:
         return self.raw_outputscale_constraint.transform(self.raw_outputscale)
@@ -916,6 +945,13 @@ class DecompositionKernel(Kernel):
                 clique: tuple = None, **params) -> torch.tensor:
         if last_dim_is_batch:
             raise RuntimeError("DecompositionKernel does not accept the last_dim_is_batch argument.")
+    
+        if self.hed:
+            x1_emb = self.kernel_dict["base_kernel_hed"].embed(x1[::, self.search_space.nominal_dims])
+            x2_emb = self.kernel_dict["base_kernel_hed"].embed(x2[::, self.search_space.nominal_dims])
+
+            x1 = torch.cat([x1, x1_emb], dim=-1)
+            x2 = torch.cat([x2, x2_emb], dim=-1)
 
         if clique is not None:
             return self.partial_forward(x1, x2, clique=clique, last_dim_is_batch=last_dim_is_batch, **params)
@@ -1035,4 +1071,7 @@ class DecompositionKernel(Kernel):
         raise ValueError(f"Clique {clique} not in decomposition.")
 
     def get_lengthcales_numerical_dims(self) -> torch.tensor:
-        return self.lengthscale
+        return self.lengthscale[::, :-len(self.hed_dims)]
+
+    def train(self, mode=True):
+        self.kernel_dict.train(mode)

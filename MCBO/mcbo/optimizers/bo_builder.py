@@ -240,6 +240,7 @@ class BoBuilder:
         elif model_id == "gp_rd":
             gp_kwargs = DEFAULT_MODEL_EXACT_GP_KWARGS.copy()
             gp_kwargs["max_batch_size"] = 200
+            gp_kwargs.update(model_kwargs.get("gp_kwargs", {}))
             kernel_kwargs = DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS.copy()
             kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
             kernel_kwargs["nominal_kernel_use_ard"] = model_kwargs.get("nominal_kernel_use_ard", True)
