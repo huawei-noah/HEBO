@@ -27,11 +27,12 @@ if __name__ == '__main__':
     from mcbo.utils.experiment_utils import get_task_from_id
 
     task = get_task_from_id('ackley-53')
+    # task = get_task_from_id('pest')
     # task = get_task_from_id('xgboost_opt')
     search_space = task.get_search_space()
 
-    optimizer = BoBuilder(model_id="gp_rd", acq_opt_id="mab", acq_func_id="ei", tr_id=None).build_bo(
-        search_space=search_space, n_init=20, input_constraints=None)
+    optimizer = BoBuilder(model_id="gp_rdto", acq_opt_id="mp", acq_func_id="addlcb", tr_id="basic").build_bo(
+        search_space=search_space, n_init=3, input_constraints=None)
 
     print(task.name)
     print(optimizer.name)

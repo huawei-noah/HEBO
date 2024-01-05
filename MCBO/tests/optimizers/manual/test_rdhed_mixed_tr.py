@@ -17,7 +17,6 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import torch
 
 if __name__ == '__main__':
     import os
@@ -30,14 +29,9 @@ if __name__ == '__main__':
     # task = get_task_from_id('xgboost_opt')
     search_space = task.get_search_space()
 
-    model_kwargs = {
-        'gp_kwargs': {
-            "hed": True
-        }
-    }
-
-    optimizer = BoBuilder(model_id="gp_rd", acq_opt_id="is", acq_func_id="ei", tr_id="basic", model_kwargs=model_kwargs).build_bo(
-        search_space=search_space, n_init=20, input_constraints=None)
+    optimizer = BoBuilder(model_id="gp_rdhed", acq_opt_id="mab", acq_func_id="ei", tr_id="basic").build_bo(
+        search_space=search_space, n_init=20, input_constraints=None
+    )
 
     print(task.name)
     print(optimizer.name)

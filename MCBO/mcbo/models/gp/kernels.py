@@ -768,14 +768,14 @@ class DecompositionKernel(Kernel):
             lengthscale_prior: Optional[Prior] = None,
             lengthscale_constraint: Optional[Interval] = None,
             hed: bool = False,
-            hed_kwargs: dict = {},
+            hed_kwargs: Optional[Dict[str, Any]] = None,
     ):
-        
+
         self.search_space = search_space
         kernel_dict = {}
 
+        self.hed_kwargs = {} if hed_kwargs is None else hed_kwargs
         if hed:
-            self.hed_kwargs = hed_kwargs
             n_cats_per_dim = [len(self.search_space.params[param_name].categories) for param_name in
                           self.search_space.nominal_names]
 
@@ -815,10 +815,12 @@ class DecompositionKernel(Kernel):
 
         if base_kernel_nom == 'overlap':
             base_kernel_nom_class = Overlap
-        elif base_kernel_kwargs_nom == "transformed_overlap":
+        elif base_kernel_nom == "transformed_overlap":
             base_kernel_nom_class = TransformedOverlap
+        elif hed:  # no need to have a nominal kernel
+            base_kernel_nom_class = Overlap
         else:
-            raise NotImplementedError
+            raise NotImplementedError(base_kernel_nom)
 
         if num_lengthscale_constraint is None:
             num_lengthscale_constraint = Positive()
@@ -945,7 +947,7 @@ class DecompositionKernel(Kernel):
                 clique: tuple = None, **params) -> torch.tensor:
         if last_dim_is_batch:
             raise RuntimeError("DecompositionKernel does not accept the last_dim_is_batch argument.")
-    
+
         if self.hed:
             x1_emb = self.kernel_dict["base_kernel_hed"].embed(x1[::, self.search_space.nominal_dims])
             x2_emb = self.kernel_dict["base_kernel_hed"].embed(x2[::, self.search_space.nominal_dims])
@@ -1071,7 +1073,7 @@ class DecompositionKernel(Kernel):
         raise ValueError(f"Clique {clique} not in decomposition.")
 
     def get_lengthcales_numerical_dims(self) -> torch.tensor:
-        return self.lengthscale[::, :-len(self.hed_dims)]
+        return self.lengthscale[::, :self.lengthscale.shape[-1] - len(self.hed_dims)]
 
     def train(self, mode=True):
         self.kernel_dict.train(mode)

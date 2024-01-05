@@ -29,7 +29,11 @@ class RandDecompositionGP(ExactGPModel):
     @property
     def name(self) -> str:
         name = "GPRD"
-        name += f" ({self.base_kernel_num}_{self.base_kernel_nom})"
+        if self.hed:
+            kernname = f"HED-{self.base_kernel_num}"
+        else:
+            kernname = f"{self.base_kernel_num}_{self.base_kernel_nom}"
+        name += f" ({kernname})"
         return name
 
     def __init__(
@@ -57,9 +61,9 @@ class RandDecompositionGP(ExactGPModel):
             dtype: torch.dtype = torch.float32,
             device: torch.device = torch.device('cpu'),
             random_tree_size: float = 0.2,
-            hed=False,
-            hed_kwargs={},
-            batched_kernel=True
+            hed: bool = False,
+            hed_kwargs: Optional[Dict[str, Any]] = None,
+            batched_kernel: bool = True
     ):
         self.search_space = search_space
 
@@ -75,7 +79,7 @@ class RandDecompositionGP(ExactGPModel):
         self.numeric_dims = self.search_space.cont_dims + self.search_space.disc_dims
         self.batched_kernel = batched_kernel
         self.hed = hed
-        self.hed_kwargs = hed_kwargs
+        self.hed_kwargs = {} if hed_kwargs is None else hed_kwargs
 
         self.graph = self.get_random_graph()
         kernel = self.build_kernels(self.graph, restart_lengthscales=True)

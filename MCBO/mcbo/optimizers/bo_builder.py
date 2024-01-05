@@ -237,12 +237,22 @@ class BoBuilder:
                 device=model_kwargs["device"],
                 **lin_reg_kwargs
             )
-        elif model_id == "gp_rd":
+        elif model_id in ["gp_rd", "gp_rdto", "gp_rdhed"]:
             gp_kwargs = DEFAULT_MODEL_EXACT_GP_KWARGS.copy()
             gp_kwargs["max_batch_size"] = 200
             gp_kwargs.update(model_kwargs.get("gp_kwargs", {}))
             kernel_kwargs = DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS.copy()
-            kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
+            if model_id == "gp_rd":
+                kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
+            elif model_id == "gp_rdto":
+                kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "transformed_overlap")
+            elif model_id == "gp_rdhed":
+                gp_kwargs["hed"] = True
+                kernel_kwargs["nominal_kernel_name"] = None
+
+            if model_id != "gp_rdhed":
+                assert not gp_kwargs.get("hed", False), gp_kwargs
+
             kernel_kwargs["nominal_kernel_use_ard"] = model_kwargs.get("nominal_kernel_use_ard", True)
             kernel_kwargs.update(model_kwargs.get("default_kernel_kwargs", {}))
 
