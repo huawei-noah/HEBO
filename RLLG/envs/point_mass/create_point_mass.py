@@ -9,7 +9,7 @@
 
 
 
-
+from typing import  Any, Tuple, Dict
 import dmc2gym
 from envs.point_mass.local_expert_policy import SACExpert
 import os
@@ -18,8 +18,22 @@ from dm_control.utils import rewards
 
 
 # modify initialization
-def new_get_reward(self, physics):
-    """Returns a reward to the agent."""
+def new_get_reward(self: Any, physics: Any) -> float:
+    """
+    Returns a reward to the agent.
+
+    Parameters:
+    ----------
+    self : Any
+        Instance of the environment task
+    physics : Any
+        Physics object representing the state of the environment
+
+    Returns:
+    ----------
+    float
+        Computed reward for the agent.
+    """
     target_size = physics.named.model.geom_size['target', 0]
     near_target = rewards.tolerance(physics.mass_to_target_dist(),
                                     bounds=(0, target_size))
@@ -30,9 +44,26 @@ def new_get_reward(self, physics):
     return near_target * small_control
 
 
-def create_point_mass_and_control(orig_cwd='./',
-                                  device="cpu",
-                                  sparse=False):
+def create_point_mass_and_control(orig_cwd: str = './',
+                                  device: str = "cpu",
+                                  sparse: bool = False) -> Tuple[Any, Dict[str, Any]]:
+    """
+    Create the Point Mass environment and its associated controller.
+
+    Parameters:
+    ----------
+    orig_cwd : str, optional
+        Original current working directory (default is './')
+    device : str, optional
+        Device to run the environment on (default is "cpu")
+    sparse : bool, optional
+        Flag indicating whether to use sparse rewards (default is False)
+
+    Returns:
+    ----------
+    Tuple[Any, Dict[str, Any]]
+        Tuple containing the environment and the controller dictionary
+    """
     # create env
     env = dmc2gym.make('point_mass', 'easy')
 

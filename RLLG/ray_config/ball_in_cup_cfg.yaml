@@ -8,10 +8,10 @@ policy_arch: '64-64'
 qf_arch: '64-64'
 policy_log_std_multiplier: 1.0
 policy_log_std_offset: -1.0
-n_epochs: 1000
-n_initial_env_steps: 1000
-n_env_steps_per_epoch: 1000
-n_train_step_per_epoch: 1000
+n_epochs: 1 # 1000
+n_initial_env_steps: 10
+n_env_steps_per_epoch: 10 # 1000
+n_train_step_per_epoch: 10 # 1000
 eval_period: 1
 eval_n_trajs: 5
 batch_size: 256

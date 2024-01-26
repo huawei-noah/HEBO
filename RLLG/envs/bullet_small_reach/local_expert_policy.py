@@ -8,17 +8,34 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
-
-
+from typing import Any, Optional
 import numpy as np
 
 
 class SafeScripted:
+    """
+    SafeScripted class for scripted control.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def get_quarter_position(self, agent, obstacle):
+    def get_quarter_position(self, agent: Any, obstacle: Any) -> str:
+        """
+        Get the quarter position.
+
+        Parameters:
+        ----------
+        agent : Any
+            The agent object.
+        obstacle : Any
+            The obstacle object.
+
+        Returns:
+        ----------
+        str
+            The quarter position ('below-left', 'below-right', 'above-left', 'above-right').
+        """
         pos_x, pos_y = agent.get_position()[:2]
         obstacle_x, obstacle_y = obstacle.get_position()[:2]
         if pos_x <= obstacle_x:
@@ -29,12 +46,43 @@ class SafeScripted:
             return 'below-right'
         return 'above-right'
 
-    def get_closest_obstacle(self, env):
+    def get_closest_obstacle(self, env: Any) -> int:
+        """
+        Get the index of the closest obstacle.
+
+        Parameters:
+        ----------
+        env : Any
+            The environment object.
+
+        Returns:
+        ----------
+        int
+            The index of the closest obstacle.
+        """
         agent_pos = env.env.env.agent.get_position()[:2]
         pos_los = [obstacle.get_position()[:2] for obstacle in env.env.obstacles]
         return np.argmin(np.linalg.norm(np.vstack(pos_los) - agent_pos, axis=1))
 
-    def get_action(self, observation, init_action=None, env=None):
+    def get_action(self, observation: np.ndarray, init_action: Optional[Any] = None, env: Optional[Any] = None)\
+            -> np.ndarray:
+        """
+        Get the action for scripted control.
+
+        Parameters:
+        ----------
+        observation : Any
+            The observation.
+        init_action : Any, optional
+            The initial action (default is None).
+        env : Any, optional
+            The environment object (default is None).
+
+        Returns:
+        ----------
+        np.ndarray
+            The scripted action.
+        """
 
         # get closest obstacle
         id = self.get_closest_obstacle(env)

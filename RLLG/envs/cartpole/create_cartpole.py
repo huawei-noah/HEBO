@@ -15,15 +15,46 @@ import dmc2gym
 from envs.cartpole.local_expert_policy import SafeScripted
 import os
 from types import MethodType
+from typing import Callable, Tuple, Any, Dict
 
-def new_get_termination(limit_cart=0.6):
+
+def new_get_termination(limit_cart: float = 0.6) -> Callable:
+    """
+    Return a new termination function for the Cartpole environment.
+
+    Parameters:
+    ----------
+    limit_cart : float, optional
+        Cart position limit (default is 0.6).
+
+    Returns:
+    ----------
+    Callable
+        New termination function.
+    """
     def new_get_termination_fn(self, physics):
         pos = physics.named.data.qpos['slider'][0]
         if abs(pos) > limit_cart:
             return 1
     return new_get_termination_fn
 
-def new_get_reward(limit_cart=0.6, reward_end=1):
+
+def new_get_reward(limit_cart: float = 0.6, reward_end: int = 1) -> Callable:
+    """
+    Return a new reward function for the Cartpole environment
+
+    Parameters:
+    ----------
+    limit_cart : float, optional
+        Cart position limit (default is 0.6)
+    reward_end : int, optional
+        Reward value when the limit is reached (default is 1)
+
+    Returns:
+    ----------
+    Callable
+        New reward function
+    """
     def new_get_reward_fn(self, physics):
         """Returns a sparse or a smooth reward, as specified in the constructor."""
         pos = physics.named.data.qpos['slider'][0]
@@ -33,12 +64,35 @@ def new_get_reward(limit_cart=0.6, reward_end=1):
     return new_get_reward_fn
 
 
-def create_cartpole_and_control(orig_cwd='./',
-                                device="cpu",
-                                task_name="swingup",
-                                limit_cart=0.6,
-                                reward_end=1,
-                                pos_tol=1.):
+def create_cartpole_and_control(orig_cwd: str = './',
+                                device: str = "cpu",
+                                task_name: str = "swingup",
+                                limit_cart: float = 0.6,
+                                reward_end: int = 1,
+                                pos_tol: float = 1.) -> Tuple[Any, Dict]:
+    """
+    Create the Cartpole environment and its control dictionary
+
+    Parameters:
+    ----------
+    orig_cwd : str, optional
+        Original current working directory (default is './')
+    device : str, optional
+        Device (default is 'cpu')
+    task_name : str, optional
+        Task name (default is 'swingup')
+    limit_cart : float, optional
+        Cart position limit (default is 0.6)
+    reward_end : int, optional
+        Reward value when the limit is reached (default is 1)
+    pos_tol : float, optional
+        Position tolerance (default is 1.)
+
+    Returns:
+    ----------
+    Tuple[Any, dict]
+        The Cartpole environment and the control dictionary
+    """
 
     # create env
     env = dmc2gym.make(domain_name="cartpole", task_name=task_name)

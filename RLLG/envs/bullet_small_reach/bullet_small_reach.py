@@ -8,16 +8,39 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
+from typing import Any, Tuple, Dict, Optional
+import numpy as np
 
 
 class BulletBallSmallReach:
+    """
+    Wrapper for the Bullet Reach environment to change the constraint function into a bad reward.
 
-    def __init__(self, env):
+    Parameters:
+    ----------
+    env : Any
+        The environment to wrap.
+    """
+
+    def __init__(self, env: Any) -> None:
         self.env = env
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
 
-    def step(self, action):
+    def step(self, action: np.ndarray) -> Tuple[Any, float, bool, Dict]:
+        """
+        Step through the environment dynamics and change reward function.
+
+        Parameters:
+        ----------
+        action : Any
+            The action to be executed.
+
+        Returns:
+        ----------
+        tuple
+            Observation, reward, done, and info.
+        """
         obs, reward, done, info = self.env.step(action)
         if 'cost_collisions' in info:
             if info['cost_collisions'] >= 0.5:
@@ -26,8 +49,29 @@ class BulletBallSmallReach:
                 done = True
         return obs, reward, done, info
 
-    def render(self, mode="human"):
+    def render(self, mode: Optional[str] = "human") -> Any:
+        """
+        Render the environment.
+
+        Parameters:
+        ----------
+        mode : str, optional
+            Rendering mode (default is "human").
+
+        Returns:
+        ----------
+        Any
+            The rendering output.
+        """
         return self.env.render(mode)
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
+        """
+        Reset the environment.
+
+        Returns:
+        ----------
+        Any
+            The reset observation.
+        """
         return self.env.reset()

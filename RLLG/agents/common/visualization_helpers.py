@@ -15,18 +15,33 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 from ray.tune import ExperimentAnalysis
+from typing import List, Union, Optional, Tuple
 
 
-def plot_curves(analysis, hps, metric, to_plot="final", label="SAC", n_epochs=2000):
+def plot_curves(analysis: ExperimentAnalysis, hps: List[str], metric: str, to_plot: Optional[str] = "final",
+                label: Optional[str] = "SAC", n_epochs: Optional[int] = 2000) -> None:
     """
-    analysis:
-        tune.ray.ExperimentAnalysis
-    hps: hyperparams to choose
-        list
-    metric:
-        str
-    to_plot: to plot best final mean or best overall
-        str: choose between final and overall
+    Plots curves for the specified hyperparameters and metric.
+
+    Parameters:
+    -----------
+    analysis : tune.ray.ExperimentAnalysis
+        Analysis object from Ray Tune.
+    hps : List[str]
+        List of hyperparameters to choose.
+    metric : str
+        Metric to plot.
+    to_plot : str, optional
+        Choose between "final" and "overall" for best final mean or best overall.
+        Defaults to "final".
+    label : str, optional
+        Label for the plotted curve. Defaults to "SAC".
+    n_epochs : int, optional
+        Number of epochs. Defaults to 2000.
+
+    Returns:
+    -----------
+    None
     """
     group_by = [f'config/{hp}' for hp in hps if hp != 'repeat_run'] + ['epoch']
     dfs = analysis.trial_dataframes
@@ -60,33 +75,45 @@ def plot_curves(analysis, hps, metric, to_plot="final", label="SAC", n_epochs=20
                      alpha=0.2)
 
 
-def plot_all(env,
-             agents,
-             experts,
-             lambda_s_choices,
-             init_path="..",
-             hps=['lambda_s_eps'],
-             metric="mean_avg_return",
-             mode="max",
-             to_plot="final",
-             n_epochs=2000):
+def plot_all(env: str,
+             agents: List[str],
+             experts: List[str],
+             lambda_s_choices: List[str],
+             init_path: Optional[str] = "..",
+             hps: Optional[List[str]] = ['lambda_s_eps'],
+             metric: Optional[str] = "mean_avg_return",
+             mode: Optional[str] = "max",
+             to_plot: Optional[str] = "final",
+             n_epochs: Optional[int] = 2000) -> None:
     """
-    env:
-        str
-    agents:
-        list of str
-    init_path:
-        str
-    hps: hyperparams to choose
-        list
-    metric:
-        str
-    mode:
-        str
-    to_plot: to plot best final mean or best overall
-        str: choose between final and overall
-    n_epochs:
-        int
+    Plots curves for different agents, experts, and lambda_s choices.
+
+    Parameters:
+    -----------
+    env : str
+        The environment name.
+    agents : List[str]
+        List of agent names.
+    experts : List[str]
+        List of expert names.
+    lambda_s_choices : List[str]
+        List of lambda_s choices.
+    init_path : str, optional
+        The initialization path. Defaults to "..".
+    hps : List[str], optional
+        List of hyperparameters to choose. Defaults to ['lambda_s_eps'].
+    metric : str, optional
+        Metric to plot. Defaults to "mean_avg_return".
+    mode : str, optional
+        Mode for metric comparison. Defaults to "max".
+    to_plot : str, optional
+        Choose between "overall" and "final" for best overall or best final mean. Defaults to "final".
+    n_epochs : int, optional
+        Number of epochs. Defaults to 2000.
+
+    Returns:
+    -----------
+    None
     """
     assert to_plot in ["overall", "final"]
 

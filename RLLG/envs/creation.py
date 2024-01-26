@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
-
+from typing import Union, Any, Dict, List, Optional, Tuple, Callable
 from envs.cartpole.create_cartpole import create_cartpole_and_control
 from envs.ball_in_cup.create_ball_in_cup import create_ball_in_cup_and_control
 from envs.point_mass.create_point_mass import create_point_mass_and_control
@@ -27,18 +27,34 @@ dict_fn = {
 }
 
 
-def get_env_and_control(name='ball_in_cup',
-                        orig_cwd='./',
-                        device='cpu',
-                        limit_cart=0.6,
-                        reward_end=1,
-                        pos_tol=1.):
+def get_env_and_control(name: str = 'ball_in_cup',
+                        orig_cwd: str = './',
+                        device: str = 'cpu',
+                        limit_cart: Optional[float] = 0.6,
+                        reward_end: Optional[int] = 1,
+                        pos_tol: Optional[float] = 1.) -> Tuple[Any, Dict[Union[str, Tuple[float, float]], Callable]]:
     """
-    Returns required env and local(s) controller.
-    The env is a Gym environment.
-    The local controller is a dictionary with:
-        - key: point where the linearization happened
-        - value: control function (taking the state as an argument)
+    Returns the environment and local controller.
+
+    Parameters:
+    ----------
+    name : str, optional
+        Name of the environment (default is 'ball_in_cup')
+    orig_cwd : str, optional
+        Original working directory (default is './')
+    device : str, optional
+        Device for computation (default is 'cpu')
+    limit_cart : float, optional
+        Limit for the cart (default is 0.6)
+    reward_end : int, optional
+        Reward at the end (default is 1)
+    pos_tol : float, optional
+        Position tolerance (default is 1.0)
+
+    Returns:
+    ----------
+    Tuple[Any, Dict[Union[str, Tuple[float, float]], Callable]]
+        The environment and local controller.
     """
     kwargs = {}
 
