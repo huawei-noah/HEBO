@@ -8,20 +8,52 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-
+from typing import Optional, Tuple, Any, Dict, List, Union
 from ml_collections import ConfigDict
 import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-
-from agents.common.model import Scalar, soft_target_update
+from agents.common.model import Scalar, soft_target_update, SamplerPolicy
 
 
 class SAC(object):
+    """
+    Soft Actor-Critic (SAC) algorithm implementation.
+
+    Parameters:
+    -----------
+    config: dict
+        Configuration parameters for SAC.
+    policy: torch.nn.Module
+        The policy network.
+    sampler_policy: SamplerPolicy
+        The sampler policy network.
+    qf1: torch.nn.Module
+        The first critic network.
+    qf2: torch.nn.Module
+        The second critic network.
+    target_qf1: torch.nn.Module
+        The target network for the first critic.
+    target_qf2: torch.nn.Module
+        The target network for the second critic.
+    """
 
     @staticmethod
-    def get_default_config(updates=None):
+    def get_default_config(updates: Optional[Dict] = None) -> ConfigDict:
+        """
+        Get the default configuration for SAC.
+
+        Parameters:
+        -----------
+        updates: dict, optional
+            Optional dictionary to update default configuration.
+
+        Returns:
+        --------
+        ConfigDict
+            Default configuration for SAC.
+        """
         config = ConfigDict()
         config.discount = 0.99
         config.reward_scale = 1.0
@@ -39,7 +71,14 @@ class SAC(object):
             config.update(ConfigDict(updates).copy_and_resolve_references())
         return config
 
-    def __init__(self, config, policy, sampler_policy, qf1, qf2, target_qf1, target_qf2):
+    def __init__(self,
+                 config: Dict,
+                 policy: torch.nn.Module,
+                 sampler_policy: SamplerPolicy,
+                 qf1: torch.nn.Module,
+                 qf2: torch.nn.Module,
+                 target_qf1: torch.nn.Module,
+                 target_qf2: torch.nn.Module):
         self.config = SAC.get_default_config(config)
         self.policy = policy
         self.sampler_policy = sampler_policy
@@ -72,11 +111,35 @@ class SAC(object):
         self.update_target_network(1.0)
         self._total_steps = 0
 
-    def update_target_network(self, soft_target_update_rate):
+    def update_target_network(self, soft_target_update_rate: float) -> None:
+        """
+        Update the target networks with soft target updates.
+
+        Parameters:
+        -----------
+        soft_target_update_rate: float
+            Rate of soft target network updates.
+        """
         soft_target_update(self.qf1, self.target_qf1, soft_target_update_rate)
         soft_target_update(self.qf2, self.target_qf2, soft_target_update_rate)
 
-    def train(self, batch, batch_success=None):
+    def train(self, batch: Dict[str, Any], batch_success: Optional[Dict[str, torch.Tensor]] = None) -> Dict[
+        str, Any]:
+        """
+        Train the SAC (Soft Actor-Critic) agent on a batch of experiences.
+
+        Parameters:
+        -----------
+        batch: dict
+            A dictionary containing the the transitions.
+        batch_success: dict, optional
+            A dictionary containing the the transitions.
+
+        Returns:
+        --------
+        dict
+            A dictionary containing training metrics.
+        """
         self._total_steps += 1
 
         # classic obs
@@ -155,16 +218,42 @@ class SAC(object):
 
         return metrics_to_return
 
+    def torch_to_device(self, device: torch.device) -> None:
+        """
+        Move all modules to the specified device.
 
-    def torch_to_device(self, device):
+        Parameters:
+        -----------
+        device: torch.device
+            The target device.
+        """
         for module in self.modules:
             module.to(device)
 
     def get_action(self,
-                   env,
-                   observation,
-                   deterministic=False,
-                   add_local_information=False):
+                   env: Any,
+                   observation: np.ndarray,
+                   deterministic: bool = False,
+                   add_local_information: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, float, np.ndarray]]:
+        """
+        Get an action from the policy.
+
+        Parameters:
+        -----------
+        env: Any
+            The environment.
+        observation: np.ndarray
+            The current observation.
+        deterministic: bool, optional
+            Whether to sample a deterministic action.
+        add_local_information: bool, optional
+            Whether to add local information.
+
+        Returns:
+        --------
+        Tuple[np.ndarray, float, np.ndarray]
+            The action, local information, and expert action.
+        """
         action = self.sampler_policy(
                     np.expand_dims(observation, 0), deterministic=deterministic
                 )[0, :]
@@ -173,12 +262,28 @@ class SAC(object):
         return action
 
     @property
-    def modules(self):
+    def modules(self) -> List[torch.nn.Module]:
+        """
+        Get a list of modules.
+
+        Returns:
+        --------
+        List[nn.Module]
+            The list of modules including policy, q-functions, and optional log_alpha.
+        """
         modules = [self.policy, self.qf1, self.qf2, self.target_qf1, self.target_qf2]
         if self.config.use_automatic_entropy_tuning:
             modules.append(self.log_alpha)
         return modules
 
     @property
-    def total_steps(self):
+    def total_steps(self) -> int:
+        """
+        Get the total number of steps taken.
+
+        Returns:
+        --------
+        int
+            The total number of steps.
+        """
         return self._total_steps

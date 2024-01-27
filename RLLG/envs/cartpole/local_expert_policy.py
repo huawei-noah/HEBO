@@ -9,16 +9,34 @@
 
 
 
-
+from typing import Optional
 import numpy as np
 
 
 class SafeScripted:
+    """
+    SafeScripted class for scripted control.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def get_action(self, observation, init_action=None):
+    def get_action(self, observation: np.ndarray, init_action: Optional[np.ndarray] = None) -> np.ndarray:
+        """
+        Get the action for scripted control.
+
+        Parameters:
+        ----------
+        observation : np.ndarray
+            The observation.
+        init_action : Any, optional
+            The initial action (default is None).
+
+        Returns:
+        ----------
+        np.ndarray
+            The scripted action.
+        """
         pos = observation[0]
         if pos > 0:
             return np.float32(np.array([-0.999]))

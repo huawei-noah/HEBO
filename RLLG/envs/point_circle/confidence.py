@@ -8,23 +8,68 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
+from typing import Union, Any, Dict, List, Optional, Tuple, Callable
+
 
 class LambdaS:
+    """
+    Class representing the confidence function.
 
-    def __init__(self, pos_tol=0.6):
+    Parameters:
+    ----------
+    pos_tol : float or None, optional
+        Position tolerance (default is 0.6)
+    """
+
+    def __init__(self, pos_tol: float =0.6):
         self.pos_tol = pos_tol
 
-    def get_use_local(self, env, observation):
+    def get_use_local(self, env: Any, observation: List) -> float:
+        """
+        Get the lambda s value based on the environment and observation.
+
+        Parameters:
+        ----------
+        env : Any
+            The environment
+        observation : list of array
+            The observation.
+
+        Returns:
+        ----------
+        float
+            Use_local value (0 or 1).
+        """
         x_pos, y_pos, z_pos = env.env.world.robot_pos()
         if abs(x_pos) > self.pos_tol:
             return 1
         return 0
 
 
-def point_circle_lambda_s(expert,
-                          device="cpu",
-                          pos_tol=None,
-                          speed_tol=None,
-                          smoothed=False
-                          ):
+def point_circle_lambda_s(expert: Any,
+                          device: str = "cpu",
+                          pos_tol: float = None,
+                          speed_tol: float = None,
+                          smoothed: bool = None) -> LambdaS:
+    """
+    Returns the confidence LambdaS instance for the point circle environment.
+
+    Parameters:
+    ----------
+    expert : Any
+        Expert (not used, but here in case the lambda_s depends on the expert).
+    device : str, optional
+        Device for computation (default is 'cpu')
+    pos_tol : float or None, optional
+        Position tolerance (default is None)
+    speed_tol : float or None, optional
+        Speed tolerance (default is None)
+    smoothed : bool or None, optional
+        Whether to use smoothed lambda_s (default is None)
+
+    Returns:
+    ----------
+    LambdaS
+        The LambdaS instance
+    """
     return LambdaS(pos_tol=pos_tol)

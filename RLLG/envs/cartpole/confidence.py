@@ -7,23 +7,48 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-
-
-
+from typing import Union, Any, Dict, List, Optional, Tuple, Callable
 from math import exp
 
 
 class LambdaS:
+    """
+    Class representing the confidence function.
+
+    Parameters:
+    ----------
+    pos_tol : float or None, optional
+        Position tolerance (default is None)
+    speed_tol : float or None, optional
+        Speed tolerance (default is None)
+    smoothed : bool, optional
+        Have a smooth confidence function or not (default is 3.)
+    """
 
     def __init__(self,
-                 pos_tol=None,
-                 speed_tol=None,
-                 smoothed=False):
+                 pos_tol: float = None,
+                 speed_tol: float = None,
+                 smoothed: bool = False):
         self.pos_tol = pos_tol
         self.speed_tol = speed_tol
         self.smoothed = smoothed
 
-    def get_use_local(self, env, observation):
+    def get_use_local(self, env: Any, observation: List) -> float:
+        """
+        Get the lambda s value based on the environment and observation.
+
+        Parameters:
+        ----------
+        env : Any
+            The environment
+        observation : list of array
+            The observation.
+
+        Returns:
+        ----------
+        float
+            Use_local value (0 or 1).
+        """
         abs_pos = abs(observation[0])
         if self.smoothed:
             if abs_pos < 0.5:
@@ -37,10 +62,30 @@ class LambdaS:
             return 0
 
 
-def cartpole_lambda_s(expert,
-                      device="cpu",
-                      pos_tol=None,
-                      speed_tol=None,
-                      smoothed=False
-                      ):
+def cartpole_lambda_s(expert: Any,
+                      device: str = "cpu",
+                      pos_tol: float = None,
+                      speed_tol: float = None,
+                      smoothed: bool = None) -> LambdaS:
+    """
+    Returns the confidence LambdaS instance for the cartpole environment.
+
+    Parameters:
+    ----------
+    expert : Any
+        Expert (not used, but here in case the lambda_s depends on the expert).
+    device : str, optional
+        Device for computation (default is 'cpu')
+    pos_tol : float or None, optional
+        Position tolerance (default is None)
+    speed_tol : float or None, optional
+        Speed tolerance (default is None)
+    smoothed : bool or None, optional
+        Whether to use smoothed lambda_s (default is None)
+
+    Returns:
+    ----------
+    LambdaS
+        The LambdaS instance
+    """
     return LambdaS(pos_tol=pos_tol, speed_tol=speed_tol, smoothed=smoothed)

@@ -4,28 +4,53 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from ray.tune import ExperimentAnalysis
 from scipy.integrate import simps
+from typing import Union, Any, Dict, List, Optional, Tuple
 
 
-def plot_curves(analysis,
-                hps,
-                metric,
-                rolling_mean=0.6,
-                set_hyperparam={},
-                hyperparam_comparison=None,
-                to_plot="final",
-                label="SAC",
-                chosen_max=1000,
-                n_epochs=2000,
-                retrieve_auc=False):
+def plot_curves(analysis: tune.ray.ExperimentAnalysis,
+                hps: List[str],
+                metric: str,
+                rolling_mean: float = 0.6,
+                set_hyperparam: Dict[str, Any] = {},
+                hyperparam_comparison: Optional[str] = None,
+                to_plot: Optional[str] = "final",
+                label: Optional[str] = "SAC",
+                chosen_max: Optional[int] = 1000,
+                n_epochs: Optional[int] = 2000,
+                retrieve_auc: Optional[bool] = False) -> Optional[Dict[str, Union[float, float]]]:
+
     """
-    analysis:
-        tune.ray.ExperimentAnalysis
-    hps: hyperparams to choose
-        list
-    metric:
-        str
-    to_plot: to plot best final mean or best overall
-        str: choose between final and overall
+    Plot learning curves based on the specified analysis, hyperparameters, and metric.
+
+    Parameters:
+    ----------
+    analysis : tune.ray.ExperimentAnalysis
+        The ray tune analysis object containing information about the experiment
+    hps : List[str]
+        List of hyperparameters to choose for plotting
+    metric : str
+        The metric to be plotted
+    rolling_mean : float, optional
+        The alpha value for exponential weighted moving average (default is 0.6).
+    set_hyperparam : Dict[str, Any], optional
+        Dictionary specifying hyperparameters and their values to set during plotting (default is an empty dictionary).
+    hyperparam_comparison : str, optional
+        String specifying the hyperparameters to compare during plotting (default is None).
+    to_plot : str, optional
+        String specifying whether to plot the best final mean or the best overall (default is "final").
+    label : str, optional
+        Label for the plot (default is "SAC").
+    chosen_max : int, optional
+        The chosen maximum value for the metric (default is 1000).
+    n_epochs : int, optional
+        The number of epochs for plotting (default is 2000).
+    retrieve_auc : bool, optional
+        Boolean indicating whether to retrieve the area under the curve (AUC) and final performance (default is False).
+
+    Returns:
+    ----------
+    Optional[Dict[str, Union[float, float]]]
+        A dictionary containing AUC and final performance if retrieve_auc is True, otherwise None.
     """
     group_by = [f'config/{hp}' for hp in hps if hp != 'repeat_run'] + ['epoch']
     dfs = analysis.trial_dataframes
@@ -154,37 +179,59 @@ def plot_curves(analysis,
         }
 
 
-def plot_all(env,
-             agents,
-             experts,
-             rolling_mean=0.6,
-             set_hyperparam={},
-             hyperparam_comparison=None,
-             init_path="..",
-             hps=['betas'],
-             metric="mean_avg_return",
-             mode="max",
-             to_plot="final",
-             chosen_max=1000,
-             n_epochs=2000,
-             retrieve_auc=False):
+def plot_all(env: str,
+             agents: List[str],
+             experts: List[str],
+             rolling_mean: float = 0.6,
+             set_hyperparam: Dict[str, Any] = {},
+             hyperparam_comparison: Optional[str] = None,
+             init_path: Optional[str] = "..",
+             hps: Optional[List[str]] = ['betas'],
+             metric: Optional[str] = "mean_avg_return",
+             mode: Optional[str] = "max",
+             to_plot: Optional[str] = "final",
+             chosen_max: Optional[int] = 1000,
+             n_epochs: Optional[int] = 2000,
+             retrieve_auc: Optional[bool] = False) -> Optional[Dict[str, Union[float, float]]]:
     """
-    env:
-        str
-    agents:
-        list of str
-    init_path:
-        str
-    hps: hyperparams to choose
-        list
-    metric:
-        str
-    mode:
-        str
-    to_plot: to plot best final mean or best overall
-        str: choose between final and overall
-    n_epochs:
-        int
+    Plot learning curves for multiple agents and experts based on the specified environment.
+
+    Parameters:
+    ----------
+    env : str
+        The environment for which learning curves will be plotted
+    agents : List[str]
+        List of agent names to be included in the plot
+    experts : List[str]
+        List of expert names to be included in the plot
+    rolling_mean : float, optional
+        The alpha value for exponential weighted moving average (default is 0.6)
+    set_hyperparam : Dict[str, Any], optional
+        Dictionary specifying hyperparameters and their values to set during plotting (default is an empty dictionary)
+    hyperparam_comparison : str, optional
+        String specifying the hyperparameters to compare during plotting (default is None)
+    init_path : str, optional
+        The initial path where ray_results are stored (default is "..")
+    hps : List[str], optional
+        List of hyperparameters to choose for plotting (default is ['betas'])
+    metric : str, optional
+        The metric to be plotted (default is "mean_avg_return")
+    mode : str, optional
+        The mode for selecting the best values (default is "max")
+    to_plot : str, optional
+        String specifying whether to plot the best final mean or the best overall (default is "final")
+    chosen_max : int, optional
+        The chosen maximum value for the metric (default is 1000)
+    n_epochs : int, optional
+        The number of epochs for plotting (default is 2000)
+    retrieve_auc : bool, optional
+        Boolean indicating whether to retrieve the area under the curve (AUC) and final performance (default is False)
+
+    Returns:
+    ----------
+    Optional[Dict[str, Union[float, float]]]
+        A dictionary containing AUC and final performance for each agent-expert combination if retrieve_auc is True,
+        otherwise None.
     """
     assert to_plot in ["overall", "final"]
 

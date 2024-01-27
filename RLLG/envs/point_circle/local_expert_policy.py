@@ -9,18 +9,39 @@
 
 
 
-
+from typing import Any, Optional
 import numpy as np
 import torch
 import os
 
 
 class SafeScripted:
+    """
+    SafeScripted class for scripted control.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def get_action(self, observation, init_action=None, env=None):
+    def get_action(self, observation: np.ndarray, init_action: Optional[Any] = None, env: Optional[Any] = None)\
+            -> np.ndarray:
+        """
+        Get the action for scripted control.
+
+        Parameters:
+        ----------
+        observation : Any
+            The observation.
+        init_action : Any, optional
+            The initial action (default is None).
+        env : Any, optional
+            The environment object (default is None).
+
+        Returns:
+        ----------
+        np.ndarray
+            The scripted action.
+        """
         x_pos, y_pos, z_pos = env.env.world.robot_pos()
         rot_mat = env.env.world.robot_mat()
         theta = np.arctan2(-rot_mat[0, 1], rot_mat[0, 0])
