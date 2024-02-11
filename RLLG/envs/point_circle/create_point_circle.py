@@ -14,14 +14,29 @@ try:
     from safety_gym.envs.engine import Engine
 except ModuleNotFoundError:
     pass
+from typing import Any, Tuple, Dict
 from envs.point_circle.point_circle import PointCircle
 from envs.point_circle.local_expert_policy import SafeScripted
 import os
-from types import MethodType
 
 
-def create_point_cirlce_and_control(orig_cwd='./',
-                                    device="cpu"):
+def create_point_cirlce_and_control(orig_cwd: str ='./',
+                                    device: str ="cpu") -> Tuple[Any, Dict]:
+    """
+    Create the Point Circle environment and its associated controller.
+
+    Parameters:
+    ----------
+    orig_cwd : str, optional
+        Original current working directory (default is './')
+    device : str, optional
+        Device to run the environment on (default is "cpu")
+
+    Returns:
+    ----------
+    Tuple[Any, Dict[str, Any]]
+        Tuple containing the environment and the controller dictionary.
+    """
     config_dict = {
         'robot_base': 'xmls/point.xml',
         'task': 'circle',

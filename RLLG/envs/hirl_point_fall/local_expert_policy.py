@@ -7,16 +7,27 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-
-
-
+from typing import Any, Optional
 import numpy as np
 import torch
 import os
 
-class SACExpert:
 
-    def __init__(self, env, path, device="cpu"):
+class SACExpert:
+    """
+    Soft Actor-Critic (SAC) Expert.
+
+    Parameters:
+    ----------
+    env : Any
+        The environment (usually dm control env, could be gym as well or others).
+    path : str
+        The path to the model.
+    device : str, optional
+        The device to run the expert policy (default is 'cpu').
+    """
+
+    def __init__(self, env: Any, path: str, device: Optional[str] = "cpu") -> None:
 
         from agents.common.model import TanhGaussianPolicy, SamplerPolicy
         # hyper-params
@@ -37,7 +48,24 @@ class SACExpert:
         expert_policy.to(device)
         self.sampling_expert_policy = SamplerPolicy(expert_policy, device=device)
 
-    def get_action(self, observation, init_action=None, env=None):
+    def get_action(self, observation: np.ndarray, init_action: Any = None, env: Any = None) -> np.ndarray:
+        """
+        Get an action from the SAC expert policy.
+
+        Parameters:
+        ----------
+        observation : numpy.ndarray
+            The observation from the environment.
+        init_action : Any, optional
+            Initial action (default is None).
+        env : gym.Env, optional
+            The environment (default is None).
+
+        Returns:
+        ----------
+        numpy.ndarray
+            The clipped expert action.
+        """
         with torch.no_grad():
             expert_action = self.sampling_expert_policy(
                 np.expand_dims(observation, 0), deterministic=True

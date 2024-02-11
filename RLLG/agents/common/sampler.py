@@ -9,21 +9,53 @@
 # LICENSE file in the root directory of this source tree.
 
 
-
+from typing import Any, Optional, Dict
+from agents.common.replay_buffer import ReplayBuffer
 import numpy as np
 
 
 class StepSampler(object):
+    """
+    StepSampler for collecting time-steps from an environment.
+
+    Parameters:
+    ----------
+    env : Any
+        The environment.
+    max_traj_length : int, optional
+        Maximum length of a trajectory (default is 1000).
+    """
 
     def __init__(self,
-                 env,
-                 max_traj_length=1000):
+                 env: Any,
+                 max_traj_length: Optional[int] = 1000):
         self.max_traj_length = max_traj_length
         self._env = env
         self._traj_steps = 0
         self._current_observation = self.env.reset()
 
-    def sample(self, agent, n_steps, deterministic=False, replay_buffer=None):
+    def sample(self, agent: Any, n_steps: int,
+               deterministic: Optional[bool] = False,
+               replay_buffer: Optional[ReplayBuffer] = None) -> Dict:
+        """
+        Collect time-steps from the environment using the provided agent.
+
+        Parameters:
+        ----------
+        agent : Any
+            The agent used to interact with the environment.
+        n_steps : int
+            Number of steps to collect.
+        deterministic : bool, optional
+            Whether to use deterministic actions (default is False).
+        replay_buffer : ReplayBuffer, optional
+            The replay buffer to store the collected samples (default is None).
+
+        Returns:
+        ----------
+        metrics
+            Dictionary containing collected time-steps information.
+        """
         # general observations
         observations = []
         actions = []
@@ -106,18 +138,58 @@ class StepSampler(object):
 
     @property
     def env(self):
+        """
+        Get the environment associated with the StepSampler.
+
+        Returns:
+        ----------
+        gym.Env
+            The environment.
+        """
         return self._env
 
 
 class TrajSampler(object):
+    """
+    StepSampler for collecting trajectories from an environment.
+
+    Parameters:
+    ----------
+    env : Any
+        The environment.
+    max_traj_length : int, optional
+        Maximum length of a trajectory (default is 1000).
+    """
 
     def __init__(self,
-                 env,
-                 max_traj_length=1000):
+                 env: Any,
+                 max_traj_length : Optional[int] = 1000) -> None:
         self.max_traj_length = max_traj_length
         self._env = env
 
-    def sample(self, agent, n_trajs, deterministic=False, replay_buffer=None, replay_buffer_success=None):
+    def sample(self, agent: Any, n_trajs: int, deterministic: Optional[bool] = False,
+               replay_buffer: Optional[ReplayBuffer] = None, replay_buffer_success: Optional[ReplayBuffer] = None):
+        """
+        Sample trajectories using the provided agent.
+
+        Parameters:
+        ----------
+        agent : Any
+            The agent used to sample trajectories.
+        n_trajs : int
+            Number of trajectories to sample.
+        deterministic : bool, optional
+            Whether to use deterministic actions (default is False).
+        replay_buffer : ReplayBuffer, optional
+            If provided, add samples to the replay buffer.
+        replay_buffer_success : ReplayBuffer, optional
+            If provided, add successful samples to this replay buffer.
+
+        Returns:
+        ----------
+        List[Dict]
+            List of dictionaries containing trajectory information.
+        """
 
         trajs = []
 
@@ -190,4 +262,12 @@ class TrajSampler(object):
 
     @property
     def env(self):
+        """
+        Get the environment associated with the StepSampler.
+
+        Returns:
+        ----------
+        gym.Env
+            The environment.
+        """
         return self._env

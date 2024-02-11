@@ -2,6 +2,14 @@
 
 This is the official implementation of the techniques discussed in the paper [Enhancing Reinforcement Learning agents with Local Guides](https://hal.science/hal-04052358/file/Final_Reinforcement_Learning_with_Local_Guides.pdf).
 
+## Create the conda virtual environment
+
+```
+conda create --name rllg python=3.8
+conda activate rllg
+pip install -e .
+```
+
 ## Steps to launch it for a new environment
 
 - In the folder `envs`, create a folder with the name of the environment with 3 files:

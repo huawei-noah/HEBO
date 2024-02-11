@@ -14,18 +14,40 @@ import dmc2gym
 from envs.ball_in_cup.local_expert_policy import SACExpert
 import os
 from types import MethodType
+from typing import Any, Tuple, Dict
 
 
-def create_ball_in_cup_and_control(orig_cwd='./',
-                                   device="cpu"):
+def create_ball_in_cup_and_control(orig_cwd: str = './',
+                                   device: str = "cpu") -> Tuple[Any, Dict]:
+    """
+    Create the ball in cup environment and its control (local expert) dictionary.
+
+    Parameters:
+    ----------
+    orig_cwd : str, optional
+        Original current working directory (default is './')
+    device : str, optional
+        Device (default is 'cpu')
+
+    Returns:
+    ----------
+    Any
+        The ball in cup environment.
+    dict
+        The control dictionary
+    """
     # create env
     env = dmc2gym.make('ball_in_cup', 'catch')
 
     # modify initialization
-    def new_initialize_episode(self, physics):
-        """Sets the state of the environment at the start of each episode.
-        Args:
-          physics: An instance of `Physics`.
+    def new_initialize_episode(self, physics: Any) -> None:
+        """
+        Sets the state of the environment at the start of each episode.
+
+        Parameters:
+        ----------
+        physics: Any
+            An instance of `Physics`
         """
         # Find a collision-free random initial position of the ball.
         penetrating = True

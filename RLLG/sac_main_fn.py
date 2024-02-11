@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 
-
+from typing import Union, Any, Dict, List, Optional, Tuple
 from copy import deepcopy
 import torch
 from omegaconf import DictConfig
@@ -17,27 +17,48 @@ from ray import tune
 import numpy as np
 
 # agents
-from agents.algos.sac import SAC
-from agents.algos.sag import SAG
-from agents.algos.pag import PAG
-from agents.algos.pig import PIG
 from agents.common.model import TanhGaussianPolicy, ParametrizedPerturbationTanhGaussianPolicy, FullyConnectedQFunction, \
     SamplerPolicy, ExpertSamplerPolicy
 from agents.common.replay_buffer import ReplayBuffer, batch_to_torch
 from agents.common.sampler import StepSampler, TrajSampler
 from agents.common.utils import Timer, set_random_seed, prefix_metrics
+from agents.common.creation_utils import create_envs, create_agent
 from envs.creation import get_env_and_control
 from envs.confidence import global_lambda_s
 
-dict_agents = {
-    'SAC': SAC,
-    'SAG': SAG,
-    'PIG': PIG,
-    'PAG': PAG,
-}
 
 
-def save_all_models(qf1, qf2, target_qf1, target_qf2, policy, path):
+def save_all_models(qf1: torch.nn.Module,
+                    qf2: torch.nn.Module,
+                    target_qf1: torch.nn.Module,
+                    target_qf2: torch.nn.Module,
+                    policy: torch.nn.Module,
+                    path: Union[str, os.PathLike]) -> None:
+    """
+    Save the state dictionaries of the different networks the agent uses to a specific path.
+
+    Parameters:
+    ----------
+    x : type
+    Description of parameter `x`.
+    qf1 : torch.nn.Module)
+        Critic 1
+    qf2 : torch.nn.Module
+        Critic 2
+    target_qf1 : torch.nn.Module
+        Target Critic 1
+    target_qf2  :torch.nn.Module)
+        Target Critic 2
+    policy : torch.nn.Module)
+        Policy
+     path : Union[str, os.PathLike]
+        The path where the model state dictionaries will be saved
+
+    Returns:
+    ----------
+    None
+        The function does not return anything.
+    """
     torch.save(qf1.state_dict(), os.path.join(path, 'qf1'))
     torch.save(qf2.state_dict(), os.path.join(path, 'qf2'))
     torch.save(target_qf1.state_dict(), os.path.join(path, 'target_qf1'))
@@ -45,7 +66,36 @@ def save_all_models(qf1, qf2, target_qf1, target_qf2, policy, path):
     torch.save(policy.state_dict(), os.path.join(path, 'policy'))
 
 
-def load_all_models(qf1, qf2, target_qf1, target_qf2, policy, path):
+def load_all_models(qf1: torch.nn.Module,
+                    qf2: torch.nn.Module,
+                    target_qf1: torch.nn.Module,
+                    target_qf2: torch.nn.Module,
+                    policy: torch.nn.Module,
+                    path: Union[str, os.PathLike]) -> None:
+    """
+    Load the state dictionaries of the different networks the agent uses from a specific path.
+
+    Parameters:
+    ----------
+    x : type
+    Description of parameter `x`.
+    qf1 : torch.nn.Module)
+        Critic 1
+    qf2 : torch.nn.Module
+        Critic 2
+    target_qf1 : torch.nn.Module
+        Target Critic 1
+    target_qf2  :torch.nn.Module)
+        Target Critic 2
+    policy : torch.nn.Module)
+        Policy
+     path : Union[str, os.PathLike]
+        The path where the model state dictionaries will be loaded.
+
+    Returns:
+    ----------
+    None : The function does not return anything.
+    """
     qf1.load_state_dict(torch.load(os.path.join(path, 'qf1')))
     qf2.load_state_dict(torch.load(os.path.join(path, 'qf2')))
     target_qf1.load_state_dict(torch.load(os.path.join(path, 'target_qf1')))
@@ -53,7 +103,20 @@ def load_all_models(qf1, qf2, target_qf1, target_qf2, policy, path):
     policy.load_state_dict(torch.load(os.path.join(path, 'policy')))
 
 
-def main(cfg):
+def main(cfg: Dict) -> None:
+    """
+    Main function to train an RL agent using Ray Tune.
+
+    Parameters:
+    ----------
+    cfg : Dict
+        The configuration dictionary
+
+    Returns:
+    ----------
+    None
+        The function runs the training process and reports metrics to Ray Tune.
+    """
     cfg = DictConfig(cfg)
 
     # global hyperparameters
@@ -61,47 +124,30 @@ def main(cfg):
     glob_name = cfg['glob_name']
     num_run = cfg['repeat_run']
 
-    # environment parameters
-    limit_cart = None
-    reward_end = None
+    # create envs and retrieve local controls
+    env_train, local_control_dict_train, env_test, local_control_dict_test = create_envs(cfg)
+
+    # retrieve local experts and their confidence function
+    expert = cfg['expert']
     pos_tol = None
-    speed_tol = None
-    if 'limit_cart' in cfg:
-        limit_cart = cfg['limit_cart']
-    if 'reward_end' in cfg:
-        reward_end = cfg['reward_end']
     if 'pos_tol' in cfg:
         pos_tol = cfg['pos_tol']
-    env_train, local_control_dict_train = get_env_and_control(name=cfg['env'],
-                                                              orig_cwd=cfg['orig_cwd'],
-                                                              device=cfg['device'],
-                                                              limit_cart=limit_cart,
-                                                              reward_end=reward_end,
-                                                              pos_tol=pos_tol
-                                                              )
-    env_test, local_control_dict_test = get_env_and_control(name=cfg['env'],
-                                                            orig_cwd=cfg['orig_cwd'],
-                                                            device=cfg['device'],
-                                                            limit_cart=limit_cart,
-                                                            reward_end=reward_end,
-                                                            pos_tol=pos_tol
-                                                            )
-
-    # experts
-    expert = cfg['expert']
     lambda_s = global_lambda_s(cfg['glob_name'],
                                expert,
                                device=cfg['device'],
-                               pos_tol=pos_tol,
-                               speed_tol=speed_tol
+                               pos_tol=pos_tol
                                )
     local_expert = local_control_dict_train[expert]['local_expert']
 
+    # Create samplers
     train_sampler = StepSampler(env_train, cfg['max_traj_length'])  # .unwrapped
     eval_sampler = TrajSampler(env_test, cfg['max_traj_length'])  # .unwrapped
+
+    # Create replay buffer
     replay_buffer = ReplayBuffer(cfg['replay_buffer_size'])
     set_random_seed(cfg["repeat_run"])
 
+    # Create relevant networks (Critics, Target Critics, Perturbations, Policies)
     policy = TanhGaussianPolicy(
         eval_sampler.env.observation_space.shape[0],
         eval_sampler.env.action_space.shape[0],
@@ -143,47 +189,18 @@ def main(cfg):
         cfg['target_entropy'] = -np.prod(eval_sampler.env.action_space.shape).item()
 
     # Get agent
-    if cfg['agent_name'] == 'SAC':
-        agent = dict_agents[agent_name](cfg,
-                                        policy,
-                                        sampler_policy,
-                                        qf1,
-                                        qf2,
-                                        target_qf1,
-                                        target_qf2)
-    elif cfg['agent_name'] == 'SAG':
-        agent = dict_agents[agent_name](cfg,
-                                        policy,
-                                        sampler_policy,
-                                        qf1,
-                                        qf2,
-                                        target_qf1,
-                                        target_qf2,
-                                        use_local=lambda_s,
-                                        local_expert=local_expert)
-    elif cfg['agent_name'] == 'PIG':
-        agent = dict_agents[agent_name](cfg,
-                                        policy,
-                                        sampler_policy,
-                                        qf1,
-                                        qf2,
-                                        target_qf1,
-                                        target_qf2,
-                                        use_local=lambda_s,
-                                        local_expert=local_expert,
-                                        beta=cfg['beta'])
-    else:
-        agent = dict_agents[agent_name](cfg,
-                                        policy,
-                                        sampler_policy,
-                                        qf1,
-                                        qf2,
-                                        target_qf1,
-                                        target_qf2,
-                                        use_local=lambda_s,
-                                        local_expert=local_expert,
-                                        parametrized_perturbation=parametrized_perturbation,
-                                        sampler_parametrized_perturbation=sampler_parametrized_perturbation)
+    agent = create_agent(cfg,
+                         agent_name,
+                         policy,
+                         sampler_policy,
+                         qf1,
+                         qf2,
+                         target_qf1,
+                         target_qf2,
+                         lambda_s,
+                         local_expert,
+                         parametrized_perturbation,
+                         sampler_parametrized_perturbation)
     agent.torch_to_device(cfg['device'])
 
     # put beta right if PAG without decay parameter
@@ -253,6 +270,7 @@ def main(cfg):
                 if agent_name in ['PIG', 'PAG']:
                     metrics[f'beta'] = agent.beta
 
+        # Report metrics to ray tune
         if epoch == 0 or (epoch + 1) % cfg['eval_period'] == 0 or epoch == cfg['n_epochs'] - 1:
             metrics['epoch'] = epoch
             metrics['rollout_time'] = rollout_timer()
@@ -263,6 +281,7 @@ def main(cfg):
             # Report metrics
             tune.report(**metrics)
 
+        # Save agent policy if required
         if epoch % cfg['num_epoch_save'] == 0 and cfg['agent_name'] == 'SAC' and epoch > 0:
             act_fn = cfg['activation_fn']
             save_path_init = os.path.join(cfg['orig_cwd'],

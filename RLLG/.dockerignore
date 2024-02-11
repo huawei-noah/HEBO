@@ -1,0 +1,9 @@
+__pycache__/
+ray_results
+.idea/
+logs/
+.pytype/
+.vscode/
+# ignore for docker builds
+.git/
+.mypy_cache/
