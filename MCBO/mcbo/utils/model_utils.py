@@ -39,7 +39,7 @@ def add_hallucinations_and_retrain_model(model: ModelBase, x_next: torch.Tensor)
     if y is None:
         y = y_next_mean.to(y)
     else:
-        y = torch.cat((model.fit_y_to_y(fit_y=y), y_next_mean.to(y)))
+        y = torch.cat((y, y_next_mean.to(y)))
 
     # Call the pre fit method
     model.pre_fit_method(x, y)
