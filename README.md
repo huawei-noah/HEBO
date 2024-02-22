@@ -12,7 +12,7 @@ Huawei, Noah's Ark Lab.
     - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
     - [T-LBO](./T-LBO)
     - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
-    - [AIRBO: Efficient Robust Bayesian Optimisation for Arbitrary Uncertain Inputs](./CompBO)
+    - [AIRBO: Efficient Robust Bayesian Optimisation for Arbitrary Uncertain Inputs](./AIRBO)
 - Reinforcement Learning Research
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
@@ -204,11 +204,7 @@ performance improvements across all domains in which Bayesian optimisation is cu
 
 ## [AIRBO](./AIRBO)
 
-:<p float="center">
-  <img src="./AIRBO/figures/thumbnail.png" width="300" />
-  <img src="./AIRBO/figures/modeling_performance.png" width="400" />
-  <img src="./AIRBO/figures/opt_performance.png" width="300" />
-</p>
+<div style="text-align:center"><img src="./AIRBO/figures\opt_performance.png" alt="drawing" width="600"/>
 
 
 
