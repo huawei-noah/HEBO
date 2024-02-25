@@ -30,8 +30,8 @@ from pathlib import Path
 
 import torch
 
-from mcbo.optimizers.manual.casmopolitan import Casmopolitan
 from mcbo.utils.plotting_utils import plot_convergence_curve
+from mcbo.optimizers.bo_builder import BO_ALGOS
 
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
@@ -42,7 +42,8 @@ if __name__ == '__main__':
     task = task_factory('levy', num_dims=1, variable_type='nominal', num_categories=21)
     search_space = task.get_search_space()
 
-    optimizer = Casmopolitan(search_space, n_init=10, tr_fail_tol=4, model_num_epochs=10, device=torch.device('cuda:1'))
+    casmo_builder = BO_ALGOS["Casmopolitan"]
+    optimizer = casmo_builder.build_bo(search_space=search_space, n_init=10, device=torch.device('cuda:0'))
 
     for i in range(20):
         x_next = optimizer.suggest(2)

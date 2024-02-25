@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import copy
-from typing import Optional, Callable, Dict, List
+from typing import Optional, Callable, Dict, List, Union
 
 import numpy as np
 import torch
@@ -41,6 +41,9 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  n_iter: int = 100,
                  n_restarts: int = 3,
                  max_n_perturb_num: int = 20,
@@ -52,7 +55,10 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
         super(InterleavedSearchAcqOptimizer, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
 
         assert search_space.num_cont + search_space.num_disc + search_space.num_nominal == search_space.num_dims, \
@@ -99,7 +105,9 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
 
         # if TR manager is None: we set TR to be the entire space
         if tr_manager is None:
-            tr_manager = ProxyTrManager(search_space=self.search_space, dtype=self.search_space.dtype)
+            tr_manager = ProxyTrManager(search_space=self.search_space, dtype=self.search_space.dtype,
+                                        obj_dims=self.obj_dims, out_constr_dims=self.out_constr_dims,
+                                        out_upper_constr_vals=self.out_upper_constr_vals)
             if self.search_space.num_numeric > 0:
                 tr_manager.register_radius('numeric', 0, 1, 1)
             if self.search_space.num_nominal > 1:
@@ -205,7 +213,7 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
                     optimizer.zero_grad()
                     x_cand = self._reconstruct_x(x_numeric, x_nominal)
                     x_cand_copy = x_cand.clone()
-                    acq_x = acq_func(x_cand.to(device, dtype), model, **acq_evaluate_kwargs)
+                    acq_x = acq_func(x=x_cand.to(device, dtype), model=model, **acq_evaluate_kwargs)
 
                     try:
                         acq_x.backward()
@@ -229,8 +237,10 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
 
                     if self.search_space.num_numeric == 0:
                         with torch.no_grad():
-                            acq_x = acq_func(self._reconstruct_x(x_numeric, x_nominal).to(device, dtype), model,
-                                             **acq_evaluate_kwargs)
+                            acq_x = acq_func(
+                                x=self._reconstruct_x(x_numeric, x_nominal).to(device, dtype), model=model,
+                                **acq_evaluate_kwargs
+                            )
 
                     is_valid = False
                     tol_ = self.nominal_tol
@@ -252,7 +262,7 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
 
                     with torch.no_grad():
                         x_cand = self._reconstruct_x(x_numeric, neighbour_nominal)
-                        acq_neighbour = acq_func(x_cand.to(device, dtype), model, **acq_evaluate_kwargs)
+                        acq_neighbour = acq_func(x=x_cand.to(device, dtype), model=model, **acq_evaluate_kwargs)
 
                     if acq_neighbour < acq_x:
                         x_nominal = neighbour_nominal.clone()
@@ -260,7 +270,7 @@ class InterleavedSearchAcqOptimizer(AcqOptimizerBase):
 
             x_ = self._reconstruct_x(x_numeric, x_nominal)
             with torch.no_grad():
-                acq_x = acq_func(x_.to(device, dtype), model, **acq_evaluate_kwargs)
+                acq_x = acq_func(x=x_.to(device, dtype), model=model, **acq_evaluate_kwargs)
 
             x.append(x_)
             acq.append(acq_x.item())

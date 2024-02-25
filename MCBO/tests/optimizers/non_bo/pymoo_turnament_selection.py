@@ -14,7 +14,7 @@ def binary_tournament(pop, P, _, **kwargs):
 
     # the result this function returns
     import numpy as np
-    S = np.full(n_tournaments, -1, dtype=np.int)
+    S = np.full(n_tournaments, -1, dtype=int)
 
     # now do all the tournaments
     for i in range(n_tournaments):

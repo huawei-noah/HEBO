@@ -6,7 +6,7 @@
 # the terms of the MIT license.
 
 import copy
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Union
 
 import numpy as np
 import torch
@@ -35,6 +35,9 @@ class RandomSearchAcqOptimizer(AcqOptimizerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  num_samples: int = 300,
                  dtype: torch.dtype = torch.float64,
                  ):
@@ -55,7 +58,10 @@ class RandomSearchAcqOptimizer(AcqOptimizerBase):
         super(RandomSearchAcqOptimizer, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            out_constr_dims=out_constr_dims
         )
 
     def optimize(self, x: torch.Tensor, n_suggestions: int, x_observed: torch.Tensor, model: ModelBase,
@@ -107,6 +113,9 @@ class RandomSearchAcqOptimizer(AcqOptimizerBase):
         rs = RandomSearch(
             search_space=self.search_space,
             input_constraints=self.input_constraints,
+            obj_dims=self.obj_dims,
+            out_constr_dims=self.out_constr_dims,
+            out_upper_constr_vals=self.out_upper_constr_vals,
             fixed_tr_manager=tr_manager,
             store_observations=True,
             dtype=self.dtype

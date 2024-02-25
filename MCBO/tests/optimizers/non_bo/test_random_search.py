@@ -1,15 +1,12 @@
 import os
-from pathlib import Path
-
 import sys
+from pathlib import Path
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-import torch
-
 from mcbo.task_factory import task_factory
-from mcbo.optimizers.random_search import RandomSearch
+from mcbo.optimizers import RandomSearch
 from mcbo.utils.general_utils import set_random_seed
 from mcbo.utils.plotting_utils import plot_convergence_curve
 

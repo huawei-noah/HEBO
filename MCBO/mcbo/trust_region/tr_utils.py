@@ -7,7 +7,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 
 import numpy as np
 import torch
@@ -27,9 +27,26 @@ def get_num_tr_bounds(
         is_numeric: bool,
         is_mixed: bool,
         kernel: Optional[MixtureKernel] = None,
-):
+) -> Tuple[torch.Tensor, torch.Tensor]:
     assert 'numeric' in tr_manager.radii, "numeric not in radii"
     # This function requires the mixture kernel or the RBF or Matérn kernel to use lengthscales as weights
+    if is_numeric:
+        weights = get_numdim_weights(
+            num_dim=x_num.shape[-1], is_numeric=is_numeric, is_mixed=is_mixed, kernel=kernel
+        )
+
+        # continuous variables
+        lb = torch.clip(x_num - weights.to(x_num) * tr_manager.radii['numeric'] / 2.0, 0.0, 1.0)
+        ub = torch.clip(x_num + weights.to(x_num) * tr_manager.radii['numeric'] / 2.0, 0.0, 1.0)
+
+    else:
+        lb = torch.zeros_like(x_num)
+        ub = torch.ones_like(x_num)
+
+    return lb, ub
+
+
+def get_numdim_weights(num_dim: int, is_numeric: bool, is_mixed: bool, kernel: Optional[MixtureKernel]) -> torch.Tensor:
     if kernel is not None:
         if isinstance(kernel, ScaleKernel):
             kernel = kernel.base_kernel
@@ -72,17 +89,9 @@ def get_num_tr_bounds(
             weights = weights / torch.pow(torch.prod(weights), 1 / len(weights))
 
         else:
-            weights = torch.tensor(1.)
+            weights = torch.ones(num_dim)
 
-            # continuous variables
-        lb = torch.clip(x_num - weights.to(x_num) * tr_manager.radii['numeric'] / 2.0, 0.0, 1.0)
-        ub = torch.clip(x_num + weights.to(x_num) * tr_manager.radii['numeric'] / 2.0, 0.0, 1.0)
-
-    else:
-        lb = torch.zeros_like(x_num)
-        ub = torch.ones_like(x_num)
-
-    return lb, ub
+    return weights
 
 
 def sample_numeric_and_nominal_within_tr(
@@ -97,7 +106,6 @@ def sample_numeric_and_nominal_within_tr(
         model: Optional[ModelBase] = None,
         return_numeric_bounds: bool = False,
 ):
-
     is_numeric = search_space.num_numeric > 0
     is_mixed = is_numeric and search_space.num_nominal > 0
     x_centre = x_centre.clone() * torch.ones((n_points, search_space.num_dims)).to(x_centre)

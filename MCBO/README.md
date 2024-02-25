@@ -131,7 +131,7 @@ if __name__ == '__main__':
         x = optimizer.suggest(1)
         y = task(x)
         optimizer.observe(x, y)
-        print(f'Iteration {i + 1:3d}/{100:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y:.3f}')
+        print(f'Iteration {i + 1:3d}/{100:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y.item():.3f}')
 
     # Access history of suggested points and black-box values
     all_x = search_space.inverse_transform(optimizer.data_buffer.x)
@@ -186,6 +186,7 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 
 ## Library Roadmap
 
+#### Features
 - [x] Allows restart from checkpoints
 - [x] Add random tree-based additive GP kernel as surrogate model
 - [x] Add message-passing acquisition function optimizer
@@ -198,6 +199,12 @@ in [general_plot_utils.py](./mcbo/utils/general_plot_utils.py).
 - [ ] Handle black-box constraints.
 - [ ] Handle multi-fidelity MCBO.
 - [ ] Implement probabilistic reparameterization for acquisition function optimization
+- [ ] Support optimizing in a table of points instead of in the full search space.
+
+#### Debug
+- [] improve the way we cope with hallucinatory points (to prevent sampled values from exploding)
+
+
 
 We invite you to contribute to the development of the MCBO library notably by proposing implementation of new modules,
 providing new tasks or spotting issues.

@@ -62,7 +62,13 @@ def test_rs_acq_opt() -> int:
     model = ExactGPModel(search_space, 1, kernel, dtype=dtype, device=device)
     model.fit(x_train, y_train)
 
-    acq_opt = RandomSearchAcqOptimizer(search_space=search_space, input_constraints=input_constraints)
+    acq_opt = RandomSearchAcqOptimizer(
+        search_space=search_space,
+        input_constraints=input_constraints,
+        obj_dims=[0],
+        out_upper_constr_vals=None,
+        out_constr_dims=None
+    )
 
     x = search_space.transform(search_space.sample(1))
     acq_func = acq_factory("lcb")

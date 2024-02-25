@@ -1,6 +1,6 @@
 import copy
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List, Callable
+from typing import Optional, Dict, Any, List, Callable, Union
 
 import math
 import numpy as np
@@ -122,7 +122,6 @@ DEFAULT_ACQ_OPTIM_RS_KWARGS = dict(
 
 # ------ BoBuilder -------------------
 
-
 @dataclass
 class BoBuilder:
     model_id: str = "gp_to"
@@ -238,10 +237,22 @@ class BoBuilder:
                 device=model_kwargs["device"],
                 **lin_reg_kwargs
             )
-        elif model_id == "gp_rd":
+        elif model_id in ["gp_rd", "gp_rdto", "gp_rdhed"]:
             gp_kwargs = DEFAULT_MODEL_EXACT_GP_KWARGS.copy()
+            gp_kwargs["max_batch_size"] = 200
+            gp_kwargs.update(model_kwargs.get("gp_kwargs", {}))
             kernel_kwargs = DEFAULT_MODEL_EXACT_GP_KERNEL_KWARGS.copy()
-            kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
+            if model_id == "gp_rd":
+                kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "overlap")
+            elif model_id == "gp_rdto":
+                kernel_kwargs["nominal_kernel_name"] = model_kwargs.get("nominal_kernel_name", "transformed_overlap")
+            elif model_id == "gp_rdhed":
+                gp_kwargs["hed"] = True
+                kernel_kwargs["nominal_kernel_name"] = None
+
+            if model_id != "gp_rdhed":
+                assert not gp_kwargs.get("hed", False), gp_kwargs
+
             kernel_kwargs["nominal_kernel_use_ard"] = model_kwargs.get("nominal_kernel_use_ard", True)
             kernel_kwargs.update(model_kwargs.get("default_kernel_kwargs", {}))
 
@@ -263,8 +274,11 @@ class BoBuilder:
         return model
 
     @staticmethod
-    def get_acq_optim(search_space: SearchSpace, acq_optim_name: str, device,
-                      input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
+    def get_acq_optim(search_space: SearchSpace, acq_optim_name: str, device: torch.device,
+                      input_constraints: Optional[List[Callable[[Dict], bool]]],
+                      obj_dims: Union[List[int], np.ndarray, None],
+                      out_constr_dims: Union[List[int], np.ndarray, None],
+                      out_upper_constr_vals: Optional[torch.Tensor],
                       **acq_optim_kwargs) -> AcqOptimizerBase:
         if acq_optim_name == "is":
             kwargs = DEFAULT_ACQ_OPTIM_IS_KWARGS
@@ -272,6 +286,9 @@ class BoBuilder:
             acq_optim = InterleavedSearchAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         elif acq_optim_name == "ls":
@@ -283,6 +300,9 @@ class BoBuilder:
             acq_optim = LsAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 adjacency_mat_list=adjacency_mat_list,
                 n_vertices=n_vertices,
                 **kwargs
@@ -293,6 +313,9 @@ class BoBuilder:
             acq_optim = SimulatedAnnealingAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         elif acq_optim_name == "ga":
@@ -301,6 +324,9 @@ class BoBuilder:
             acq_optim = GeneticAlgoAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         elif acq_optim_name == "mab":
@@ -309,6 +335,9 @@ class BoBuilder:
             acq_optim = MixedMabAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         elif acq_optim_name == "mp":
@@ -317,6 +346,9 @@ class BoBuilder:
             acq_optim = MessagePassingOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         elif acq_optim_name == "rs":
@@ -325,6 +357,9 @@ class BoBuilder:
             acq_optim = RandomSearchAcqOptimizer(
                 search_space=search_space,
                 input_constraints=input_constraints,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 **kwargs
             )
         else:
@@ -332,8 +367,17 @@ class BoBuilder:
         return acq_optim
 
     @staticmethod
-    def get_tr_manager(tr_id: Optional[str], search_space: SearchSpace, model: ModelBase, n_init: int,
-                       **tr_kwargs) -> Optional[TrManagerBase]:
+    def get_tr_manager(
+            tr_id: Optional[str],
+            search_space: SearchSpace,
+            model: ModelBase,
+            constr_models: List[ModelBase],
+            obj_dims: Union[List[int], np.ndarray],
+            out_constr_dims: Union[List[int], np.ndarray],
+            out_upper_constr_vals: Optional[torch.Tensor],
+            n_init: int,
+            **tr_kwargs
+    ) -> Optional[TrManagerBase]:
         if tr_id is None:
             return
         if tr_id == "basic":
@@ -416,6 +460,10 @@ class BoBuilder:
             tr_manager = CasmopolitanTrManager(
                 search_space=search_space,
                 model=tr_model,
+                constr_models=constr_models,
+                obj_dims=obj_dims,
+                out_constr_dims=out_constr_dims,
+                out_upper_constr_vals=out_upper_constr_vals,
                 acq_func=tr_acq_func,
                 n_init=n_init,
                 min_num_radius=tr_min_num_radius,
@@ -439,7 +487,11 @@ class BoBuilder:
 
     def build_bo(self, search_space: SearchSpace, n_init: int,
                  input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
-                 dtype: torch.dtype = torch.float64, device: torch.device = torch.device('cpu')
+                 dtype: torch.dtype = torch.float64,
+                 device: torch.device = torch.device('cpu'),
+                 obj_dims: Union[List[int], np.ndarray, None] = None,
+                 out_constr_dims: Union[List[int], np.ndarray, None] = None,
+                 out_upper_constr_vals: Optional[np.ndarray] = None,
                  ) -> BoBase:
         """
 
@@ -447,6 +499,9 @@ class BoBuilder:
             search_space: search space
             n_init: number of initial points before building the surrogate
             input_constraints: constraints on the values of input variables
+            obj_dims: dimensions in ys corresponding to objective values to minimize
+            out_constr_dims: dimensions in ys corresponding to inequality constraints
+            out_upper_constr_vals: values of upper bounds for inequality constraints
             dtype: torch type
             device: torch device
 
@@ -458,11 +513,37 @@ class BoBuilder:
         self.acq_opt_kwargs["dtype"] = dtype
 
         model = self.get_model(search_space=search_space, model_id=self.model_id, **self.model_kwargs)
+        if out_constr_dims is None:
+            out_constr_dims = []
+            out_upper_constr_vals = []
+        if obj_dims is None:
+            obj_dims = [0]
+        constr_models = [  # TODO: allow to have different models for the constraints
+            copy.deepcopy(model) for _ in range(len(out_constr_dims))
+        ]
+
         acq_func = acq_factory(self.acq_func_id, **self.acq_func_kwargs)
-        acq_optim = self.get_acq_optim(search_space=search_space, acq_optim_name=self.acq_opt_id, device=device,
-                                       input_constraints=input_constraints, **self.acq_opt_kwargs)
-        tr_manager = self.get_tr_manager(tr_id=self.tr_id, search_space=search_space, model=model,
-                                         n_init=n_init, **self.tr_kwargs)
+        acq_optim = self.get_acq_optim(
+            search_space=search_space,
+            acq_optim_name=self.acq_opt_id,
+            device=device,
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            **self.acq_opt_kwargs
+        )
+        tr_manager = self.get_tr_manager(
+            tr_id=self.tr_id,
+            search_space=search_space,
+            model=model,
+            constr_models=constr_models,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            n_init=n_init,
+            **self.tr_kwargs
+        )
 
         return BoBase(
             search_space=search_space,
@@ -475,6 +556,9 @@ class BoBuilder:
             init_sampling_strategy=self.init_sampling_strategy,
             dtype=dtype,
             device=device,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
         )
 
     def get_short_opt_name(self) -> str:

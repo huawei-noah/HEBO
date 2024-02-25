@@ -10,7 +10,7 @@
 import copy
 import os
 import warnings
-from typing import List, Optional, Callable, Dict
+from typing import List, Optional, Callable, Dict, Union
 
 import numpy as np
 import torch
@@ -42,6 +42,9 @@ class LsAcqOptimizer(AcqOptimizerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  adjacency_mat_list: List[torch.FloatTensor],
                  n_vertices: np.array,
                  n_random_vertices: int = 20000,
@@ -58,7 +61,10 @@ class LsAcqOptimizer(AcqOptimizerBase):
         super(LsAcqOptimizer, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
 
         self.is_numeric = True if search_space.num_cont > 0 or search_space.num_disc > 0 else False

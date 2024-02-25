@@ -18,55 +18,28 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import sys
-from pathlib import Path
-
-ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
-sys.path[0] = ROOT_PROJECT
-
-from mcbo.optimizers.manual import BOiLS
-
-import torch
-
 if __name__ == '__main__':
-    from mcbo.task_factory import task_factory
+    import os
+    from pathlib import Path
+    from mcbo.optimizers.bo_builder import BoBuilder
+    from mcbo.utils.plotting_utils import plot_convergence_curve
+    from mcbo.utils.experiment_utils import get_task_from_id
 
-    n_init = 5
-    operator_space_id = "basic"
-    seq_operators_pattern_id = "basic"
-
-    # task = task_factory(
-    #     task_name='aig_optimization',
-    #     dtype=torch.float64,
-    #     designs_group_id="i2c",
-    #     operator_space_id=operator_space_id,
-    #     seq_operators_pattern_id=seq_operators_pattern_id,
-    #     n_parallel=1
-    # )
-
-    task = task_factory('levy', num_dims=5, variable_type='nominal', num_categories=3)
+    task = get_task_from_id('ackley-53')
+    # task = get_task_from_id('xgboost_opt')
     search_space = task.get_search_space()
 
-    optimizer = BOiLS(
-        search_space=search_space,
-        n_init=n_init,
-        device=torch.device('cpu'),
-        tr_succ_tol=2,
-        tr_fail_tol=20,
-        use_tr=True,
-        model_max_training_dataset_size=500,
-        tr_min_num_radius=0.5 ** 5,
-        tr_max_num_radius=1,
-        ls_acq_name='ei',
-        tr_restart_acq_name='lcb'
+    optimizer = BoBuilder(model_id="gp_rdhed", acq_opt_id="mab", acq_func_id="ei", tr_id="basic").build_bo(
+        search_space=search_space, n_init=20, input_constraints=None
     )
 
-    for i in range(40):
+    print(task.name)
+    print(optimizer.name)
+    for i in range(50):
         x_next = optimizer.suggest(1)
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
-        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {optimizer.best_y:.3f}')
-    #
-    # plot_convergence_curve(optimizer, task, os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
-    #                                                      f'{optimizer.name}_test.png'), plot_per_iter=True)
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {optimizer.best_y[0]:.3f}')
+
+    plot_convergence_curve(optimizer, task, os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
+                                                         f'{optimizer.name}_test.png'), plot_per_iter=True)

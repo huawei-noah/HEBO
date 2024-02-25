@@ -168,7 +168,7 @@ Doing this, you can instantiate the new acquisition function simply from its str
 ```python
 from mcbo.acq_funcs.factory import acq_factory
 
-acq_func = acq_factory('new_acq_id', **kwargs)
+acq_func = acq_factory(acq_func_id='new_acq_id', **kwargs)
 ```
 
 ###### 3. Add a test script
@@ -349,9 +349,10 @@ function `estimate_runtime` from [runtime_estimator.py](../analysis/runtime_esti
 
 ```python
 import torch
-from mcbo.task_factory import task_factory
-from mcbo.optimizers.bo_builder import BO_ALGOS
+
 from analysis.runtime_estimator import estimate_runtime
+from mcbo.optimizers.bo_builder import BO_ALGOS
+from mcbo.task_factory import task_factory
 
 algo_name = "Casmopolitan"
 total_budget = 200
@@ -361,7 +362,8 @@ task = task_factory('ackley', num_dims=[10, 5, 5], variable_type=['nominal', 'in
 bo_builder = BO_ALGOS[algo_name]
 optimizer = bo_builder.build_bo(search_space=task.get_search_space(), n_init=20, device=torch.device("cuda"))
 
-estimate_runtime(optimizer, task=task, total_budget=total_budget, interpolation_num_samples=interpolation_num_samples)
+estimate_runtime(optimizer=optimizer, task=task, total_budget=total_budget,
+                 interpolation_num_samples=interpolation_num_samples)
 ```
 
 Running it for standard optimizers we compared the estimated runtime with the actual runtime (

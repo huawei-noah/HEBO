@@ -39,7 +39,7 @@ def test_runtime_estimator(algo_name: str) -> int:
         x = optimizer.suggest(1)
         y = task(x)
         optimizer.observe(x, y)
-    print(f'Iteration {i + 1:3d}/{total_budget:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y:.3f}')
+        print(f'Iteration {i + 1:3d}/{total_budget:3d} - f(x) = {y[0, 0]:.3f} - f(x*) = {optimizer.best_y:.3f}')
 
     actual_time_taken = int(np.round(time.time() - time_ref))
 

@@ -6,7 +6,7 @@
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
-from typing import Optional, List, Callable, Dict, Any
+from typing import Optional, List, Callable, Dict, Any, Union
 
 import numpy as np
 import pandas as pd
@@ -47,6 +47,9 @@ class SimulatedAnnealing(OptimizerNotBO):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  fixed_tr_manager: Optional[TrManagerBase] = None,
                  init_temp: float = 100.,
                  tolerance: int = 1000,
@@ -68,8 +71,14 @@ class SimulatedAnnealing(OptimizerNotBO):
         super(SimulatedAnnealing, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
+
+        assert len(self.out_constr_dims) == 0, "Do not support multi-obj / constraints yet"
+        assert len(self.obj_dims) == 1, "Do not support multi-obj / constraints yet"
 
         self.numeric_dims = self.search_space.cont_dims + self.search_space.disc_dims
         self.discrete_choices = get_discrete_choices(search_space)

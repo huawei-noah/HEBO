@@ -1,11 +1,12 @@
 # Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the MIT license.
-
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
+import time
 from abc import ABC
 from abc import abstractmethod
 from typing import Optional, Callable, List, Dict, Union
@@ -19,9 +20,14 @@ from mcbo.utils.constraints_utils import input_eval_from_origx, input_eval_from_
     sample_input_valid_points
 from mcbo.utils.data_buffer import DataBuffer
 from mcbo.utils.general_utils import filter_nans
+from mcbo.utils.multi_obj_constr_utils import get_best_y_ind, get_valid_filter
 
 
 class OptimizerBase(ABC):
+    """ Base class for multi-objective and multi-constrained optimizers
+            min(f_1(x), ..., f_n(x))
+            s.t. c_1(x) <= lambda_1, ... c_m(x) <= lambda_m
+    """
 
     @staticmethod
     def get_linestyle() -> str:
@@ -58,6 +64,9 @@ class OptimizerBase(ABC):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  dtype: torch.dtype = torch.float64,
                  ):
         """
@@ -73,10 +82,48 @@ class OptimizerBase(ABC):
         self.search_space = search_space
         self.input_constraints = input_constraints
 
+        # Constraints-related management
+        if obj_dims is None:
+            obj_dims = np.array([0])
+        elif isinstance(obj_dims, list):
+            obj_dims = np.array(obj_dims)
+        self.obj_dims = obj_dims
+        assert len(self.obj_dims) == 1, "Cannot support multi-objective for now"
+
+        if out_constr_dims is not None:
+            if isinstance(out_constr_dims, list):
+                out_constr_dims = np.array(out_constr_dims)
+            assert out_upper_constr_vals is not None
+        else:
+            out_constr_dims = np.zeros(0, dtype=int)
+        self.out_constr_dims = out_constr_dims
+        if self.n_constrs == 0:
+            out_upper_constr_vals = torch.zeros(0)
+        elif out_upper_constr_vals is not None and not isinstance(out_upper_constr_vals, torch.Tensor):
+            out_upper_constr_vals = torch.tensor(out_upper_constr_vals).to(dtype=dtype)
+        self.out_upper_constr_vals = out_upper_constr_vals
+
+        self.data_buffer = DataBuffer(
+            num_dims=self.search_space.num_dims,
+            dtype=self.dtype,
+            obj_dims=self.obj_dims,
+            out_constr_dims=self.out_constr_dims,
+            out_upper_constr_vals=self.out_upper_constr_vals
+        )
+
         self._best_x = None
         self.best_y = None
 
-        self.data_buffer = DataBuffer(num_dims=self.search_space.num_dims, num_out=1, dtype=self.dtype)
+        self.last_suggest_time = None
+        self.last_observe_time = None
+
+    @property
+    def n_objs(self) -> int:
+        return len(self.obj_dims)
+
+    @property
+    def n_constrs(self) -> int:
+        return len(self.out_constr_dims)
 
     @abstractmethod
     def method_suggest(self, n_suggestions: int = 1) -> pd.DataFrame:
@@ -106,9 +153,14 @@ class OptimizerBase(ABC):
         Returns:
             dataframe of suggested points.
         """
+        time_ref = time.time()
+
         suggestions = self.method_suggest(n_suggestions)
         # Convert the dtype of each column to proper dtype
         sample = self.search_space.sample(1)
+
+        self.last_suggest_time = time.time() - time_ref
+
         return suggestions.astype({column_name: sample.dtypes[column_name] for column_name in sample})
 
     @abstractmethod
@@ -132,12 +184,15 @@ class OptimizerBase(ABC):
             x: points in search space
             y: 2-d array of black-box values
         """
+        time_ref = time.time()
+
         assert len(x) == len(y)
         x, y = filter_nans(x=x, y=y)
 
-        if len(x) == 0:
-            return
-        return self.method_observe(x=x, y=y)
+        if len(x) > 0:
+            self.method_observe(x=x, y=y)
+
+        self.last_observe_time = time.time() - time_ref
 
     @abstractmethod
     def restart(self):
@@ -170,9 +225,10 @@ class OptimizerBase(ABC):
         pass
 
     @property
-    def best_x(self):
+    def best_x(self) -> Optional[pd.DataFrame]:
         if self.best_y is not None:
             return self.search_space.inverse_transform(self._best_x)
+        return None
 
     def _restart(self):
         self._best_x = None
@@ -188,7 +244,7 @@ class OptimizerBase(ABC):
             Array of `number of input points \times number of input constraint` booleans
                 specifying at index `(i, j)` if input point `i` is valid regarding constraint function `j`        """
         return input_eval_from_transfx(transf_x=transf_x, search_space=self.search_space,
-                                               input_constraints=self.input_constraints)
+                                       input_constraints=self.input_constraints)
 
     def input_eval_from_origx(self, x: Union[pd.DataFrame, Dict]) -> np.ndarray:
         """
@@ -204,7 +260,7 @@ class OptimizerBase(ABC):
         return input_eval_from_origx(x=x, input_constraints=self.input_constraints)
 
     def sample_input_valid_points(self, n_points: int, point_sampler: Callable[[int], pd.DataFrame],
-                                          max_trials: int = 100, allow_repeat: bool = True) -> pd.DataFrame:
+                                  max_trials: int = 100, allow_repeat: bool = True) -> pd.DataFrame:
         """
         Sample valid points from the original space that fulfill the input constraints
 
@@ -225,8 +281,80 @@ class OptimizerBase(ABC):
             max_trials=max_trials
         )
 
+    def get_valid_filter(self, y: torch.Tensor) -> torch.Tensor:
+        """ Get boolean tensor specifying whether each entry of `y` fulfill the constraints and is not NaN"""
+        assert y.ndim == 2, y.shape
+        constr_valid_filter = get_valid_filter(
+            y=y, out_constr_dims=self.out_constr_dims, out_upper_constr_vals=self.out_upper_constr_vals
+        )
+        filtr_nan = torch.isnan(y).sum(-1) == 0
+        return filtr_nan * constr_valid_filter
 
-class OptimizerNotBO(OptimizerBase):
+    def get_best_y_ind(self, y: torch.Tensor) -> int:
+        """ Get index of best entry in y, taking into account objective and constraints
+            If some entries fulfill the constraints, return the best among them
+            Otherwise, return the index of the entry that is the closest to fulfillment
+        """
+        assert y.ndim == 2, y.shape
+        best_ind = get_best_y_ind(y=y, obj_dims=self.obj_dims, out_constr_dims=self.out_constr_dims,
+                                  out_upper_constr_vals=self.out_upper_constr_vals)
+        return best_ind
+
+    def get_point_penalty(self, y: torch.Tensor) -> float:
+        assert y.ndim == 1, y.shape
+        penalties = y[self.out_constr_dims] - self.out_upper_constr_vals.to(y)
+        penalty = penalties.max().item()
+        return penalty
+
+    def point_is_valid(self, y: torch.Tensor) -> bool:
+        assert y.ndim == 1, y.shape
+        return self.get_point_penalty(y) <= 0
+
+    @property
+    def num_outputs(self) -> int:
+        return self.n_constrs + self.n_objs
+
+    def is_better_than_current(self, current_y: torch.Tensor, new_y: torch.Tensor) -> bool:
+        """ Check whether new_y is better than current_y  """
+        assert len(self.obj_dims) == 1
+        assert new_y.shape == current_y.shape == torch.Size([self.n_objs + self.n_constrs]), (
+            new_y.shape, current_y.shape, self.n_objs, self.n_constrs)
+        if torch.any(torch.isnan(new_y)):
+            return False
+        if torch.any(torch.isnan(current_y)):
+            return True
+        if current_y is None:
+            return True
+        if len(self.out_constr_dims) == 0:
+            return new_y[self.obj_dims] < current_y[self.obj_dims]
+
+        # Get penalties of current best and new point
+        current_penalty = torch.max(
+            current_y[self.out_constr_dims] - self.out_upper_constr_vals.to(current_y)).item()
+        new_penalty = torch.max(
+            new_y[self.out_constr_dims] - self.out_upper_constr_vals.to(new_y)).item()
+        if current_penalty <= 0:  # current is valid: need the new to be valid and better than current best
+            return new_penalty <= 0 and new_y[self.obj_dims] < current_y[self.obj_dims]
+
+        # Current best is not valid: need the new to be more valid or equally valid and better than current best
+        if new_penalty < current_penalty:
+            return True
+        return new_penalty == current_penalty and new_y[self.obj_dims] < current_y[self.obj_dims]
+
+    def fill_field_after_pkl_load(self, search_space: SearchSpace, **kwargs):
+        """ As some elements are not pickled, need to reinstantiate them """
+        self.search_space = search_space
+
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        to_remove = []  # fields to remove when pickling this object
+        for attr in to_remove:
+            if attr in d:
+                del d[attr]
+        return d
+
+
+class OptimizerNotBO(OptimizerBase, ABC):
 
     @property
     def model_name(self) -> str:
@@ -239,4 +367,3 @@ class OptimizerNotBO(OptimizerBase):
     @property
     def acq_func_name(self) -> str:
         return "no-acq-func"
-

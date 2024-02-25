@@ -21,64 +21,28 @@
 import os
 import sys
 from pathlib import Path
-from typing import Callable, Dict
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-import numpy as np
-import torch
-
-from mcbo.task_factory import task_factory
-from mcbo.optimizers.manual.cocabo import CoCaBO
-from mcbo.utils.plotting_utils import plot_convergence_curve
-
-
-def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
-    def f(x: Dict) -> bool:
-        return x[f"var_{ind}"] < 0
-
-    return f
-
-
 if __name__ == '__main__':
-    n = 100
+    import os
+    from pathlib import Path
+    from mcbo.optimizers.bo_builder import BoBuilder
+    from mcbo.utils.plotting_utils import plot_convergence_curve
+    from mcbo.task_factory import task_factory
 
-    task_name_suffix = "2-nom-3 2-int 2-nom-3 2-int 2-nom-4"
-    task = task_factory('ackley', num_dims=[2, 2, 2, 2, 2],
-                                      variable_type=['nominal', 'int', 'nominal', 'int', 'nominal'],
-                                      num_categories=[5, None, 5, None, 5])
+    task = task_factory(task_name='styblinski_tang', num_dims=6, variable_type='num')
     search_space = task.get_search_space()
 
-    input_constraints = [input_constraint_maker(i) for i in range(1, 4)]
+    optimizer = BoBuilder(model_id="gp_rd", acq_opt_id="mp", acq_func_id="addlcb", tr_id=None).build_bo(
+        search_space=search_space, n_init=10, input_constraints=None)
 
-    task_name = "ackley"
-    num_dims = [50, 3]
-    variable_type = ['nominal', 'num']
-    num_categories = [2, None]
-    task_name_suffix = " 50-nom-2 3-num"
-    lb = np.zeros(53)
-    lb[-3:] = -1
-    task_kwargs = dict(num_dims=num_dims, variable_type=variable_type, num_categories=num_categories,
-                       task_name_suffix=task_name_suffix, lb=lb, ub=1)
-    input_constraints = None
-    task = task_factory(task_name=task_name, **task_kwargs)
-    search_space = task.get_search_space()
-
-    optimizer = CoCaBO(
-        search_space=search_space,
-        model_cat_kernel_name='hed',
-        input_constraints=input_constraints,
-        n_init=20,
-        device=torch.device('cpu'),
-        use_tr=True
-    )
-
-    for i in range(n):
+    for i in range(50):
         x_next = optimizer.suggest(1)
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
-        print(f"Iteration {i + 1:03d}/{n} Current value: {y_next[0, 0]:.2f} - best value: {optimizer.best_y:.2f}")
+        print(f'Iteration {i + 1:>4d} - f(x) - {y_next[0][0]:.3f} - f(x*) - {optimizer.best_y[0]:.3f}')
 
     plot_convergence_curve(optimizer, task, os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
                                                          f'{optimizer.name}_test.png'), plot_per_iter=True)

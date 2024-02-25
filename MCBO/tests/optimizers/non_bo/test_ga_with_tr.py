@@ -26,11 +26,6 @@ from typing import Callable, Dict
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.task_factory import task_factory
-from mcbo.optimizers import PymooGeneticAlgorithm, GeneticAlgorithm
-from mcbo.trust_region.random_restart_tr_manager import RandomRestartTrManager
-from mcbo.utils.distance_metrics import hamming_distance
-
 
 def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
     def f(x: Dict) -> bool:
@@ -40,20 +35,30 @@ def input_constraint_maker(ind: int) -> Callable[[Dict], bool]:
 
 
 if __name__ == '__main__':
+    from mcbo.task_factory import task_factory
+    from mcbo.optimizers import PymooGeneticAlgorithm
+    from mcbo.trust_region.random_restart_tr_manager import RandomRestartTrManager
+    from mcbo.utils.distance_metrics import hamming_distance
+
     task = task_factory('ackley', num_dims=[10, 2], variable_type=['nominal', 'num'],
-                                      num_categories=[10, None])
+                        num_categories=[10, None])
     search_space = task.get_search_space()
 
-    tr_manager = RandomRestartTrManager(search_space,
-                                        min_num_radius=2 ** -5,
-                                        max_num_radius=1.,
-                                        init_num_radius=0.8,
-                                        min_nominal_radius=1,
-                                        max_nominal_radius=10,
-                                        init_nominal_radius=8,
-                                        fail_tol=5,
-                                        succ_tol=2,
-                                        verbose=True)
+    tr_manager = RandomRestartTrManager(
+        search_space,
+        obj_dims=[0],
+        out_constr_dims=None,
+        out_upper_constr_vals=None,
+        min_num_radius=2 ** -5,
+        max_num_radius=1.,
+        init_num_radius=0.8,
+        min_nominal_radius=1,
+        max_nominal_radius=10,
+        init_nominal_radius=8,
+        fail_tol=5,
+        succ_tol=2,
+        verbose=True
+    )
     center = search_space.transform(search_space.sample(1))[0]
     tr_manager.set_center(center)
     tr_manager.radii['nominal'] = 5

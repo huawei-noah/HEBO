@@ -13,10 +13,11 @@ from pathlib import Path
 
 import torch
 
+from mcbo.optimizers.bo_builder import BoBuilder
+
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-from mcbo.optimizers import CoCaBO
 from mcbo.utils.plotting_utils import plot_convergence_curve
 from mcbo.task_factory import task_factory
 from mcbo.utils.distance_metrics import hamming_distance
@@ -27,10 +28,11 @@ if __name__ == '__main__':
     dtype = torch.float64
 
     task = task_factory('levy', num_dims=[3, 3, 6], variable_type=['nominal', 'num', 'nominal'],
-                                      num_categories=[5, 5, 5])
+                        num_categories=[5, 5, 5])
     search_space = task.get_search_space(dtype=dtype)
 
-    optimizer = CoCaBO(search_space, n_init, use_tr=use_tr, tr_init_nominal_radius=5, tr_init_num_radius=0.3)
+    cocabo_builder = BoBuilder(model_id="gp_o", acq_opt_id="mab", acq_func_id="ei", tr_id="basic")
+    optimizer = cocabo_builder.build_bo(search_space=search_space, n_init=n_init)
 
     for i in range(100):
         x_next = optimizer.suggest(1)

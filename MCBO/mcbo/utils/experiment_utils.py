@@ -8,7 +8,7 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Type
 
 import numpy as np
 import pandas as pd
@@ -17,13 +17,14 @@ import torch
 from mcbo import RESULTS_DIR, task_factory
 from mcbo.optimizers import OptimizerBase, RandomSearch, SimulatedAnnealing, MultiArmedBandit, GeneticAlgorithm, \
     HillClimbing, BoBuilder, BoBase
+from mcbo.optimizers.optimizer_base import OptimizerNotBO
 from mcbo.tasks import TaskBase
 from mcbo.utils.general_utils import create_save_dir, current_time_formatter, set_random_seed, load_w_pickle
 from mcbo.utils.general_utils import save_w_pickle
 from mcbo.utils.results_logger import ResultsLogger
 from mcbo.utils.stopwatch import Stopwatch
 
-NON_BO_SHORT_ID_TO_OPT = {
+NON_BO_SHORT_ID_TO_OPT: Dict[str, Type[OptimizerNotBO]] = {
     "rs": RandomSearch,
     "sa": SimulatedAnnealing,
     "mab": MultiArmedBandit,
@@ -39,6 +40,7 @@ def run_experiment(
         max_num_iter: int,
         save_results_every: int = 100,
         very_verbose=False,
+        result_dir: Optional[str] = None
 ):
     # Basic assertion checks
     assert isinstance(task, TaskBase)
@@ -54,7 +56,9 @@ def run_experiment(
     batch_suggest = 1
 
     # Create the save directory
-    exp_save_dir = os.path.join(RESULTS_DIR, task.name)
+    if result_dir is None:
+        result_dir = RESULTS_DIR
+    exp_save_dir = os.path.join(result_dir, task.name)
     create_save_dir(exp_save_dir)
 
     stopwatch = Stopwatch()
@@ -81,7 +85,9 @@ def run_experiment(
             start_iter = 1
 
             print(
-                f'{current_time_formatter()} - Optimizer : {optimizer.name:>{max_name_len}} - Seed {seed} {i + 1:2d}/{len(random_seeds):2d}')
+                f'{current_time_formatter()} - Optimizer : {optimizer.name:>{max_name_len}}'
+                f' - Seed {seed} {i + 1:2d}/{len(random_seeds):2d}'
+            )
 
             save_y_path = os.path.join(optim_save_dir, f'seed_{seed}_results.csv')
             save_x_path = os.path.join(optim_save_dir, f'seed_{seed}_x.pkl')
@@ -90,7 +96,7 @@ def run_experiment(
                 x = load_w_pickle(save_x_path)
                 x = pd.DataFrame.from_dict(x)
 
-                results = pd.read_csv((save_y_path))
+                results = pd.read_csv(save_y_path)
                 y = results["f(x)"].values.reshape((-1, 1))
                 elapsed_time = results["Elapsed Time"].values.flatten()
 
@@ -106,7 +112,7 @@ def run_experiment(
                         eval_num=len(optimizer.data_buffer),
                         x=x_next.iloc[0].to_dict(),
                         y=y_next[0, 0],
-                        y_star=optimizer.best_y,
+                        y_star=optimizer.best_y[0],
                         elapsed_time=elapsed_time[iter_num]
                     )
 
@@ -116,12 +122,13 @@ def run_experiment(
 
                 start_iter = len(x) // batch_suggest + 1
                 print(
-                    f'{current_time_formatter()} - Loaded {len(x)} existing points... y* {optimizer.best_y:.3f}')
+                    f'{current_time_formatter()} - Loaded {len(x)} existing points... y* {optimizer.best_y[0]:.3f}')
 
             # Main loop
             for iter_num in range(start_iter, max_num_iter + 1):
-
-                torch.cuda.empty_cache()  # Clear cached memory
+                if optimizer.device is not None and optimizer.device.type == "cuda":
+                    with torch.cuda.device(optimizer.device):
+                        torch.cuda.empty_cache()
 
                 # Suggest a point
                 stopwatch.start()
@@ -146,13 +153,15 @@ def run_experiment(
                     eval_num=len(optimizer.data_buffer),
                     x=x_next.iloc[0].to_dict(),
                     y=y_next[0, 0],
-                    y_star=optimizer.best_y,
+                    y_star=optimizer.best_y[0],
                     elapsed_time=stopwatch.get_total_time()
                 )
 
                 if very_verbose:
                     print(
-                        f'{current_time_formatter()} - Iteration {iter_num:3d}/{max_num_iter:3d} - y {y_next[0, 0]:.3f} - y* {optimizer.best_y:.3f}')
+                        f'{current_time_formatter()} - Iteration {iter_num:3d}/{max_num_iter:3d} - y '
+                        f'{y_next[0, 0]:.3f} - y* {optimizer.best_y[0]:.3f}'
+                    )
 
                 if iter_num % save_results_every == 0:
                     results_logger.save(save_y_path=save_y_path, save_x_path=save_x_path)
@@ -234,8 +243,8 @@ def get_bo_short_opt_id(model_id: str, acq_opt_id: str, acq_func_id: str, tr_id:
 def get_opt(task: TaskBase, short_opt_id: str, bo_n_init: int = 20,
             dtype: torch.dtype = torch.float64,
             bo_device=torch.device("cpu")) -> OptimizerBase:
-    opt_kwargs = dict(search_space=task.get_search_space(dtype=dtype), dtype=dtype,
-                      input_constraints=task.input_constraints)
+    opt_kwargs = dict(search_space=task.get_search_space(dtype=dtype), dtype=dtype, obj_dims=[0],
+                      input_constraints=task.input_constraints, out_constr_dims=None, out_upper_constr_vals=None)
     if short_opt_id in NON_BO_SHORT_ID_TO_OPT:
         opt = NON_BO_SHORT_ID_TO_OPT[short_opt_id](**opt_kwargs)
     else:
@@ -263,7 +272,8 @@ def get_opt(task: TaskBase, short_opt_id: str, bo_n_init: int = 20,
     return opt
 
 
-def get_opt_results(task_id: str, opt_short_name: str, seeds: List[int], **task_kwargs) -> str:
+def get_opt_results(task_id: str, opt_short_name: str, seeds: List[int], result_dir: Optional[str] = None,
+                    **task_kwargs) -> str:
     task = get_task_from_id(task_id=task_id, **task_kwargs)
     opt = get_opt(task=task, short_opt_id=opt_short_name)
 
@@ -273,7 +283,9 @@ def get_opt_results(task_id: str, opt_short_name: str, seeds: List[int], **task_
 
     optname = opt.name
 
-    sub_folder_dir = os.path.join(RESULTS_DIR, task.name, optname)
+    if result_dir is None:
+        result_dir = RESULTS_DIR
+    sub_folder_dir = os.path.join(result_dir, task.name, optname)
 
     for seed in seeds:
         res_path = os.path.join(sub_folder_dir, f'seed_{seed}_results.csv')

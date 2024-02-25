@@ -81,10 +81,24 @@ if __name__ == '__main__':
 
             x_init = search_space.sample(pop_size)
 
-            pymoo_optimizer = PymooGeneticAlgorithm(search_space, pop_size, tournament_selection=tournament_selection)
+            pymoo_optimizer = PymooGeneticAlgorithm(
+                search_space=search_space,
+                input_constraints=None,
+                obj_dims=[0],
+                out_constr_dims=None,
+                out_upper_constr_vals=None,
+                pop_size=pop_size,
+                tournament_selection=tournament_selection
+            )
             pymoo_optimizer.set_x_init(x_init)
 
-            our_optimizer = CategoricalGeneticAlgorithm(search_space)
+            our_optimizer = CategoricalGeneticAlgorithm(
+                search_space=search_space,
+                obj_dims=[0],
+                out_constr_dims=None,
+                out_upper_constr_vals=None,
+                input_constraints=None
+            )
             our_optimizer.set_x_init(x_init)
 
             start = time.time()

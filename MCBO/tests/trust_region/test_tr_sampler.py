@@ -22,16 +22,21 @@ import os
 import sys
 from pathlib import Path
 
+import torch
+
+from mcbo.optimizers.bo_builder import BO_ALGOS
+
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path[0] = ROOT_PROJECT
 
 from mcbo.task_factory import task_factory
-from mcbo.optimizers.manual.casmopolitan import Casmopolitan
 
 if __name__ == '__main__':
     task = task_factory('ackley', num_dims=[5, 5], variable_type=['num', 'nominal'], num_categories=[None, 5])
 
-    optimizer = Casmopolitan(task.get_search_space(), n_init=50, model_num_kernel_ard=False)
+    casmo_builder = BO_ALGOS["Casmopolitan"]
+    optimizer = casmo_builder.build_bo(search_space=task.get_search_space(), n_init=10, device=torch.device('cuda:0'))
+
     n = 100
     for i in range(n):
         x_next = optimizer.suggest()

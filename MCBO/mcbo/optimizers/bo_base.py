@@ -9,7 +9,7 @@
 
 import copy
 import time
-from typing import Optional, Dict, Callable, List
+from typing import Optional, Dict, Callable, List, Union, Tuple
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,9 @@ from mcbo.optimizers.optimizer_base import OptimizerBase
 from mcbo.search_space import SearchSpace
 from mcbo.trust_region.casmo_tr_manager import CasmopolitanTrManager
 from mcbo.trust_region.tr_manager_base import TrManagerBase
-from mcbo.utils.model_utils import move_model_to_device
+from mcbo.trust_region.tr_utils import sample_numeric_and_nominal_within_tr
+from mcbo.utils.discrete_vars_utils import get_discrete_choices
+from mcbo.utils.model_utils import move_model_to_device, model_can_be_fit
 
 
 class BoBase(OptimizerBase):
@@ -69,9 +71,6 @@ class BoBase(OptimizerBase):
             return non_tr_linestyle
         return tr_linestyle
 
-    def get_color_acq_opt_based(self, color_dict: Optional[Dict[str, str]] = None) -> str:
-        return self.acq_optimizer.get_color_1()
-
     def __init__(self,
                  search_space: SearchSpace,
                  n_init: int,
@@ -80,6 +79,10 @@ class BoBase(OptimizerBase):
                  acq_optim: AcqOptimizerBase,
                  input_constraints: Optional[List[Callable[[Dict], bool]]] = None,
                  tr_manager: Optional[TrManagerBase] = None,
+                 constr_models: Optional[List[ModelBase]] = None,
+                 obj_dims: Union[List[int], np.ndarray, None] = None,
+                 out_constr_dims: Union[List[int], np.ndarray, None] = None,
+                 out_upper_constr_vals: Optional[np.ndarray] = None,
                  init_sampling_strategy: str = "uniform",
                  dtype: torch.dtype = torch.float64,
                  device: torch.device = torch.device('cpu')
@@ -95,7 +98,12 @@ class BoBase(OptimizerBase):
         """
 
         super(BoBase, self).__init__(
-            search_space=search_space, dtype=dtype, input_constraints=input_constraints
+            search_space=search_space,
+            input_constraints=input_constraints,
+            dtype=dtype,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
 
         assert isinstance(n_init, int) and n_init > 0
@@ -107,12 +115,17 @@ class BoBase(OptimizerBase):
         assert isinstance(dtype, torch.dtype) and dtype in [torch.float32, torch.float64]
         assert isinstance(device, torch.device)
 
+        if constr_models is None:
+            constr_models = []
+
         self.device = device
 
         self._init_model = copy.deepcopy(model)
+        self._init_constr_models = copy.deepcopy(constr_models)
         self._init_acq_optimizer = copy.deepcopy(acq_optim)
 
         self.model = model
+        self.constr_models = constr_models
         self.acq_func = acq_func
         self.acq_optimizer = acq_optim
         self.tr_manager = tr_manager
@@ -160,7 +173,9 @@ class BoBase(OptimizerBase):
             point_sampler=point_sampler
         )
         self.model = copy.deepcopy(self._init_model)
+        self.constr_models = copy.deepcopy(self._init_constr_models)
         self.acq_optimizer = copy.deepcopy(self._init_acq_optimizer)
+        self.acq_optimizer.search_space = self.search_space
         if self.tr_manager is not None:
             self.tr_manager.restart()
 
@@ -172,7 +187,7 @@ class BoBase(OptimizerBase):
     def initialize(self, x: pd.DataFrame, y: np.ndarray):
         assert y.ndim == 2
         assert x.ndim == 2
-        assert y.shape[1] == 1
+        assert y.shape[1] == self.n_objs + self.n_constrs
         assert x.shape[0] == y.shape[0]
         assert x.shape[1] == self.search_space.num_dims
 
@@ -189,10 +204,10 @@ class BoBase(OptimizerBase):
             self.tr_manager.append(x, y)
 
         # update best fx
-        best_idx = y.flatten().argmin()
-        best_y = y[best_idx, 0].item()
+        best_idx = self.get_best_y_ind(y)
+        best_y = y[best_idx]
 
-        if self.best_y is None or best_y < self.best_y:
+        if self.best_y is None or self.is_better_than_current(self.best_y, best_y):
             self.best_y = best_y
             self._best_x = x[best_idx: best_idx + 1]
 
@@ -218,7 +233,7 @@ class BoBase(OptimizerBase):
         x_next = pd.DataFrame(index=range(n_suggestions), columns=self.search_space.df_col_names, dtype=float)
 
         # Return as many points from initialisation as possible
-        if len(self.x_init) and n_remaining:
+        if len(self.x_init) > 0 and n_remaining > 0:
             n = min(n_suggestions, len(self.x_init))
             x_next.iloc[idx: idx + n] = self.x_init.iloc[[i for i in range(0, n)]]
             self.x_init = self.x_init.drop(self.x_init.index[[i for i in range(0, n)]], inplace=False).reset_index(
@@ -226,14 +241,42 @@ class BoBase(OptimizerBase):
             idx += n
             n_remaining -= n
 
-        # Sanity check
-        if n_remaining and len(self.data_buffer) == 0:
-            raise Exception('n_suggestion is larger than n_init and there is no data to fit a surrogate model to')
+        if n_remaining > 0 and not self.can_fit_all_models():
+            # Need to suggest more random points
+            max_n_perturb_num = 20
+            if hasattr(self.tr_manager, "max_n_perturb_num"):
+                max_n_perturb_num = self.tr_manager.max_n_perturb_num
+
+            numeric_dims = self.search_space.cont_dims + self.search_space.disc_dims
+            discrete_choices = get_discrete_choices(self.search_space)
+
+            if self.tr_manager:  # sample within TR
+                point_sampler = lambda n_points: self.search_space.inverse_transform(
+                    sample_numeric_and_nominal_within_tr(
+                        x_centre=self.tr_manager.center,
+                        search_space=self.search_space,
+                        tr_manager=self.tr_manager,
+                        n_points=n_points,
+                        numeric_dims=numeric_dims,
+                        discrete_choices=discrete_choices,
+                        max_n_perturb_num=max_n_perturb_num,
+                        model=None,
+                        return_numeric_bounds=False
+                    )
+                )
+            else:
+                point_sampler = self.search_space.sample
+
+            x_next[idx: idx + n_remaining] = self.sample_input_valid_points(n_points=n_remaining,
+                                                                            point_sampler=point_sampler)
+
+            n_remaining = 0
 
         # Get remaining points using standard BO loop
         if n_remaining:
-
-            torch.cuda.empty_cache()  # Clear cached memory
+            if self.device is not None and self.device.type == "cuda":
+                with torch.cuda.device(self.device):
+                    torch.cuda.empty_cache()
 
             if self.tr_manager is not None:
                 data_buffer = self.tr_manager.data_buffer
@@ -243,25 +286,57 @@ class BoBase(OptimizerBase):
             move_model_to_device(model=self.model, data_buffer=data_buffer, target_device=self.device)
 
             # Used to conduct and pre-fitting operations, such as creating a new model
-            self.model.pre_fit_method(x=data_buffer.x, y=data_buffer.y)
+            filter_nan = torch.isnan(data_buffer.y[:, self.obj_dims]).sum(-1) == 0
+            obj_x = data_buffer.x[filter_nan]
+            obj_y = data_buffer.y[filter_nan][:, self.obj_dims]
+
+            constr_xs = []
+            constr_ys = []
+            for out_constr_ind, out_constr_dim in enumerate(self.out_constr_dims):
+                filter_nan = torch.isnan(data_buffer.y[:, [out_constr_dim]]).sum(-1) == 0
+                constr_xs.append(data_buffer.x[filter_nan])
+                constr_ys.append(data_buffer.y[filter_nan][:, [out_constr_dim]])
+
+            self.model.pre_fit_method(x=obj_x, y=obj_y)
+            if self.constr_models is not None:
+                for out_constr_ind in range(len(self.out_constr_dims)):
+                    constr_model = self.constr_models[out_constr_ind]
+                    move_model_to_device(constr_model, data_buffer, self.device)
+                    constr_model.pre_fit_method(x=constr_xs[out_constr_ind], y=constr_ys[out_constr_ind])
 
             time_ref = time.time()
-            # Fit the model
-            _ = self.model.fit(x=data_buffer.x, y=data_buffer.y)
+            # Fit the models
+            _ = self.model.fit(x=obj_x, y=obj_y)
+            if self.constr_models is not None:
+                for i, constr_model in enumerate(self.constr_models):
+                    _ = constr_model.fit(x=constr_xs[i], y=constr_ys[i])
             self.fit_time.append(time.time() - time_ref)
 
             # Grab the current best x and y for acquisition evaluation and optimization
             best_x, best_y = self.get_best_x_and_y()
-            acq_evaluate_kwargs = {'best_y': best_y}
+            assert best_y.shape == (self.num_outputs,)
+            valid_filtr = self.get_valid_filter(best_y.unsqueeze(0)).item()
+            if not valid_filtr:  # current best is not feasible
+                best_obj = None
+            else:
+                best_obj = best_y[self.obj_dims]
+            acq_evaluate_kwargs = {
+                'best_y': best_obj,
+            }
 
-            torch.cuda.empty_cache()  # Clear cached memory
+            if obj_x.device.type == "cuda":
+                with torch.cuda.device(obj_x.device):
+                    torch.cuda.empty_cache()
 
             time_ref = time.time()
             # Optimise the acquisition function
             x_remaining = self.acq_optimizer.optimize(
-                x=best_x, n_suggestions=n_remaining,
+                x=best_x,
+                n_suggestions=n_remaining,
                 x_observed=self.data_buffer.x,
                 model=self.model,
+                constr_models=self.constr_models,
+                out_upper_constr_vals=self.out_upper_constr_vals,
                 acq_func=self.acq_func,
                 acq_evaluate_kwargs=acq_evaluate_kwargs,
                 tr_manager=self.tr_manager
@@ -277,12 +352,20 @@ class BoBase(OptimizerBase):
 
         is_valid = self.input_eval_from_origx(x=x)
         assert np.all(is_valid), is_valid
-
+        num_nan = np.isnan(y).sum()
+        if num_nan > 0 and self.n_constrs == 0:
+            raise ValueError(f"Got {num_nan} / {len(y)} NaN observations.\n"
+                             f"X:\n"
+                             f"    {x}\n"
+                             f"Y:\n"
+                             f"    {y}")
         # Transform x and y to torch tensors
         x = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
+
+        assert len(x) == len(y)
 
         # Add data to all previously observed data and to the trust region manager
         self.data_buffer.append(x, y)
@@ -295,15 +378,15 @@ class BoBase(OptimizerBase):
 
         # update best x and y
         if self.best_y is None:
-            idx = y.flatten().argmin()
-            self.best_y = y[idx, 0].item()
+            idx = self.get_best_y_ind(y)
+            self.best_y = y[idx]
             self._best_x = x[idx: idx + 1]
 
         else:
-            idx = y.flatten().argmin()
-            y_ = y[idx, 0].item()
+            idx = self.get_best_y_ind(y)
+            y_ = y[idx]
 
-            if y_ < self.best_y:
+            if self.is_better_than_current(current_y=self.best_y, new_y=y_):
                 self.best_y = y_
                 self._best_x = x[idx: idx + 1]
 
@@ -312,9 +395,10 @@ class BoBase(OptimizerBase):
 
         self.observe_time.append(time.time() - time_ref)
 
-    def get_best_x_and_y(self):
+    def get_best_x_and_y(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        :return: Returns best x and best y used for acquisition optimization.
+        Returns:
+             best x and best y in  to use for acquisition optimization -> can be limited to the TR-manager.
         """
         if self.tr_manager is None:
             x, y = self.data_buffer.x, self.data_buffer.y
@@ -322,7 +406,7 @@ class BoBase(OptimizerBase):
         else:
             x, y = self.tr_manager.data_buffer.x, self.tr_manager.data_buffer.y
 
-        idx = y.argmin()
+        idx = self.get_best_y_ind(y=y)
         best_x = x[idx]
         best_y = y[idx]
 
@@ -346,6 +430,14 @@ class BoBase(OptimizerBase):
             "acquisition_time": self.acq_time,
             "fit_time": self.fit_time,
         }
+
+    def can_fit_all_models(self) -> bool:
+        fit_models = model_can_be_fit(x=self.data_buffer.x, y=self.data_buffer.y[:, self.obj_dims], model=self.model)
+        for i, constr_model in enumerate(self.constr_models):
+            fit_models = fit_models and model_can_be_fit(x=self.data_buffer.x,
+                                                         y=self.data_buffer.y[:, [self.out_constr_dims[i]]],
+                                                         model=constr_model)
+        return fit_models
 
     def set_time_from_dict(self, time_dict: Dict[str, List[float]]) -> None:
         self.observe_time = time_dict["observation_time"]

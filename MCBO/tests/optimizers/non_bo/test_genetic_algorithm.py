@@ -25,27 +25,17 @@ from pathlib import Path
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path[0] = ROOT_PROJECT
 
-import os
-from pathlib import Path
-
-import torch
-
-from mcbo.optimizers.non_bo.genetic_algorithm import PymooGeneticAlgorithm
-from mcbo.utils.plotting_utils import plot_convergence_curve
-
 if __name__ == '__main__':
     from mcbo.task_factory import task_factory
+    from mcbo.optimizers import GeneticAlgorithm
 
     task = task_factory('levy', num_dims=5, variable_type='nominal', num_categories=21)
     search_space = task.get_search_space()
 
-    optimizer = PymooGeneticAlgorithm(search_space, allow_repeating_suggestions=False)
+    optimizer = GeneticAlgorithm(search_space=search_space, input_constraints=task.input_constraints)
 
     for i in range(500):
         x_next = optimizer.suggest(1)
         y_next = task(x_next)
         optimizer.observe(x_next, y_next)
         print(f'Iteration {i + 1:>4d} - f(x) {optimizer.best_y:.3f}')
-
-    plot_convergence_curve(optimizer, task, os.path.join(Path(os.path.realpath(__file__)).parent.parent.resolve(),
-                                                         f'{optimizer.name}_test.png'), plot_per_iter=True)

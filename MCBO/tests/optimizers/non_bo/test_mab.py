@@ -23,13 +23,12 @@ import sys
 from pathlib import Path
 from typing import Callable, Dict
 
-import torch
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent.parent)
 sys.path[0] = ROOT_PROJECT
 
+from mcbo.optimizers import MultiArmedBandit
 from mcbo.task_factory import task_factory
-from mcbo.optimizers.multi_armed_bandit import MultiArmedBandit
 from mcbo.trust_region.random_restart_tr_manager import RandomRestartTrManager
 from mcbo.utils.distance_metrics import hamming_distance
 
@@ -48,6 +47,9 @@ if __name__ == '__main__':
 
     tr_manager = RandomRestartTrManager(
         search_space=search_space,
+        obj_dims=[0],
+        out_constr_dims=None,
+        out_upper_constr_vals=None,
         min_num_radius=2 ** -5,
         max_num_radius=1.,
         init_num_radius=0.8,
@@ -63,7 +65,12 @@ if __name__ == '__main__':
     tr_manager.radii['nominal'] = 4
 
     optimizer = MultiArmedBandit(
-        search_space=search_space, input_constraints=input_constraints, fixed_tr_manager=tr_manager,
+        search_space=search_space,
+        obj_dims=[0],
+        out_constr_dims=None,
+        out_upper_constr_vals=None,
+        input_constraints=input_constraints,
+        fixed_tr_manager=tr_manager,
         fixed_tr_centre_nominal_dims=search_space.nominal_dims + search_space.ordinal_dims
     )
 

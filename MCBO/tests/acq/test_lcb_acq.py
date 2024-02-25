@@ -27,4 +27,4 @@ if __name__ == '__main__':
 
     acq_func = acq_factory('lcb')
 
-    acq_func(x_test, model, best_y=y_train.min())
+    acq_func(x=x_test, model=model, best_y=y_train.min())

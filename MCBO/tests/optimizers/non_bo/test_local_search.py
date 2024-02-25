@@ -14,7 +14,13 @@ if __name__ == '__main__':
     task = task_factory('levy', num_dims=10, variable_type='nominal', num_categories=21)
     search_space = task.get_search_space()
 
-    optimizer = HillClimbing(search_space, input_constraints=task.input_constraints)
+    optimizer = HillClimbing(
+        search_space=search_space,
+        input_constraints=task.input_constraints,
+        obj_dims=[0],
+        out_upper_constr_vals=None,
+        out_constr_dims=None
+    )
 
     for i in range(500):
         x_next = optimizer.suggest(1)

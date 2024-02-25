@@ -29,7 +29,11 @@ class RandDecompositionGP(ExactGPModel):
     @property
     def name(self) -> str:
         name = "GPRD"
-        name += f" ({self.base_kernel_num}_{self.base_kernel_nom})"
+        if self.hed:
+            kernname = f"HED-{self.base_kernel_num}"
+        else:
+            kernname = f"{self.base_kernel_num}_{self.base_kernel_nom}"
+        name += f" ({kernname})"
         return name
 
     def __init__(
@@ -51,13 +55,15 @@ class RandDecompositionGP(ExactGPModel):
             optimizer: str = 'adam',
             max_cholesky_size: int = 2000,
             max_training_dataset_size: int = 1000,
-            max_batch_size: int = 1000,
+            max_batch_size: int = 200,
             verbose: bool = False,
             print_every: int = 10,
             dtype: torch.dtype = torch.float32,
             device: torch.device = torch.device('cpu'),
             random_tree_size: float = 0.2,
-            batched_kernel=True
+            hed: bool = False,
+            hed_kwargs: Optional[Dict[str, Any]] = None,
+            batched_kernel: bool = True
     ):
         self.search_space = search_space
 
@@ -72,6 +78,8 @@ class RandDecompositionGP(ExactGPModel):
         self.random_tree_size = random_tree_size
         self.numeric_dims = self.search_space.cont_dims + self.search_space.disc_dims
         self.batched_kernel = batched_kernel
+        self.hed = hed
+        self.hed_kwargs = {} if hed_kwargs is None else hed_kwargs
 
         self.graph = self.get_random_graph()
         kernel = self.build_kernels(self.graph, restart_lengthscales=True)
@@ -215,7 +223,11 @@ class RandDecompositionGP(ExactGPModel):
 
     def get_random_graph(self) -> List[List[int]]:
 
-        size = self.search_space.num_dims
+        if self.hed:
+            hed_num_embedders = self.hed_kwargs.get('hed_num_embedders', 128)
+            size = self.search_space.num_dims + hed_num_embedders
+        else:
+            size = self.search_space.num_dims
         graph = nx.empty_graph(size)
         disjoint_set = DisjointSet()
         connections_made = 0
@@ -230,6 +242,10 @@ class RandDecompositionGP(ExactGPModel):
                 graph.add_edge(edge_in, edge_out)
                 disjoint_set.union(edge_in, edge_out)
 
+        if self.hed:
+            for dim in self.search_space.nominal_dims:
+                graph.remove_node(dim)
+
         return list(nx.find_cliques(graph))
 
     def build_kernels(self, decomposition: List[List[int]], restart_lengthscales=True) -> Kernel:
@@ -242,7 +258,9 @@ class RandDecompositionGP(ExactGPModel):
                 base_kernel_kwargs_nom=self.base_kernel_nom_kwargs,
                 search_space=self.search_space,
                 num_lengthscale_constraint=self.num_lengthscale_constraint,
-                nom_lengthscale_constraint=self.nom_lengthscale_constraint
+                nom_lengthscale_constraint=self.nom_lengthscale_constraint,
+                hed=self.hed,
+                hed_kwargs=self.hed_kwargs
             )
 
             # emprically better performance if we restart the lengthscales

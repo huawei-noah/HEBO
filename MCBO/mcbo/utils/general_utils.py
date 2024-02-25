@@ -15,42 +15,42 @@ import time
 import warnings
 from datetime import datetime
 from inspect import signature
-from typing import Any, Callable, Dict, Tuple, List
+from typing import Any, Callable, Dict
+from typing import Optional, List, Union, Tuple
+from typing import TypeVar
 
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import torch
 from joblib import Parallel, delayed
+from matplotlib.axes import Axes
 from scipy.stats import t
 from tqdm import tqdm
 
+T = TypeVar('T')
+
 matplotlib.use('Agg')
-
-import torch
-
-from typing import Optional, List, Union, Tuple
-
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.axes import Axes
 
 
 def get_project_root() -> str:
     return str(pathlib.Path(__file__).parent.parent.parent.resolve())
 
 
-def load_yaml(path_to_yaml_file):
+def load_yaml(path_to_yaml_file) -> Any:
     import yaml
     with open(path_to_yaml_file, 'r') as f:
         return yaml.safe_load(f)
 
 
-def save_yaml(dictionary, save_path):
+def save_yaml(dictionary, save_path) -> None:
     import yaml
     with open(save_path, 'w') as file:
         _ = yaml.dump(dictionary, file)
 
 
-def set_random_seed(seed):
+def set_random_seed(seed) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -58,29 +58,31 @@ def set_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def create_save_dir(save_dir):
+def create_save_dir(save_dir) -> None:
     if os.path.exists(save_dir):
         print(
-            f'{current_time_formatter()} - Directory {save_dir} already exists. Continuing with the experiment may lead to previous results being overwritten.')
+            f'{current_time_formatter()} - Directory {save_dir} already exists. '
+            f'Continuing with the experiment may lead to previous results being overwritten.'
+        )
     os.makedirs(save_dir, exist_ok=True)
 
 
-def get_path_to_save_dir(settings):
+def get_path_to_save_dir(settings) -> str:
     path = os.path.join(pathlib.Path(__file__).parent.parent.parent.resolve(), "results", settings.get("task_name"),
                         settings.get("problem_name"), settings.get("save_dir"))
     return path
 
 
-def array_to_tensor(X, device):
-    if not isinstance(X, torch.Tensor):
-        X = torch.tensor(X, dtype=torch.float64, device=device)
-    if X.dim() == 1:
-        X = X.reshape(1, -1)
+def array_to_tensor(x, device) -> torch.Tensor:
+    if not isinstance(x, torch.Tensor):
+        x = torch.tensor(x, dtype=torch.float64, device=device)
+    if x.dim() == 1:
+        x = x.reshape(1, -1)
 
-    return X
+    return x
 
 
-def copy_tensor(x):
+def copy_tensor(x) -> torch.Tensor:
     return torch.empty_like(x).copy_(x)
 
 
@@ -115,11 +117,11 @@ def load_w_pickle(path: str, filename: Optional[str] = None) -> Any:
     with open(p, 'rb') as f:
         try:
             return pickle.load(f)
-        except EOFError as e:
+        except EOFError:
             raise Exception(f"EOFError with {p}")
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError:
             raise Exception(f"UnicodeDecodeError with {p}")
-        except pickle.UnpicklingError as e:
+        except pickle.UnpicklingError:
             raise Exception(f"UnpicklingError with {p}")
 
 
@@ -164,30 +166,30 @@ def time_formatter(t: float, show_ms: bool = False) -> str:
     return ts
 
 
-def current_time_formatter():
+def current_time_formatter() -> str:
     return "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
 
 
-def log(message, header: Optional[str] = None, end: Optional[str] = None):
+def log(message, header: Optional[str] = None, end: Optional[str] = None) -> None:
     if header is None:
         header = ''
     print(f'[{header}' + f' {current_time_formatter()}' + f"]  {message}", end=end)
 
 
-def cummax(X: np.ndarray, return_ind=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def cummax(x: np.ndarray, return_ind=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """ Return array containing at index `i` the value max(X)[:i] """
     cmaxind: List[int] = [0]
-    cmax: List[float] = [X[0]]
-    for i, x in enumerate(X[1:]):
+    cmax: List[float] = [x[0]]
+    for i, xx in enumerate(x[1:]):
         i += 1
-        if x > cmax[-1]:
-            cmax.append(x)
+        if xx > cmax[-1]:
+            cmax.append(xx)
             cmaxind.append(i)
         else:
             cmax.append(cmax[-1])
             cmaxind.append(cmaxind[-1])
     cmax_np = np.array(cmax)
-    assert np.all(X[cmaxind] == cmax_np), (X, X[cmaxind], cmax_np)
+    assert np.all(x[cmaxind] == cmax_np), (x, x[cmaxind], cmax_np)
     if return_ind:
         return cmax_np, np.array(cmaxind)
     return cmax_np
@@ -232,7 +234,7 @@ def get_cummin(scores: Union[List[np.ndarray], np.ndarray]) -> List[np.ndarray]:
     return cmins
 
 
-def get_common_chunk_sizes(ys: List[np.ndarray]):
+def get_common_chunk_sizes(ys: List[np.ndarray]) -> List[Tuple[np.ndarray, List[List[int]]]]:
     """ From a list of arrays of various sizes, get a list of `list of arrays of same size`
 
      Example:
@@ -251,9 +253,9 @@ def get_common_chunk_sizes(ys: List[np.ndarray]):
 
     output = []
     for i in range(1, len(lens)):
-        Xs = np.arange(lens[i - 1], lens[i])
+        x_s = np.arange(lens[i - 1], lens[i])
         y = [y[lens[i - 1]:lens[i]] for y in ys if len(y) >= lens[i]]
-        output.append((Xs, y))
+        output.append((x_s, y))
     return output
 
 
@@ -264,19 +266,18 @@ def plot_mean_std(*args, n_std: Optional[float] = 1,
                   linewidth: int = 3,
                   show_std_error: Optional[bool] = False,
                   ci_level: Optional[float] = None,
-                  **plot_mean_kwargs):
+                  **plot_mean_kwargs) -> Axes:
     """ Plot mean and std (with fill between) of sequential data Y of shape (n_trials, lenght_of_a_trial)
 
     Args:
-        X: x-values (if None, we will take `range(0, len(Y))`)
-        Y: y-values
+        args: x-values (if None, we will take `range(0, len(Y))`), y-values
         n_std: number of std to plot around the mean (if `0` only the mean is plotted)
         ax: axis on which to plot the curves
-        color: color of the curve
         alpha: parameter for `fill_between`
         errbar: use error bars instead of shaded area
         ci_level: show confidence interval over the mean at specified level (e.g. 0.95), otherwise uncertainty shows
           n_std std around the mean
+        linewidth: width of line
         lb: lower bound (to clamp uncertainty region)
         ub: upper bound (to clamp uncertainty region)
         show_std_error: show standard error (std / sqrt(n_samples)) as shadow area around mean curve
@@ -285,41 +286,41 @@ def plot_mean_std(*args, n_std: Optional[float] = 1,
         The axis.
     """
     if len(args) == 1:
-        Y = args[0]
-        X = None
+        y = args[0]
+        x = None
     elif len(args) == 2:
-        X, Y = args
+        x, y = args
     else:
         raise RuntimeError('Wrong number of arguments (should be [X], Y,...)')
 
-    assert len(Y) > 0, 'Y should be a non-empty array, nothing to plot'
-    Y = np.atleast_2d(Y)
-    if X is None:
-        X = np.arange(Y.shape[1])
-    assert X.ndim == 1, f'X should be of rank 1, got {X.ndim}'
-    mean = Y.mean(0)
-    std = Y.std(0)
+    assert len(y) > 0, 'Y should be a non-empty array, nothing to plot'
+    y = np.atleast_2d(y)
+    if x is None:
+        x = np.arange(y.shape[1])
+    assert x.ndim == 1, f'X should be of rank 1, got {x.ndim}'
+    mean = y.mean(0)
+    std = y.std(0)
     if ax is None:
         ax = plt.subplot()
 
-    if len(X) == 0:
+    if len(x) == 0:
         return ax
 
-    if ci_level is not None and len(Y) > 1:
+    if ci_level is not None and len(y) > 1:
         # student
-        t_crit = np.abs(t.ppf((1 - ci_level) / 2, len(Y) - 1))
-        n_std = t_crit / np.sqrt(len(Y))
+        t_crit = np.abs(t.ppf((1 - ci_level) / 2, len(y) - 1))
+        n_std = t_crit / np.sqrt(len(y))
     elif show_std_error:
-        n_std = 1 / np.sqrt(len(Y))
+        n_std = 1 / np.sqrt(len(y))
 
     if errbar:
         n_errbars = min(10, len(std))
         errbar_inds = len(std) // n_errbars
-        ax.errorbar(X, mean, yerr=n_std * std, errorevery=errbar_inds, linewidth=linewidth, **plot_mean_kwargs)
+        ax.errorbar(x, mean, yerr=n_std * std, errorevery=errbar_inds, linewidth=linewidth, **plot_mean_kwargs)
     else:
-        line_plot = ax.plot(X, mean, linewidth=linewidth, **plot_mean_kwargs)
+        line_plot = ax.plot(x, mean, linewidth=linewidth, **plot_mean_kwargs)
 
-        if n_std > 0 and Y.shape[0] > 1:
+        if n_std > 0 and y.shape[0] > 1:
             uncertainty_lb = mean - n_std * std
             uncertainty_ub = mean + n_std * std
             if lb is not None:
@@ -327,7 +328,7 @@ def plot_mean_std(*args, n_std: Optional[float] = 1,
             if ub is not None:
                 uncertainty_ub = np.minimum(uncertainty_ub, ub)
 
-            ax.fill_between(X, uncertainty_lb, uncertainty_ub, alpha=alpha, color=line_plot[0].get_c())
+            ax.fill_between(x, uncertainty_lb, uncertainty_ub, alpha=alpha, color=line_plot[0].get_c())
 
     return ax
 
@@ -361,7 +362,7 @@ def filter_nans(x: pd.DataFrame, y: np.ndarray) -> Tuple[pd.DataFrame, np.ndarra
     return x, y
 
 
-def parallel_call_wrapper(func: Callable, func_kwargs_list: List[Dict[str, Any]], n_parallel=None):
+def parallel_call_wrapper(func: Callable[[Any], T], func_kwargs_list: List[Dict[str, Any]], n_parallel=None) -> List[T]:
     if n_parallel is None:
         n_parallel = len(os.sched_getaffinity(0)) - 1
     if n_parallel == 1:  # do not run in parallel -> this will make debugging easier

@@ -9,6 +9,7 @@
 
 from typing import Union, Optional, List, Callable, Dict
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -21,11 +22,20 @@ class ProxyTrManager(TrManagerBase):
 
     def __init__(self,
                  search_space: SearchSpace,
+                 obj_dims: Union[List[int], np.ndarray],
+                 out_constr_dims: Union[List[int], np.ndarray],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  dtype: torch.dtype = torch.float64,
                  ):
-        super(ProxyTrManager, self).__init__(search_space, dtype)
+        super(ProxyTrManager, self).__init__(
+            search_space=search_space,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
+            dtype=dtype
+        )
 
-    def restart(self):
+    def restart(self) -> None:
         pass
 
     def adjust_tr_radii(self, y: torch.Tensor, **kwargs):
@@ -40,7 +50,7 @@ class ProxyTrManager(TrManagerBase):
         Function used to update the TR center
         :return:
         """
-        self.set_center(self.data_buffer.x_min)
+        self.set_center(self.data_buffer.best_x)
 
     def suggest_new_tr(self, n_init: int, observed_data_buffer: DataBuffer,
                        input_constraints: Optional[List[Callable[[Dict], bool]]],

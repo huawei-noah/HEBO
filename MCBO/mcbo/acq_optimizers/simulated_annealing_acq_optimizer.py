@@ -6,7 +6,7 @@
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
-from typing import Optional, List, Callable, Dict, Tuple
+from typing import Optional, List, Callable, Dict, Tuple, Union
 
 import numpy as np
 import torch
@@ -37,6 +37,9 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  num_iter: int = 100,
                  init_temp: float = 1.,
                  tolerance: int = 100,
@@ -59,7 +62,10 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
         super(SimulatedAnnealingAcqOptimizer, self).__init__(
             search_space=search_space,
             dtype=dtype,
-            input_constraints=input_constraints
+            input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals
         )
 
         assert search_space.num_cont + search_space.num_disc + search_space.num_nominal == search_space.num_dims, \
@@ -129,13 +135,16 @@ class SimulatedAnnealingAcqOptimizer(AcqOptimizerBase):
             best_v: associated acquistion function value
         """
 
-        assert n_suggestions == 1, 'Simulated annealing acquisition optimizer does not support suggesting batches of data'
+        assert n_suggestions == 1, 'SA acquisition optimizer does not support suggesting batches of data'
 
         dtype = model.dtype
 
         sa = SimulatedAnnealing(
             search_space=self.search_space,
             input_constraints=self.input_constraints,
+            obj_dims=self.obj_dims,
+            out_upper_constr_vals=self.out_upper_constr_vals,
+            out_constr_dims=self.out_constr_dims,
             fixed_tr_manager=tr_manager,
             init_temp=self.init_temp,
             tolerance=self.tolerance,

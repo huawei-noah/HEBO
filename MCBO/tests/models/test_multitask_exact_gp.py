@@ -33,8 +33,8 @@ if __name__ == '__main__':
     y_pred, var_pred = model.predict(x_test)
 
     # Plotting should be improved by ordering according to the true y values and by using two seperate plots.
-    plot_posterior(y_pred[:, 0].detach().cpu().numpy(), var_pred[:, 0].sqrt().detach().cpu().numpy(),
-                   y_test[:, 0].numpy(), './', save=True)
-
-    plot_posterior(y_pred[:, 1].detach().cpu().numpy(), var_pred[:, 1].sqrt().detach().cpu().numpy(),
-                   y_test[:, 1].numpy(), './', save=True)
+    # plot_posterior(y_pred[:, 0].detach().cpu().numpy(), var_pred[:, 0].sqrt().detach().cpu().numpy(),
+    #                y_test[:, 0].numpy(), './', save=True)
+    #
+    # plot_posterior(y_pred[:, 1].detach().cpu().numpy(), var_pred[:, 1].sqrt().detach().cpu().numpy(),
+    #                y_test[:, 1].numpy(), './', save=True)

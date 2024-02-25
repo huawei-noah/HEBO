@@ -5,7 +5,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -38,6 +38,9 @@ class HillClimbing(OptimizerNotBO):
     def __init__(self,
                  search_space: SearchSpace,
                  input_constraints: Optional[List[Callable[[Dict], bool]]],
+                 obj_dims: Union[List[int], np.ndarray, None],
+                 out_constr_dims: Union[List[int], np.ndarray, None],
+                 out_upper_constr_vals: Optional[torch.Tensor],
                  tolerance: int = 1000,
                  store_observations: bool = True,
                  allow_repeating_suggestions: bool = False,
@@ -52,6 +55,9 @@ class HillClimbing(OptimizerNotBO):
         super(HillClimbing, self).__init__(
             search_space=search_space,
             input_constraints=input_constraints,
+            obj_dims=obj_dims,
+            out_constr_dims=out_constr_dims,
+            out_upper_constr_vals=out_upper_constr_vals,
             dtype=dtype
         )
 

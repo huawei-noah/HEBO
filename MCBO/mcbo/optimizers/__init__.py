@@ -8,11 +8,10 @@
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
 from mcbo.optimizers.bo_base import BoBase
-from mcbo.optimizers.manual.cocabo import CoCaBO
 from mcbo.optimizers.non_bo.hill_climbing import HillClimbing
 from mcbo.optimizers.optimizer_base import OptimizerBase
 from mcbo.optimizers.non_bo.random_search import RandomSearch
 from mcbo.optimizers.non_bo.simulated_annealing import SimulatedAnnealing
 from mcbo.optimizers.non_bo.multi_armed_bandit import MultiArmedBandit
-from mcbo.optimizers.non_bo.genetic_algorithm import GeneticAlgorithm
+from mcbo.optimizers.non_bo.genetic_algorithm import GeneticAlgorithm, PymooGeneticAlgorithm
 from mcbo.optimizers.bo_builder import BoBuilder
