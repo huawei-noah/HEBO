@@ -138,6 +138,7 @@ class OptimizerBase(ABC):
         Returns:
              a DataFrame of suggestions
         """
+
     pass
 
     def suggest(self, n_suggestions: int = 1) -> pd.DataFrame:
@@ -149,7 +150,7 @@ class OptimizerBase(ABC):
 
         Args:
             n_suggestions: number of points to suggest
-            
+
         Returns:
             dataframe of suggested points.
         """
@@ -229,6 +230,20 @@ class OptimizerBase(ABC):
         if self.best_y is not None:
             return self.search_space.inverse_transform(self._best_x)
         return None
+
+    def update_best(self, x_transf: torch.Tensor, y: torch.Tensor) -> None:
+        """ Update `best_y` and `_best_x` given new suggestions
+
+        Args:
+            x_transf: tensor of inputs (in transformed space)
+            y: tensor of black-box values
+        """
+        best_idx = self.get_best_y_ind(y=y)
+        best_y = y[best_idx]
+
+        if self.best_y is None or self.is_better_than_current(current_y=self.best_y, new_y=best_y):
+            self.best_y = best_y
+            self._best_x = x_transf[best_idx: best_idx + 1]
 
     def _restart(self):
         self._best_x = None
