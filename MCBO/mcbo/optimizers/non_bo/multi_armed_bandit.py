@@ -243,36 +243,25 @@ class MultiArmedBandit(OptimizerNotBO):
     def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         # Transform x and y to torch tensors
-        x = self.search_space.transform(x)
+        x_transf = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
-        assert len(x) == len(y)
+        assert len(x_transf) == len(y)
 
         # Add data to all previously observed data and to the trust region manager
-        self.data_buffer.append(x, y)
+        self.data_buffer.append(x_transf, y)
 
         # update best x and y
-        if self.best_y is None:
-            batch_idx = y.flatten().argmin()
-            self.best_y = y[batch_idx, 0].item()
-            self._best_x = x[batch_idx: batch_idx + 1]
-
-        else:
-            batch_idx = y.flatten().argmin()
-            y_ = y[batch_idx, 0].item()
-
-            if y_ < self.best_y:
-                self.best_y = y_
-                self._best_x = x[batch_idx: batch_idx + 1]
+        self.update_best(x_transf=x_transf, y=y)
 
         # Compute the MAB rewards for each of the suggested categories
-        mab_rewards = torch.zeros((len(x), self.search_space.num_dims), dtype=self.dtype)
+        mab_rewards = torch.zeros((len(x_transf), self.search_space.num_dims), dtype=self.dtype)
 
         # Iterate over the batch
-        for batch_idx in range(len(x)):
-            _x = x[batch_idx]
+        for batch_idx in range(len(x_transf)):
+            _x = x_transf[batch_idx]
 
             # Iterate over all categorical variables
             for dim_dix in range(self.search_space.num_dims):
@@ -301,9 +290,9 @@ class MultiArmedBandit(OptimizerNotBO):
             gamma = self.gamma[dim_dix]
             prob_dist = self.prob_dist[dim_dix]
 
-            x = x.to(torch.long)
+            x_transf = x_transf.to(torch.long)
             reward = mab_rewards[:, dim_dix]
-            nominal_vars = x[:, dim_dix]  # 1xB
+            nominal_vars = x_transf[:, dim_dix]  # 1xB
             for ii, ht in enumerate(nominal_vars):
                 gt_ht_b = reward[ii]
                 estimated_reward = 1.0 * gt_ht_b / prob_dist[ht]

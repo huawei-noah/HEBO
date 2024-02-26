@@ -22,7 +22,7 @@ for task in ackley aig_optimization antibody_design mig_optimization pest rna_in
     done
   done
 
-  for opt_id in ga sa rs ls; do
+  for opt_id in ga sa rs hc; do
     cmd="python ./experiments/run_task_exps.py --device_id 0 --absolut_dir $ABSOLUT_EXE --task_id $task --optimizers_ids $opt_id --seeds $SEEDS"
     $cmd
   done
@@ -44,7 +44,7 @@ for task in ackley-53 xgboost_opt aig_optimization_hyp svm_opt; do
     done
   done
 
-  for opt_id in ga sa rs ls; do
+  for opt_id in ga sa rs hc; do
     cmd="python ./experiments/run_task_exps.py --device_id 0 --task_id $task --optimizers_ids $opt_id --seeds $SEEDS"
     $cmd
   done

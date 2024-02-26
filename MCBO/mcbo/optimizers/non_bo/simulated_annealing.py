@@ -137,12 +137,10 @@ class SimulatedAnnealing(OptimizerNotBO):
             self.data_buffer.append(x.clone(), y.clone())
 
         # update best fx
-        best_idx = y.flatten().argmin()
-        best_y = y[best_idx, 0].item()
+        self.update_best(x_transf=x, y=y)
 
-        if self.best_y is None or best_y < self.best_y:
-            self.best_y = best_y
-            self._best_x = x[best_idx: best_idx + 1]
+        best_idx = self.get_best_y_ind(y=y)
+        best_y = y[best_idx].clone()
 
         if self._current_x is None or self._current_y is None:
             self._current_y = best_y
@@ -237,35 +235,29 @@ class SimulatedAnnealing(OptimizerNotBO):
         if self.store_observations or (not self.allow_repeating_suggestions):
             self.data_buffer.append(x.clone(), y.clone())
 
+        self.update_best(x_transf=x.clone(), y=y)
+        idx = self.get_best_y_ind(y=y)
+        candidate_best_y = y[idx].clone()
         # update best fx
-        if self.best_y is None:
-            idx = y.flatten().argmin()
-            self._current_x = x[idx: idx + 1]
-            self._current_y = y[idx, 0].item()
-
-            self._best_x = x[idx: idx + 1]
-            self.best_y = y[idx, 0].item()
-
+        if self._current_y is None:
+            self._current_x = x[idx: idx + 1].clone()
+            self._current_y = y[idx].clone()
         else:
             self.temp *= 0.8
-            idx = y.flatten().argmin()
-            y_ = y[idx, 0].item()
 
-            if y_ < self.best_y:
-                self._current_x = x[idx: idx + 1]
-                self._current_y = y_
-
-                self._best_x = x[idx: idx + 1]
-                self.best_y = y_
-
+            if self.is_better_than_current(current_y=self._current_y, new_y=candidate_best_y):
+                self._current_x = x[idx: idx + 1].clone()
+                self._current_y = candidate_best_y
             else:
-                exponent = np.clip(- (y_ - self._current_y) / self.temp, self.MIN_EXPONENT, self.MAX_EXPONENT)
+                assert self.n_objs == 1 and self.n_constrs == 0, (self.n_objs, self.n_constrs)
+                gap = candidate_best_y[0].item() - self._current_y[0].item()
+                exponent = np.clip(- gap / self.temp, self.MIN_EXPONENT, self.MAX_EXPONENT)
                 p = np.clip(np.exp(exponent), self.MIN_PROB, self.MAX_PROB)
                 z = np.random.rand()
 
                 if z < p:
                     self._current_x = x[idx: idx + 1]
-                    self._current_y = y_
+                    self._current_y = candidate_best_y
 
     def sample_unseen_nominal_neighbour(self, x_nominal: torch.Tensor):
 
@@ -276,6 +268,7 @@ class SimulatedAnnealing(OptimizerNotBO):
 
         if x_nominal.ndim == 1:
             x_nominal = x_nominal.view(1, -1)
+
             single_sample = True
 
         x_nominal_neighbour = x_nominal.clone()

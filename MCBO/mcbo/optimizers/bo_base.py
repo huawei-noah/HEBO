@@ -191,25 +191,20 @@ class BoBase(OptimizerBase):
         assert x.shape[0] == y.shape[0]
         assert x.shape[1] == self.search_space.num_dims
 
-        x = self.search_space.transform(x)
+        transf_x = self.search_space.transform(x)
         self.x_init = self.x_init[len(x):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
         # Add data to all previously observed data
-        self.data_buffer.append(x, y)
+        self.data_buffer.append(transf_x, y)
 
         if self.tr_manager is not None:
-            self.tr_manager.append(x, y)
+            self.tr_manager.append(transf_x, y)
 
         # update best fx
-        best_idx = self.get_best_y_ind(y)
-        best_y = y[best_idx]
-
-        if self.best_y is None or self.is_better_than_current(self.best_y, best_y):
-            self.best_y = best_y
-            self._best_x = x[best_idx: best_idx + 1]
+        self.update_best(x_transf=transf_x, y=y)
 
     def method_suggest(self, n_suggestions: int = 1) -> pd.DataFrame:
 
@@ -360,38 +355,27 @@ class BoBase(OptimizerBase):
                              f"Y:\n"
                              f"    {y}")
         # Transform x and y to torch tensors
-        x = self.search_space.transform(x)
+        x_transf = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
-        assert len(x) == len(y)
+        assert len(x_transf) == len(y)
 
         # Add data to all previously observed data and to the trust region manager
-        self.data_buffer.append(x, y)
+        self.data_buffer.append(x_transf, y)
 
         if self.tr_manager is not None:
             if len(self.tr_manager.data_buffer) > self.n_init:
                 self.tr_manager.adjust_tr_radii(y)
-            self.tr_manager.append(x, y)
+            self.tr_manager.append(x_transf, y)
             self.tr_manager.adjust_tr_center()
 
         # update best x and y
-        if self.best_y is None:
-            idx = self.get_best_y_ind(y)
-            self.best_y = y[idx]
-            self._best_x = x[idx: idx + 1]
-
-        else:
-            idx = self.get_best_y_ind(y)
-            y_ = y[idx]
-
-            if self.is_better_than_current(current_y=self.best_y, new_y=y_):
-                self.best_y = y_
-                self._best_x = x[idx: idx + 1]
+        self.update_best(x_transf=x_transf, y=y)
 
         # Used to update internal state of the optimizer if needed
-        self.acq_optimizer.post_observe_method(x, y, self.data_buffer, self.n_init)
+        self.acq_optimizer.post_observe_method(x=x_transf, y=y, data_buffer=self.data_buffer, n_init=self.n_init)
 
         self.observe_time.append(time.time() - time_ref)
 

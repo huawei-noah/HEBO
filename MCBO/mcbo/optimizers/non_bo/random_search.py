@@ -124,24 +124,19 @@ class RandomSearch(OptimizerNotBO):
 
     def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
-        x = self.search_space.transform(x)
+        x_transf = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
-        assert len(x) == len(y)
+        assert len(x_transf) == len(y)
 
         # Add data to all previously observed data
         if self.store_observations:
-            self.data_buffer.append(x, y)
+            self.data_buffer.append(x_transf, y)
 
         # update best fx
-        best_idx = y.flatten().argmin()
-        best_y = y[best_idx, 0].item()
-
-        if self.best_y is None or best_y < self.best_y:
-            self.best_y = best_y
-            self._best_x = x[best_idx: best_idx + 1]
+        self.update_best(x_transf=x_transf, y=y)
 
     def initialize(self, x: pd.DataFrame, y: np.ndarray):
         assert y.ndim == 2
@@ -149,23 +144,18 @@ class RandomSearch(OptimizerNotBO):
         assert x.shape[0] == y.shape[0]
         assert x.shape[1] == self.search_space.num_dims
 
-        x = self.search_space.transform(x)
-        self.x_init = self.x_init[len(x):]
+        x_transf = self.search_space.transform(x)
+        self.x_init = self.x_init[len(x_transf):]
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
         # Add data to all previously observed data
         if self.store_observations:
-            self.data_buffer.append(x.clone(), y.clone())
+            self.data_buffer.append(x_transf.clone(), y.clone())
 
         # update best fx
-        best_idx = y.flatten().argmin()
-        best_y = y[best_idx, 0].item()
-
-        if self.best_y is None or best_y < self.best_y:
-            self.best_y = best_y
-            self._best_x = x[best_idx: best_idx + 1]
+        self.update_best(x_transf=x_transf, y=y)
 
     def set_x_init(self, x: pd.DataFrame):
         self.x_init = x

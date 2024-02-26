@@ -126,7 +126,7 @@ def run_experiment(
 
             # Main loop
             for iter_num in range(start_iter, max_num_iter + 1):
-                if optimizer.device is not None and optimizer.device.type == "cuda":
+                if hasattr(optimizer, "device") and optimizer.device is not None and optimizer.device.type == "cuda":
                     with torch.cuda.device(optimizer.device):
                         torch.cuda.empty_cache()
 

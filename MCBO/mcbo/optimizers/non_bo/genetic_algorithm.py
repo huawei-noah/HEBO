@@ -7,7 +7,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-from typing import Optional, List, Callable, Dict, Any, Union
+from typing import Optional, List, Callable, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -165,25 +165,19 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
     def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
         if isinstance(y, torch.Tensor):
+            y_torch = y
             y = y.cpu().numpy()
+        else:
+            y_torch = torch.tensor(y, dtype=self.dtype)
+
+        x_transf = self.search_space.transform(x)
 
         # Append the data to the internal data buffer
         if self.store_observations:
-            self.data_buffer.append(self.search_space.transform(x), torch.tensor(y, dtype=self.dtype))
+            self.data_buffer.append(x_transf, y_torch)
 
         # update best fx
-        if self.best_y is None:
-            idx = y.flatten().argmin()
-            self.best_y = y[idx, 0].item()
-            self._best_x = x.iloc[idx: idx + 1]
-
-        else:
-            idx = y.flatten().argmin()
-            y_ = y[idx, 0].item()
-
-            if y_ < self.best_y:
-                self.best_y = y_
-                self._best_x = x[idx: idx + 1]
+        self.update_best(x_transf=x_transf, y=y_torch)
 
         self._pymoo_y = np.concatenate((self._pymoo_y, y.flatten()))
 
@@ -246,23 +240,7 @@ class PymooGeneticAlgorithm(OptimizerNotBO):
         self._pymoo_ga.tell(infills=pop)
 
         # Set best x and y
-        if self.best_y is None:
-            idx = y.flatten().argmin()
-            self.best_y = y[idx, 0].item()
-            self._best_x = x[idx: idx + 1]
-
-        else:
-            idx = y.flatten().argmin()
-            y_ = y[idx, 0].item()
-
-            if y_ < self.best_y:
-                self.best_y = y_
-                self._best_x = x[idx: idx + 1]
-
-    @property
-    def best_x(self):
-        if self.best_y is not None:
-            return self._best_x
+        self.update_best(x_transf=self.search_space.transform(data=x), y=torch.tensor(y, dtype=self.dtype))
 
 
 class CategoricalGeneticAlgorithm(OptimizerNotBO):
@@ -404,12 +382,7 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
         self.y_pop = torch.cat((self.y_pop, y.clone()), axis=0)
 
         # update best fx
-        best_idx = y.flatten().argmin()
-        best_y = y[best_idx, 0].item()
-
-        if self.best_y is None or best_y < self.best_y:
-            self.best_y = best_y
-            self._best_x = x[best_idx: best_idx + 1]
+        self.update_best(x_transf=x, y=y)
 
     def set_x_init(self, x: pd.DataFrame):
         self.x_queue = x
@@ -457,34 +430,23 @@ class CategoricalGeneticAlgorithm(OptimizerNotBO):
 
     def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
 
-        x = self.search_space.transform(x)
+        x_transf = self.search_space.transform(x)
 
         if isinstance(y, np.ndarray):
             y = torch.tensor(y, dtype=self.dtype)
 
-        assert len(x) == len(y)
+        assert len(x_transf) == len(y)
 
         # Add data to all previously observed data
         if self.store_observations or (not self.allow_repeating_suggestions):
-            self.data_buffer.append(x, y)
+            self.data_buffer.append(x_transf, y)
 
         # Add data to current population
-        self.x_pop = torch.cat((self.x_pop, x.clone()), axis=0)
+        self.x_pop = torch.cat((self.x_pop, x_transf.clone()), axis=0)
         self.y_pop = torch.cat((self.y_pop, y.clone()), axis=0)
 
         # update best fx
-        if self.best_y is None:
-            idx = y.flatten().argmin()
-            self.best_y = y[idx, 0].item()
-            self._best_x = x[idx: idx + 1]
-
-        else:
-            idx = y.flatten().argmin()
-            y_ = y[idx, 0].item()
-
-            if y_ < self.best_y:
-                self.best_y = y_
-                self._best_x = x[idx: idx + 1]
+        self.update_best(x_transf=x_transf, y=y)
 
     def _generate_new_population(self):
 
@@ -797,7 +759,7 @@ class GeneticAlgorithm(OptimizerNotBO):
         return self.backend_ga.method_suggest(n_suggestions)
 
     def method_observe(self, x: pd.DataFrame, y: np.ndarray) -> None:
-        self.backend_ga.observe(x, y)
+        self.backend_ga.observe(x=x, y=y)
         self._best_x = self.backend_ga._best_x
         self.best_y = self.backend_ga.best_y
 
@@ -809,7 +771,3 @@ class GeneticAlgorithm(OptimizerNotBO):
 
     def initialize(self, x: pd.DataFrame, y: np.ndarray) -> None:
         self.backend_ga.initialize(x, y)
-
-    @property
-    def best_x(self) -> Any:
-        return self.backend_ga.best_x
