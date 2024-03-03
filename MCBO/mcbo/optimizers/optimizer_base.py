@@ -75,6 +75,9 @@ class OptimizerBase(ABC):
             dtype: tensor type
             input_constraints: list of funcs taking a point as input and outputting whether the point
                                        is valid or not
+            obj_dims: dimensions in ys corresponding to objective values to minimize
+            out_constr_dims: dimensions in ys corresponding to inequality constraints
+            out_upper_constr_vals: values of upper bounds for inequality constraints
         """
         assert dtype in [torch.float32, torch.float64]
 
@@ -150,7 +153,7 @@ class OptimizerBase(ABC):
 
         Args:
             n_suggestions: number of points to suggest
-
+            
         Returns:
             dataframe of suggested points.
         """
