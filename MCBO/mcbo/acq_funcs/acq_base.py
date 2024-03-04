@@ -26,13 +26,24 @@ class AcqBase(ABC):
 
     @property
     @abstractmethod
-    def num_obj(self) -> int:
+    def obj_dims(self) -> List[int]:
+        """ List of dimensions in acquisition function output that correspond to values that should be optimized
+        (usually [0] for simple acquisition functions) """
         pass
 
     @property
     @abstractmethod
-    def num_constr(self) -> int:
+    def out_constr_dims(self) -> List[int]:
+        """ List of dimensions in acquisition function output that correspond to values that should be constrained to
+            be less than some thresholds (usually [] for simple acquisition functions) """
         pass
+
+    @property
+    @abstractmethod
+    def out_upper_constr_vals(self) -> Optional[torch.Tensor]:
+        """ Values of upper bounds for inequality constraints (if acquisition function optimization problem is framed
+        as max acq(x)[obj_dims] s.t. acq(x)[out_constr_dims] <= out_upper_constr_vals """
+        return None
 
     @abstractmethod
     def evaluate(self,
@@ -62,6 +73,18 @@ class AcqBase(ABC):
 
 
 class ConstrAcqBase(AcqBase, ABC):
+
+    @property
+    def obj_dims(self) -> List[int]:
+        return [0]
+
+    @property
+    def out_constr_dims(self) -> List[int]:
+        return []
+
+    @property
+    def out_upper_constr_vals(self) -> torch.Tensor:
+        return torch.zeros(0)
 
     @abstractmethod
     def evaluate(self,
@@ -134,12 +157,16 @@ class SingleObjAcqBase(AcqBase, ABC):
         super(SingleObjAcqBase, self).__init__(**kwargs)
 
     @property
-    def num_obj(self) -> int:
-        return 1
+    def obj_dims(self) -> List[int]:
+        return [0]
 
     @property
-    def num_constr(self) -> int:
-        return 0
+    def out_constr_dims(self) -> List[int]:
+        return []
+
+    @property
+    def out_upper_constr_vals(self) -> torch.Tensor:
+        return torch.zeros(0)
 
     def __call__(self, x: torch.Tensor, model: Union[ModelBase, EnsembleModelBase], **kwargs) -> torch.Tensor:
         assert model.num_out == 1
