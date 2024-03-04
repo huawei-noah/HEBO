@@ -40,11 +40,11 @@ class AcqBase(ABC):
 
     @property
     @abstractmethod
-    def out_upper_constr_vals(self) -> Optional[torch.Tensor]:
+    def out_upper_constr_vals(self) -> torch.Tensor:
         """ Values of upper bounds for inequality constraints (if acquisition function optimization problem is framed
         as max acq(x)[obj_dims] s.t. acq(x)[out_constr_dims] <= out_upper_constr_vals """
-        return None
-
+        pass
+    
     @abstractmethod
     def evaluate(self,
                  x: torch.Tensor,
