@@ -528,9 +528,9 @@ class BoBuilder:
             acq_optim_name=self.acq_opt_id,
             device=device,
             input_constraints=input_constraints,
-            obj_dims=obj_dims,
-            out_constr_dims=out_constr_dims,
-            out_upper_constr_vals=out_upper_constr_vals,
+            obj_dims=acq_func.obj_dims,
+            out_constr_dims=acq_func.out_constr_dims,
+            out_upper_constr_vals=acq_func.out_upper_constr_vals,
             **self.acq_opt_kwargs
         )
         tr_manager = self.get_tr_manager(
