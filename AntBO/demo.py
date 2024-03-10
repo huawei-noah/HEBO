@@ -25,6 +25,11 @@ if __name__ == "__main__":
                         help='Number of antibodies suggested at each step (default: 1)')
     parser.add_argument('--pre_evals_csv', type=str,
                         help='Path to csv file containing the binding energy of already evaluated antibody sequences.')
+    parser.add_argument('--tabular_search_csv', type=str,
+                        help='Path to csv file containing the set of eligible antibodies with their pre-computed '
+                             'binding energy (to test optimisation in a controlled scenario).')
+    parser.add_argument('--path_to_eval_csv', type=str, default="./table_of_evals.csv",
+                        help='If the black-box evaluations are provided by filling a table, path to this table.')
     parser.add_argument('--cuda_id', type=int, default=0, help='ID of the cuda device to use.')
     parser.add_argument('--seed', type=int, nargs="+", default=[42], help='Seed for reproducibility.')
     parser.add_argument('--absolut_path', type=str, help='Path to Absolut! (if Absolut is needed.)')
@@ -41,6 +46,7 @@ if __name__ == "__main__":
     # -------- Create config
     config = {
         'pre_evals': args.pre_evals_csv,
+        'tabular_search_csv': args.tabular_search_csv,
         'acq': 'ei',
         'ard': True,
         'n_init': n_init,
@@ -63,8 +69,9 @@ if __name__ == "__main__":
         #     'antigen': args.antigen
         # },
         'bbox': {
-            'tool': 'manual',
-            'antigen': args.antigen
+            'tool': 'table_filling',
+            'antigen': args.antigen,
+            'path_to_eval_csv': args.path_to_eval_csv
         },
     }
 

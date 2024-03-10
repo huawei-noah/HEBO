@@ -4,9 +4,11 @@ import sys
 from pathlib import Path
 from typing import Optional, Set, Any, Dict
 
+
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
 
+from task import BaseTool
 from utilities.misc_utils import log
 from bo.custom_init import get_initial_dataset_path, InitialBODataset, get_top_cut_ratio_per_cat, get_n_per_cat
 from bo.botask import BOTask as CDRBO
@@ -53,6 +55,11 @@ class BOExperiments:
 
         """
         self.config = config
+        if self.config["tabular_search_csv"] is not None:
+            print(
+                f"Tabular BO setting: will select antibodies among available ones from: {config['tabular_search_csv']}"
+            )
+            self.table_of_aas_inds = self.get_table_of_aas_inds(tabular_search_csv=self.config["tabular_search_csv"])
         self.seed = seed
         self.cdr_constraints = cdr_constraints
         # Sanity checks
@@ -83,7 +90,7 @@ class BOExperiments:
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-        print(self.path)
+        print(f"Results of this run will be saved in {self.path}")
 
         self.res = pd.DataFrame(np.nan, index=np.arange(int(self.config['max_iters'] * self.config['batch_size'])),
                                 columns=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
@@ -91,15 +98,20 @@ class BOExperiments:
         self.nm_AAs = 20
         self.n_categories = np.array([self.nm_AAs] * self.config['seq_len'])
         self.start_itern = 0
-        self.f_obj = CDRBO(self.config['device'], self.n_categories, self.config['seq_len'], self.config['bbox'], False)
+        self.f_obj = CDRBO(
+            device=self.config['device'], n_categories=self.n_categories,
+            seq_len=self.config['seq_len'], bbox=self.config['bbox'], normalise=False
+        )
 
     @staticmethod
     def get_path(save_path: str, antigen: str, kernel_type: str, seed: int, cdr_constraints: int, seq_len: int,
                  search_strategy: str,
-                 custom_init_dataset_path: Optional[str] = None):
+                 custom_init_dataset_path: Optional[str] = None, tabular_search_csv: Optional[str] = None):
         path: str = f"{save_path}/BO_{kernel_type}/antigen_{antigen}" \
                     f"_kernel_{kernel_type}_search-strat_{search_strategy}_seed_{seed}" \
                     f"_cdr_constraint_{bool(cdr_constraints)}_seqlen_{seq_len}"
+        if tabular_search_csv is not None:
+            path += f"_tabsearch-{os.path.basename(tabular_search_csv)[:-4]}"
         if custom_init_dataset_path:
             custom_init_id = os.path.basename(os.path.dirname(custom_init_dataset_path))
             custom_init_id_seed = os.path.basename(os.path.dirname(os.path.dirname(custom_init_dataset_path)))
@@ -116,7 +128,8 @@ class BOExperiments:
             seed=self.seed,
             cdr_constraints=self.cdr_constraints,
             seq_len=self.config['seq_len'],
-            custom_init_dataset_path=self.custom_initial_dataset_path
+            custom_init_dataset_path=self.custom_initial_dataset_path,
+            tabular_search_csv=self.config["tabular_search_csv"]
         )
 
     @property
@@ -166,7 +179,7 @@ class BOExperiments:
         if os.path.exists(res_path):
             self.res = pd.read_csv(res_path,
                                    usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
-            self.start_itern = len(self.res) - self.res['Index'].isna().sum() // self.config['batch_size']
+            self.start_itern = (len(self.res) - self.res['Index'].isna().sum()) // self.config['batch_size']
         print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
         return optim
 
@@ -229,6 +242,7 @@ class BOExperiments:
                 kernel_type=self.config['kernel_type'],
                 noise_variance=float(self.config['noise_variance']),
                 alphabet_size=self.nm_AAs,
+                table_of_candidates=self.table_of_aas_inds,
                 **kwargs
             )
 
@@ -243,7 +257,7 @@ class BOExperiments:
 
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()
-            x_next = optim.suggest(self.config['batch_size'])
+            x_next = optim.suggest(n_suggestions=self.config['batch_size'])
             if self.custom_initial_dataset and len(optim.casmopolitan.fX) < self.config['n_init']:
                 # observe the custom initial points instead of the suggested ones
                 n_random = min(x_next.shape[0], self.config['n_init'] - len(optim.casmopolitan.fX))
@@ -263,6 +277,13 @@ class BOExperiments:
         log(message=message,
             header=f"BOExp - {self.config['bbox']['antigen']} - {self.config['kernel_type']} - seed {self.seed}",
             end=end)
+
+    def get_table_of_aas_inds(self, tabular_search_csv: str) -> np.ndarray:
+        """ Return array of antigens where each row corresponds to an antigen given by the index of its AA """
+        data = pd.read_csv(tabular_search_csv, index_col=None).values
+        assert data.shape[-1] == 1
+        arr = np.array([list(c for c in x) for x in data.flatten()])
+        return BaseTool().convert_array_aas_to_idx(arr)
 
 
 from bo.utils import get_config

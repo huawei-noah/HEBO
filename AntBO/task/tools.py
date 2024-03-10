@@ -2,12 +2,27 @@
 import __main__
 import os
 import subprocess
+import time
 
 import numpy as np
 import pandas as pd
 
 # from pymol import cmd
 from task.base import BaseTool
+
+
+def custom_input(message: str, default: str) -> str:
+    """Wrapper around `input` function.
+
+    Replace empty string by `default`
+    """
+    if os.getenv("ANTBO_DEBUG", False):
+        val = default
+    else:
+        val = input(message)
+        if val == "":
+            val = default
+    return val
 
 
 ############################
@@ -156,7 +171,7 @@ class PyMolVisualisation:
         spectrum count, green_yellow_red
         color blue, ligands
         set cartoon_fancy_helices, 1
-        
+
         mset 1 x{num_frames}
         util.mroll 1, {num_frames}, 1
         set ray_trace_frames, 1
@@ -216,13 +231,67 @@ class Manual(BaseTool):
 
         energies = []
         for i in range(len(sequences)):
-            energy1 = float(input(f"[{self.antigen}] Write energy for {sequences[i]}:"))
-            energy2 = float(input(f"[{self.antigen}] Confirm energy for {sequences[i]}:"))
+            default = np.random.randn()
+            energy1 = float(custom_input(message=f"[{self.antigen}] Write energy for {sequences[i]}:", default=default))
+            energy2 = float(
+                custom_input(message=f"[{self.antigen}] Confirm energy for {sequences[i]}:", default=default))
             while energy1 != energy2:
                 print("Mismatch, pleaser enter energies again")
-                energy1 = float(input(f"[{self.antigen}] Write energy for {sequences[i]}:"))
-                energy2 = float(input(f"[{self.antigen}] Confirm energy for {sequences[i]}:"))
+                energy1 = float(custom_input(message=f"[{self.antigen}] Write energy for {sequences[i]}:",
+                                             default=default))
+                energy2 = float(custom_input(message=f"[{self.antigen}] Confirm energy for {sequences[i]}:",
+                                             default=default))
             energies.append(energy1)
+
+        return np.array(energies), sequences
+
+
+class TableFilling(BaseTool):
+    """ Get results by reading a csv """
+
+    def __init__(self, config):
+        BaseTool.__init__(self)
+        '''
+        config: dictionary of parameters for BO that includes:
+                    - antigen: PDB ID of antigen
+                    - path_to_eval_csv: str
+        '''
+        for key in ['antigen']:
+            assert key in config, f"\"{key}\" is not defined in config"
+        self.config = config
+        self.antigen = self.config["antigen"]
+        self.path_to_eval_csv = self.config["path_to_eval_csv"]
+
+    def Energy(self, x):
+        '''
+        x: categorical vector (num_Seq x Length)
+        '''
+        x = x.astype('int32')
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
+
+        sequences = []
+        for i, seq in enumerate(x):
+            seq2char = ''.join(self.idx_to_AA[aa] for aa in seq)
+            sequences.append(seq2char)
+
+        # save sequences
+        dirname = os.path.dirname(self.path_to_eval_csv)
+        os.makedirs(dirname, exist_ok=True)
+        to_eval = pd.DataFrame([[self.antigen, seq, None, 0] for seq in sequences],
+                               columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
+        to_eval.to_csv(self.path_to_eval_csv, index=False)
+        print(f"Saved candidates to evaluate in {os.path.abspath(self.path_to_eval_csv)}")
+
+        # Try to read the evaluations
+
+        while True:
+            table_of_results = pd.read_csv(self.path_to_eval_csv, index_col=None)
+            if np.all(table_of_results["Validate (0/1)"].values):
+                energies = table_of_results["Validate (0/1)"].values
+                break
+            else:
+                time.sleep(5)
 
         return np.array(energies), sequences
 

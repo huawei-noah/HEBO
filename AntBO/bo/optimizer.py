@@ -1,23 +1,28 @@
+import os
 from copy import deepcopy
-from itertools import groupby
+from typing import Optional
+
 import numpy as np
+import scipy.spatial.distance
 import scipy.stats as ss
-from bo.localbo_cat import CASMOPOLITANCat
-from bo.localbo_utils import from_unit_cube, latin_hypercube, to_unit_cube, ordinal2onehot, onehot2ordinal,\
-    random_sample_within_discrete_tr_ordinal
-from bo.localbo_utils import check_cdr_constraints
 import torch
-import logging
 from gpytorch.utils.errors import NotPSDError, NanError
+
+from bo.localbo_cat import CASMOPOLITANCat
+from bo.localbo_utils import from_unit_cube, latin_hypercube, onehot2ordinal, \
+    random_sample_within_discrete_tr_ordinal, check_cdr_constraints, space_fill_table_sample
+from bo.utils import update_table_of_candidates
 from utilities.constraint_utils import check_constraint_satisfaction_batch
 
 COUNT_AA = 5
+
 
 def order_stats(X):
     _, idx, cnt = np.unique(X, return_inverse=True, return_counts=True)
     obs = np.cumsum(cnt)  # Need to do it this way due to ties
     o_stats = obs[idx]
     return o_stats
+
 
 def copula_standardize(X):
     X = np.nan_to_num(np.asarray(X))  # Replace inf by something large
@@ -31,30 +36,33 @@ def copula_standardize(X):
 class Optimizer:
 
     def __init__(self,
-                 config: np.ndarray,
+                 config,
                  min_cuda,
-                 batch_size: int =1,
                  normalise: bool = False,
                  cdr_constraints: bool = False,
                  n_init: int = None,
                  wrap_discrete: bool = True,
                  guided_restart: bool = True,
+                 table_of_candidates: Optional[np.ndarray] = None,
                  **kwargs):
         """Build wrapper class to use an optimizer in benchmark.
 
-        Parameters
-        ----------
-        config: list. e.g. [2, 3, 4, 5] -- denotes there are 4 categorical variables, with numbers of categories
-            being 2, 3, 4, and 5 respectively.
-        guided_restart: whether to fit an auxiliary GP over the best points encountered in all previous restarts, and
-            sample the points with maximum variance for the next restart.
-        global_bo: whether to use the global version of the discrete GP without local modelling
+        Args:
+            config: list. e.g. [2, 3, 4, 5] -- denotes there are 4 categorical variables, with numbers of categories
+                being 2, 3, 4, and 5 respectively.
+            guided_restart: whether to fit an auxiliary GP over the best points encountered in all previous restarts, and
+                sample the points with maximum variance for the next restart.
+            global_bo: whether to use the global version of the discrete GP without local modelling
+            table_of_candidates: if not None, the suggestions should be taken from this list of candidates given as a
+                                2d array of aas indices.
+
         """
 
         # Maps the input order.
         self.config = config.astype(int)
         self.true_dim = len(config)
         self.kwargs = kwargs
+        self.table_of_candidates = table_of_candidates
         if self.kwargs['kernel_type'] == 'ssk':
             assert 'alphabet_size' != None and self.kwargs['alphabet_size'] != None
         # Number of one hot dimensions
@@ -75,11 +83,12 @@ class Optimizer:
             dim=self.true_dim,
             n_init=n_init if n_init is not None else 2 * self.true_dim + 1,
             max_evals=self.max_evals,
-            cdr_constraints = self.cdr_constraints,
-            normalise = normalise,
+            cdr_constraints=self.cdr_constraints,
+            normalise=normalise,
             batch_size=1,  # We need to update this later
             verbose=False,
             config=self.config,
+            table_of_candidates=self.table_of_candidates,
             **kwargs
         )
 
@@ -92,7 +101,7 @@ class Optimizer:
 
     def restart(self):
         from bo.gp import train_gp
-        if self.guided_restart and len(self.casmopolitan._fX) and self.kwargs['search_strategy'] in ['local', 'batch_local']:
+        if self.guided_restart and len(self.casmopolitan._fX) and self.kwargs['search_strategy'] == 'local':
             best_idx = self.casmopolitan._fX.argmin()
             # Obtain the best X and fX within each restart (bo._fX and bo._X get erased at each restart,
             # but bo.X and bo.fX always store the full history
@@ -100,8 +109,10 @@ class Optimizer:
                 self.best_fX_each_restart = deepcopy(self.casmopolitan._fX[best_idx])
                 self.best_X_each_restart = deepcopy(self.casmopolitan._X[best_idx])
             else:
-                self.best_fX_each_restart = np.vstack((self.best_fX_each_restart, deepcopy(self.casmopolitan._fX[best_idx])))
-                self.best_X_each_restart = np.vstack((self.best_X_each_restart, deepcopy(self.casmopolitan._X[best_idx])))
+                self.best_fX_each_restart = np.vstack(
+                    (self.best_fX_each_restart, deepcopy(self.casmopolitan._fX[best_idx])))
+                self.best_X_each_restart = np.vstack(
+                    (self.best_X_each_restart, deepcopy(self.casmopolitan._X[best_idx])))
 
             X_tr_torch = torch.tensor(self.best_X_each_restart, dtype=torch.float32).reshape(-1, self.true_dim)
             fX_tr_torch = torch.tensor(self.best_fX_each_restart, dtype=torch.float32).view(-1)
@@ -109,19 +120,26 @@ class Optimizer:
             # Train the auxiliary
             self.auxiliary_gp = train_gp(X_tr_torch, fX_tr_torch, False, 300, )
             # Generate random points in a Thompson-style sampling
-            X_init, itern = [], 0
-            while(itern<self.casmopolitan.n_cand):
-                X_init_itern = latin_hypercube(1, self.dim)
-                X_init_itern = from_unit_cube(X_init_itern, self.lb, self.ub)
-                if self.wrap_discrete:
-                    X_init_itern = self.warp_discrete(X_init_itern, )
-                X_init_itern = onehot2ordinal(X_init_itern, self.cat_dims)
-                if self.cdr_constraints:
-                    if not check_cdr_constraints(X_init_itern[0]):
-                        continue
-                X_init.append(X_init_itern)
-                itern += 1
-            X_init = torch.stack(X_init, 0).squeeze()
+            if self.table_of_candidates is not None:
+                X_init = space_fill_table_sample(
+                    n_pts=min(self.casmopolitan.n_cand, len(self.table_of_candidates)),
+                    table_of_candidates=self.table_of_candidates
+                )
+                X_init = torch.tensor(X_init)
+            else:
+                X_init, itern = [], 0
+                while (itern < self.casmopolitan.n_cand):
+                    X_init_itern = latin_hypercube(1, self.dim)
+                    X_init_itern = from_unit_cube(X_init_itern, self.lb, self.ub)
+                    if self.wrap_discrete:
+                        X_init_itern = self.warp_discrete(X_init_itern)
+                    X_init_itern = onehot2ordinal(X_init_itern, self.cat_dims)
+                    if self.cdr_constraints:
+                        if not check_cdr_constraints(X_init_itern[0]):
+                            continue
+                    X_init.append(X_init_itern)
+                    itern += 1
+                X_init = torch.stack(X_init, 0).squeeze()
             with torch.no_grad():
                 self.auxiliary_gp.eval()
                 X_init_torch = torch.tensor(X_init, dtype=torch.float32)
@@ -134,13 +152,34 @@ class Optimizer:
             self.X_init = np.ones((self.casmopolitan.n_init, self.true_dim))
             indbest = np.argmin(y_cand)
             # The initial trust region centre for the new restart
-            centre = deepcopy(X_init[indbest, :])
+            centre = deepcopy(X_init[indbest, :].cpu().detach().numpy())
             # The centre is the first point to be evaluated
             self.X_init[0, :] = deepcopy(centre)
-            for i in range(1, self.casmopolitan.n_init):
-                # Randomly sample within the initial trust region length around the centre
-                self.X_init[i, :] = deepcopy(
-                    random_sample_within_discrete_tr_ordinal(centre, self.casmopolitan.length_init_discrete, self.config))
+            if self.table_of_candidates is not None:  # sample from table
+                table_of_candidates = deepcopy(self.table_of_candidates)
+                # compute hamming distance with centre
+                hamming_dist = scipy.spatial.distance.cdist(table_of_candidates, centre.reshape(1, -1), "hamming")
+                hamming_dist = hamming_dist.flatten() * centre.shape[-1]
+                # discard center and points that are too far
+                if os.getenv("ANTBO_DEBUG", False):
+                    upper_hamming_dist = len(centre)
+                else:
+                    upper_hamming_dist = self.casmopolitan.length_init_discrete
+                filtr = np.logical_and(hamming_dist <= upper_hamming_dist, hamming_dist > 0)
+                table_of_candidates = table_of_candidates[filtr]
+                # sample
+                n_sample = self.casmopolitan.n_init - 1
+                self.X_init[1:] = space_fill_table_sample(n_pts=n_sample, table_of_candidates=table_of_candidates)
+            else:
+                for i in range(1, self.casmopolitan.n_init):
+                    # Randomly sample within the initial trust region length around the centre
+                    candidate = random_sample_within_discrete_tr_ordinal(
+                        x_center=centre,
+                        max_hamming_dist=self.casmopolitan.length_init_discrete,
+                        n_categories=self.config
+                    )
+                    self.X_init[i] = deepcopy(candidate)
+            self.X_init = torch.tensor(self.X_init).to(torch.float32)
             self.casmopolitan._restart()
             self.casmopolitan._X = np.zeros((0, self.casmopolitan.dim))
             self.casmopolitan._fX = np.zeros((0, 1))
@@ -151,75 +190,99 @@ class Optimizer:
             self.casmopolitan._restart()
             self.casmopolitan._X = np.zeros((0, self.casmopolitan.dim))
             self.casmopolitan._fX = np.zeros((0, 1))
-            # Sample Initial Points with frequency criterion
-            self.X_init, itern = [], 0
-            while(itern<self.casmopolitan.n_init):
-                X_init = latin_hypercube(1, self.dim)
-                X_init = from_unit_cube(X_init, self.lb, self.ub)
-                if self.wrap_discrete:
-                    X_init = self.warp_discrete(X_init, )
-                X_init = onehot2ordinal(X_init, self.cat_dims)
-                if self.cdr_constraints:
-                    if not check_cdr_constraints(X_init[0]):
-                        continue
-                self.X_init.append(X_init)
-                itern += 1
-            self.X_init = torch.stack(self.X_init, 0).squeeze()
+            # If a table of candidates is available: use it
+            if self.table_of_candidates is not None:
+                self.X_init = torch.tensor(
+                    space_fill_table_sample(self.casmopolitan.n_init, table_of_candidates=self.table_of_candidates)
+                )
+            else:  # Sample Initial Points with frequency criterion
+                self.X_init, itern = [], 0
+                while (itern < self.casmopolitan.n_init):
+                    X_init = latin_hypercube(1, self.dim)
+                    X_init = from_unit_cube(X_init, self.lb, self.ub)
+                    if self.wrap_discrete:
+                        X_init = self.warp_discrete(X_init)
+                    X_init = onehot2ordinal(X_init, self.cat_dims)
+                    if self.cdr_constraints:
+                        if not check_cdr_constraints(X_init[0]):
+                            continue
+                    self.X_init.append(X_init)
+                    itern += 1
+                self.X_init = torch.stack(self.X_init, 0).squeeze()
 
     def suggest(self, n_suggestions=1):
+        """
+        Args:
+            n_suggestions: number of points to suggest
+        """
         if self.batch_size is None:  # Remember the batch size on the first call to suggest
             self.batch_size = n_suggestions
             self.casmopolitan.batch_size = n_suggestions
-            # self.bo.failtol = np.ceil(np.max([4.0 / self.batch_size, self.dim / self.batch_size]))
             self.casmopolitan.n_init = max([self.casmopolitan.n_init, self.batch_size])
             self.restart()
 
         X_next = np.zeros((n_suggestions, self.true_dim))
+
+        table_of_candidates = deepcopy(self.table_of_candidates)
+
         # Pick from the initial points
         n_init = min(len(self.X_init), n_suggestions)
         if n_init > 0:
             X_next[:n_init] = deepcopy(self.X_init[:n_init, :])
-            if X_next.ndim==1:
+            if X_next.ndim == 1:
                 X_next = X_next[None, :]
             self.X_init = self.X_init[n_init:, :]  # Remove these pending points
+            table_of_candidates = update_table_of_candidates(
+                original_table=table_of_candidates,
+                observed_candidates=X_next[:n_init],
+                check_candidates_in_table=True
+            )
 
         # Get remaining points from TuRBO
         n_adapt = n_suggestions - n_init
+        if os.getenv("ANTBO_DEBUG", False):
+            n_training_steps = 10
+        else:
+            n_training_steps = 500
         if n_adapt > 0:
             if len(self.casmopolitan._X) > 0:  # Use random points if we can't fit a GP
                 X = deepcopy(self.casmopolitan._X)
-                #fX = deepcopy(self.casmopolitan._fX).ravel()
-                if self.kwargs['search_strategy'] in ['local']:
+                # fX = deepcopy(self.casmopolitan._fX).ravel()
+                if self.kwargs['search_strategy'] == 'local':
                     fX = copula_standardize(deepcopy(self.casmopolitan._fX).ravel())  # Use Copula
                 else:
-                    fX = deepcopy(self.casmopolitan._fX).ravel() # No need to use Copula as no GP predictions in here.
+                    fX = deepcopy(self.casmopolitan._fX).ravel()  # No need to use Copula as no GP predictions in here.
 
-                # try:
-                if True:
-                    X_next[-n_adapt:, :] = self.casmopolitan._create_and_select_candidates(X, fX,
-                                                                                           length=self.casmopolitan.length_discrete,
-                                                                                           n_training_steps=500,
-                                                                                          hypers={})[-n_adapt:, :]
-                # except (ValueError, NanError, NotPSDError):
-                # except:
-                else:
+                try:
+                    X_next[-n_adapt:, :] = self.casmopolitan._create_and_select_candidates(
+                        X=X, fX=fX,
+                        length=self.casmopolitan.length_discrete,
+                        n_training_steps=n_training_steps,
+                        hypers={},
+                        table_of_candidates=table_of_candidates
+                    )[-n_adapt:, :]
+                except (ValueError, NanError, NotPSDError):
                     print(f"Acquisition Failure with Kernel {self.casmopolitan.kernel_type}")
-                    # if self.casmopolitan.kernel_type == 'ssk':
-                    #     print(f"Trying with kernel {self.casmopolitan.kernel_type}")
-                    #     self.casmopolitan.kernel_type = 'transformed_overlap'
-                    #     X_next[-n_adapt:, :] = self.casmopolitan._create_and_select_candidates(X, fX,
-                    #                                                                            length=self.casmopolitan.length_discrete,
-                    #                                                                            n_training_steps=500,
-                    #                                                                            hypers={})[-n_adapt:, :]
-                    #     self.casmopolitan.kernel_type = 'ssk'
-                    if self.casmopolitan.kernel_type in ['rbfBERT', 'cosineBERT']:
+                    if self.casmopolitan.kernel_type == 'ssk':
+                        print(f"Trying with kernel {self.casmopolitan.kernel_type}")
+                        self.casmopolitan.kernel_type = 'transformed_overlap'
+                        X_next[-n_adapt:, :] = self.casmopolitan._create_and_select_candidates(
+                            X=X, fX=fX,
+                            length=self.casmopolitan.length_discrete,
+                            n_training_steps=n_training_steps,
+                            hypers={},
+                            table_of_candidates=table_of_candidates
+                        )[-n_adapt:, :]
+                        self.casmopolitan.kernel_type = 'ssk'
+                    elif self.casmopolitan.kernel_type in ['rbfBERT', 'rbf-pca-BERT', 'cosine-BERT', 'cosine-pca-BERT']:
+                        assert self.table_of_candidates is None, "not supported when given a table of candidates"
                         print("Random Acquisition")
                         X_random_next, j = [], 0
                         while (j < n_adapt):
                             X_next_j = latin_hypercube(1, self.dim)
                             X_next_j = from_unit_cube(X_next_j, self.lb, self.ub)
                             if self.wrap_discrete:
-                                X_next_j = self.warp_discrete(X_next_j, )
+                                X_next_j = self.warp_discrete(X_next_j)
                             X_next_j = onehot2ordinal(X_next_j, self.cat_dims)
                             if self.cdr_constraints:
                                 if not check_cdr_constraints(X_next_j[0]):
@@ -229,6 +292,7 @@ class Optimizer:
                         X_random_next = np.stack(X_random_next, 0)
                         X_next[-n_adapt:, :] = X_random_next
                     else:
+                        assert self.table_of_candidates is None, "not supported when given a table of candidates"
                         print('Resorting to Random Search')
                         # Create the initial population. Last column stores the fitness
                         X_next = np.random.randint(low=0, high=20, size=(n_suggestions, 11))
@@ -255,14 +319,10 @@ class Optimizer:
 
         Parameters
         ----------
-        X : list of dict-like
-            Places where the objective function has already been evaluated.
-            Each suggestion is a dictionary where each key corresponds to a
-            parameter being optimized.
-        y : array-like, shape (n,)
-            Corresponding values where objective has been evaluated
+        X : array-like, shape (n, d)
+        y : tensor of shape (n,)
         """
-        assert len(X) == len(y)
+        assert len(X) == len(y), (len(X), len(y))
         # XX = torch.cat([ordinal2onehot(x, self.n_categories) for x in X]).reshape(len(X), -1)
         XX = X
         yy = np.array(y.detach().cpu())[:, None]
@@ -273,18 +333,29 @@ class Optimizer:
             if len(self.casmopolitan._fX) >= self.casmopolitan.n_init > 0:
                 self.casmopolitan._adjust_length(yy)
 
-        self.casmopolitan.n_evals += len(y)
+        self.casmopolitan.n_evals += len(X)  # self.batch_size
         self.casmopolitan._X = np.vstack((self.casmopolitan._X, deepcopy(XX)))
         self.casmopolitan._fX = np.vstack((self.casmopolitan._fX, deepcopy(yy.reshape(-1, 1))))
         self.casmopolitan.X = np.vstack((self.casmopolitan.X, deepcopy(XX)))
         self.casmopolitan.fX = np.vstack((self.casmopolitan.fX, deepcopy(yy.reshape(-1, 1))))
+        if self.table_of_candidates is not None:
+            print(f"Get {len(self.table_of_candidates)} candidate points"
+                  f" in search table before observing new points")
+            self.table_of_candidates = update_table_of_candidates(
+                original_table=self.table_of_candidates,
+                observed_candidates=XX,
+                check_candidates_in_table=True
+            )
+            print(f"Get {len(self.table_of_candidates)} candidate points"
+                  f" in search table after observing new points")
 
         if self.kwargs['search_strategy'] in ['local', 'batch_local']:
             # Check for a restart
-            if self.casmopolitan.length <= self.casmopolitan.length_min or self.casmopolitan.length_discrete <= self.casmopolitan.length_min_discrete:
+            if (self.casmopolitan.length <= self.casmopolitan.length_min or
+                    self.casmopolitan.length_discrete <= self.casmopolitan.length_min_discrete):
                 self.restart()
 
-    def warp_discrete(self, X, ):
+    def warp_discrete(self, X):
 
         X_ = np.copy(X)
         # Process the integer dimensions

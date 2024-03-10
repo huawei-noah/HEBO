@@ -1,11 +1,18 @@
 import logging
-from itertools import groupby
-from collections import Callable
 import random
+import re
+from collections import Callable
 from copy import deepcopy
+from itertools import groupby
+
+import scipy
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PolynomialMutation
+from pymoo.operators.repair.rounding import RoundingRepair
 
 from bo.kernels import *
-import re
+
+# from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 COUNT_AA = 5
 AA = 'ACDEFGHIKLMNPQRSTVWY'
@@ -14,10 +21,7 @@ idx_to_AA = {value: key for key, value in AA_to_idx.items()}
 N_glycosylation_pattern = 'N[^P][ST][^P]'
 
 
-# from Bio.SeqUtils.ProtParam import ProteinAnalysis
-
-
-def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None):
+def check_cdr_constraints_all(x):
     # Constraints on CDR3 sequence
     x_to_seq = ''.join(idx_to_AA[int(aa)] for aa in x)
     # prot = ProteinAnalysis(x_to_seq)
@@ -40,16 +44,14 @@ def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None)
     else:
         c3 = True
 
-    if x_center_local is not None:
-        # 1 if met (True)
-        c4 = compute_hamming_dist_ordinal(x_center_local, x, config) <= hamming
-        # Return 0 if True
-        return int(not (c1)), int(not (c2)), int(not (c3)), int(not (c4))
-
+    # stability = prot.instability_index()
+    # if stability>40:
+    #    return False
+    # If constraint is satisfied return 0 for pymoo
     return int(not (c1)), int(not (c2)), int(not (c3))
 
 
-def check_cdr_constraints(x) -> bool:
+def check_cdr_constraints(x):
     constr = check_cdr_constraints_all(x)
     return not np.any(constr)
 
@@ -106,6 +108,38 @@ def latin_hypercube(n_pts, dim):
     X += pert
 
     return X
+
+
+def space_fill_table_sample(n_pts: int, table_of_candidates: np.ndarray) -> np.ndarray:
+    """
+    Sample points from a table of candidates
+
+    Args:
+        n_pts: number of points to sample
+        table_of_candidates: 2d array from which to sample points
+
+    Returns:
+        samples: 2d array with shape (n_pts, n_dim) taken from table_of_candidates
+    """
+    selected_inds = set()
+    candidates = np.zeros((n_pts, table_of_candidates.shape[-1]))
+    ind = np.random.randint(0, len(table_of_candidates))
+    selected_inds.add(ind)
+    candidates[0] = table_of_candidates[ind]  # sample first point at random
+    i = 1
+    for i in range(1, min(n_pts, 100)):  # sample the first 100 points with a space-filling strategy
+        # compute distance among table_of_candidates and already_selected candidates
+        distances = scipy.spatial.distance.cdist(table_of_candidates, candidates[:i], metric="hamming")
+        distances[distances == 0] = -np.inf  # penalize already selected points
+        mean_dist = distances.mean(-1)
+        max_mean_dist = mean_dist.max()
+        # sample among best
+        ind = np.random.choice(np.arange(len(table_of_candidates))[mean_dist == max_mean_dist])
+        selected_inds.add(ind)
+        candidates[i] = table_of_candidates[ind]
+    remaining_inds = [ind for ind in range(len(table_of_candidates)) if ind not in selected_inds]
+    candidates[i:] = table_of_candidates[np.random.choice(remaining_inds, max(0, n_pts - i), replace=False)]
+    return deepcopy(candidates)
 
 
 def compute_hamming_dist(x1, x2, categorical_dims, normalize=False):
@@ -167,55 +201,7 @@ def sample_neighbour_ordinal(x, n_categories):
     return x_pert
 
 
-def sample_neighbour_ordinal_constrained(x, n_categories):
-    """Same as above, but the variables are represented ordinally."""
-
-    x_pert = deepcopy(x)
-    n_categories = deepcopy(n_categories)
-    # Chooose a variable to modify
-    choice = random.randint(0, len(n_categories) - 1)
-    # Obtain the current value.
-    curr_val = x[choice]
-    options = [i for i in range(n_categories[choice]) if i != curr_val]
-    random.shuffle(options)
-    i = 0
-    x_pert[choice] = options[i]
-
-    while np.logical_not(check_cdr_constraints(x_pert)) and i < (len(n_categories) - 1):
-        i += 1
-        x_pert[choice] = options[i]
-    return x_pert
-
-
-def neighbourhood_init(x_center_local, config, pop_size):
-    pop = np.array([sample_neighbour_ordinal_constrained(x_center_local, config) for _ in range((pop_size))])
-    pop[0] = x_center_local
-    return pop
-
-
-def random_sample_within_discrete_tr(x_center, max_hamming_dist, categorical_dims,
-                                     mode='ordinal'):
-    """Randomly sample a point within the discrete trust region"""
-    if max_hamming_dist < 1:  # Normalised hamming distance is used
-        bit_change = int(max_hamming_dist * len(categorical_dims))
-    else:  # Hamming distance is not normalized
-        max_hamming_dist = min(max_hamming_dist, len(categorical_dims))
-        bit_change = int(max_hamming_dist)
-
-    x_pert = deepcopy(x_center)
-    # Randomly sample n bits to change.
-    modified_bits = random.sample(range(len(categorical_dims)), bit_change)
-    for bit in modified_bits:
-        n_values = len(categorical_dims[bit])
-        # Change this value
-        selected_value = random.choice(range(n_values))
-        # Change to one-hot encoding
-        substitute_values = np.array([1 if i == selected_value else 0 for i in range(n_values)])
-        x_pert[categorical_dims[bit]] = substitute_values
-    return x_pert
-
-
-def random_sample_within_discrete_tr_ordinal(x_center, max_hamming_dist, n_categories):
+def random_sample_within_discrete_tr_ordinal(x_center: np.ndarray, max_hamming_dist, n_categories) -> np.ndarray:
     """Same as above, but here we assume a ordinal representation of the categorical variables."""
     # random.seed(random.randint(0, 1e6))
     if max_hamming_dist < 1:
@@ -231,7 +217,6 @@ def random_sample_within_discrete_tr_ordinal(x_center, max_hamming_dist, n_categ
 
 
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.factory import get_mutation, get_crossover, get_termination
 from pymoo.optimize import minimize
 from pymoo.core.problem import Problem
 import numpy as np
@@ -244,19 +229,12 @@ class CDRH3Prob(Problem):
     A solution is considered as feasible of all constraint violations are less than zero."""
 
     def __init__(self, f_acq: Callable, n_var=11, n_obj=1, n_constr=3, xl=0, xu=19, cdr_constraints=True,
-                 device=torch.device('cpu'), dtype=torch.float32, f2_acq=None, f3_acq=None):
-        if f2_acq is not None:
-            n_obj += 1
-        if f3_acq is not None:
-            n_obj += 1
+                 device=torch.device('cpu'), dtype=torch.float32):
         super().__init__(n_var=n_var,
                          n_obj=n_obj,
                          n_constr=n_constr if cdr_constraints else 0,
                          xl=xl,
                          xu=xu)
-
-        self.f2_acq = f2_acq
-        self.f3_acq = f3_acq
         self.f_acq = f_acq
         self.cdr_constraints = cdr_constraints
         self.device = device
@@ -264,8 +242,9 @@ class CDRH3Prob(Problem):
 
     def _evaluate(self, x, out, *args, **kwargs):
         with torch.no_grad():
+            X = torch.from_numpy(x).to(device=self.device, dtype=self.dtype)
             # Switch from max to min problem
-            acq_x = -1.0 * self.f_acq(x).detach().cpu().numpy()
+            acq_x = -1.0 * self.f_acq(X).detach().cpu().numpy()
         out["F"] = acq_x
 
         if self.cdr_constraints:
@@ -273,38 +252,7 @@ class CDRH3Prob(Problem):
             out["G"] = np.column_stack([c1, c2, c3])
 
 
-class CDRH3ProbHamming(CDRH3Prob):
-    """CDRH3 Problem For pymoo.
-    Maximise f_acq but taking the negative in  _evaluate to perform minimisation overall.
-    A solution is considered as feasible of all constraint violations are less than zero."""
-
-    def __init__(self, max_hamming_distance=0, x_center_local=None, config=None, **kwargs):
-        super().__init__(**kwargs)
-        self.hamming = max_hamming_distance
-        self.x_center_local = x_center_local
-        self.config = config
-
-    def _evaluate(self, x, out, *args, **kwargs):
-        # Always 1 Objective
-        with torch.no_grad():
-            # Switch from max to min problem
-            acq_x = -1.0 * self.f_acq(x).detach().cpu().numpy()
-            if self.f2_acq is not None:
-                acq2_x = -1.0 * self.f2_acq(x).detach().cpu().numpy()
-                acq_x = np.column_stack([acq_x, acq2_x])
-            if self.f3_acq is not None:
-                acq3_x = -1.0 * self.f3_acq(x).detach().cpu().numpy()
-                acq_x = np.column_stack([acq_x, acq3_x])
-        out["F"] = acq_x
-
-        if self.cdr_constraints:
-            c1, c2, c3, c4 = zip(*list(
-                map(lambda seq: check_cdr_constraints_all(seq, x_center_local=self.x_center_local, hamming=self.hamming,
-                                                          config=self.config), x)))
-            out["G"] = np.column_stack([c1, c2, c3, c4])
-
-
-def get_pop(seq_len, pop_size, x_center_local, seed=0):
+def get_biased_pop(seq_len, pop_size, x_center_local, seed=0):
     eng = SobolEngine(seq_len, scramble=True, seed=seed)
     sobol_samp = eng.draw(pop_size)
     # sobol_samp = sobol_samp * (space.opt_ub - space.opt_lb) + space.opt_lb
@@ -319,26 +267,98 @@ def test_f(x):
     return torch.from_numpy(np.random.randint(0, 20, x.shape[0]))
 
 
+def local_table_search(x_center: np.ndarray,
+                       f: Callable,
+                       config: np.ndarray,
+                       table_of_candidates: np.ndarray,
+                       batch_size: int,
+                       max_hamming_dist,
+                       dtype=torch.float32,
+                       device=torch.device('cpu'),
+                       max_batch_size=5000, **kwargs):
+    """
+    Search strategy:
+        1. Compute filtr of valid points around center
+        2. Iteratively jump to a new point that is still in the valid area
+
+    Args:
+        x_center: 1d array corresponding to center of search space in transformed space
+        config: the config for the categorical variables (number of categoories per dim)
+
+    Returns:
+        x_candidates: 2d ndarray acquisition points
+        f_x_candidates: 1d array function value of these points
+    """
+    assert x_center.ndim == 1, x_center.shape
+    assert table_of_candidates.ndim == 2, table_of_candidates.shape
+    assert batch_size == 1, "Methods is designed to output only one candidate for now"
+    n_candidates = 0
+    hamming_dists = scipy.spatial.distance.cdist(table_of_candidates, x_center.reshape(1, -1), metric="hamming")
+    hamming_dists *= x_center.shape[-1]  # denormalize
+    hamming_dists = hamming_dists.flatten()
+
+    # entry `i` contains the number of points in the table of candidates that are at distance `i` of the center
+    n_cand_per_dist = np.array([(hamming_dists == i).sum() for i in range(table_of_candidates.shape[-1])])
+    max_hamming_dist = max(max_hamming_dist, np.argmax(np.cumsum(n_cand_per_dist) > 0))
+
+    table_of_candidates = table_of_candidates[hamming_dists <= max_hamming_dist]
+
+    fmax = -np.inf
+
+    current_center = deepcopy(x_center)
+
+    for _ in range(10):
+        if len(table_of_candidates) == 0:
+            break
+
+        # gather points from closest to farthest
+        hamming_dists = scipy.spatial.distance.cdist(table_of_candidates, current_center.reshape(1, -1),
+                                                     metric="hamming")
+        hamming_dists *= current_center.shape[-1]
+        hamming_dists = hamming_dists.flatten()
+
+        cand_filtr = np.zeros(len(table_of_candidates)).astype(bool)
+        dist_to_current_center = 1
+        while cand_filtr.sum() < max_batch_size and dist_to_current_center <= table_of_candidates.shape[-1]:
+            new_filtr = hamming_dists == dist_to_current_center
+            n_ones = max_batch_size - cand_filtr.sum()
+            n_zeros = new_filtr.sum() - n_ones
+            if cand_filtr.sum() + new_filtr.sum() > max_batch_size:
+                new_filtr[new_filtr] = np.random.permutation(
+                    np.concatenate([np.zeros(n_zeros), np.ones(n_ones)]).astype(bool))
+            cand_filtr = cand_filtr + new_filtr
+            dist_to_current_center += 1
+
+        if cand_filtr.sum() == 0:  # no more candidates to evaluate
+            break
+
+        # evaluate acquisition function
+        acq_x = f(table_of_candidates[cand_filtr]).detach().cpu().numpy().flatten()
+        if acq_x.max() > fmax:  # new best
+            fmax = acq_x.max()
+            current_center = table_of_candidates[cand_filtr][np.argmax(acq_x)]
+
+        # remove already evaluated points from table of candidates
+        table_of_candidates = table_of_candidates[~cand_filtr]
+
+    return current_center.reshape(1, -1), np.array([fmax])
+
+
 def glocal_search(x_center,
                   f: Callable,
                   config,
                   max_hamming_dist,
                   cdr_constraints: bool = False,
                   n_restart: int = 1,
-                  n_obj=1,
                   batch_size: int = 1,
                   seed=0,
                   seq_len=11,
                   dtype=torch.float32,
                   device=torch.device('cpu'),
                   pop_size: int = 200,
-                  eliminate_duplicates=True,
-                  biased=True,
-                  f2: Callable = None,
-                  f3: Callable = None,
-                  **kwargs):
+                  table_of_candidates=None):
     """
-    Global & Glocal search algorithm
+    Local search algorithm
     :param n_restart: number of restarts
     :param config:
     :param x0: the initial point to start the search
@@ -346,130 +366,26 @@ def glocal_search(x_center,
     :param f: the function handle to evaluate x on (the acquisition function, in this case)
     :param max_hamming_dist: maximum Hamming distance from x_center
     :param step: number of maximum local search steps the algorithm is allowed to take.
+    :param table_of_candidates: search within a table of candidates (not supported for now)
     :return:
     """
-    if kwargs['kernel_type'] == 'ssk':
-        pop_size = 20
-
+    assert table_of_candidates is None
     x_center_local = deepcopy(x_center)
-    if biased:
-        # True, Do neighbourhood sampling
-        init_pop = neighbourhood_init(x_center_local, config, pop_size)
-    else:
-        # False, Do Global sampling
-        init_pop = get_pop(seq_len, pop_size, x_center_local, seed=seed)
-
-    if f2 is not None or f3 is not None or n_obj > 1:
-        eliminate_duplicates = False
-
+    init_pop = get_biased_pop(seq_len, pop_size, x_center_local, seed=seed)
+    crossover = SBX(prob=0.9, prob_var=1.0 / seq_len, eta=15, repair=RoundingRepair(), vtype=float)
+    mutation = PolynomialMutation(prob=1.0, eta=20, repair=RoundingRepair())
     algorithm = NSGA2(pop_size=pop_size,
-                      n_offsprings=pop_size,
+                      n_offsprings=200,
                       sampling=init_pop,
-                      # crossover=get_crossover("int_sbx", eta=15, prob=0.0, prob_per_variable=0.0),
-                      crossover=get_crossover("int_sbx", eta=15, prob=0.9, prob_per_variable=1.0 / seq_len),
-                      mutation=get_mutation("int_pm", eta=20),
-                      eliminate_duplicates=eliminate_duplicates)
-    problem = CDRH3Prob(n_obj=n_obj, n_var=seq_len, f_acq=f, f2_acq=f2, f3_acq=f3, cdr_constraints=cdr_constraints,
-                        device=device, dtype=dtype)
-    termination = get_termination("n_gen", seq_len * kwargs['alphabet_size'])
+                      crossover=crossover,
+                      mutation=mutation,
+                      eliminate_duplicates=False)
+    problem = CDRH3Prob(n_var=seq_len, f_acq=f, cdr_constraints=cdr_constraints, device=device, dtype=dtype)
+    termination = ("n_gen", 11 * 20)
 
-    res = minimize(problem,
-                   algorithm,
-                   termination,
-                   seed=seed,
-                   verbose=False)
-
-    # Make sure to filter any that are not satisfied
-    if res.G.ndim == 1:
-        G = res.G[None, :]
-        X = res.X[None, :]
-        F = res.F[None, :]
-    else:
-        G = res.G
-        X = res.X
-        F = res.F
-    # Remove constraint violated
-    X = X[~G.any(1)]
-    # Turn back to maximise problem
-    fX = -1.0 * F
-    # Remove constraint violated
-    fX = fX[~G.any(1)]
-
-    if not eliminate_duplicates:
-        # Remove duplocates
-        X, idX = np.unique(X, axis=0, return_index=True)
-        # Remove duplocates
-        fX = fX[idX]
-
-    if X.ndim == 1:
-        X = X[None, :]
-        fX = fX[None, :]
-
-    if f2 is not None or f3 is not None or n_obj > 1:
-        # Sample from pareto front
-        idx = np.random.randint(0, X.shape[0], batch_size)
-        X_next = X[idx]
-        acq_next = np.array(fX).flatten()[idx]
-    else:
-        # Selects top batchsize from list
-        top_idices = np.argpartition(np.array(fX).flatten(), -batch_size)[-batch_size:]
-        X_next = np.array([x for i, x in enumerate(X) if i in top_idices])
-        acq_next = np.array(fX).flatten()[top_idices]
-
-    return X_next, acq_next
-
-
-def blocal_search(x_center,
-                  f: Callable,
-                  config,
-                  max_hamming_dist,
-                  cdr_constraints: bool = False,
-                  n_restart: int = 1,
-                  batch_size: int = 1,
-                  seed=0,
-                  seq_len=11,
-                  n_obj=1,
-                  dtype=torch.float32,
-                  device=torch.device('cpu'),
-                  pop_size: int = 200,
-                  eliminate_duplicates=True,
-                  f2: Callable = None,
-                  f3: Callable = None,
-                  **kwargs):
-    """
-    Batch Local search algorithm
-    :param n_restart: number of restarts
-    :param config:
-    :param x0: the initial point to start the search
-    :param x_center: the center of the trust region. In this case, this should be the optimum encountered so far.
-    :param f: the function handle to evaluate x on (the acquisition function, in this case)
-    :param max_hamming_dist: maximum Hamming distance from x_center
-    :param step: number of maximum local search steps the algorithm is allowed to take.
-    :return:
-    """
-    if kwargs['kernel_type'] == 'ssk':
-        pop_size = 20
-
-    if f2 is not None or f3 is not None or n_obj > 1:
-        eliminate_duplicates = False
-
-    x_center_local = deepcopy(x_center)
-    init_pop = neighbourhood_init(x_center_local, config, pop_size)
-    algorithm = NSGA2(pop_size=pop_size,
-                      n_offsprings=pop_size,
-                      sampling=init_pop,
-                      crossover=get_crossover("int_sbx", eta=15, prob=0.9, prob_per_variable=1.0 / seq_len),
-                      # crossover=get_crossover("int_sbx", eta = 15, prob = 0.0, prob_per_variable=0.0),
-                      mutation=get_mutation("int_pm", eta=20),
-                      eliminate_duplicates=eliminate_duplicates)
-    problem = CDRH3ProbHamming(n_obj=n_obj, x_center_local=x_center_local, n_constr=4, config=config,
-                               max_hamming_distance=max_hamming_dist, n_var=seq_len, f_acq=f, f2_acq=f2, f3_acq=f3,
-                               cdr_constraints=cdr_constraints, device=device, dtype=dtype)
-    termination = get_termination("n_gen", seq_len * kwargs['alphabet_size'])
-
-    res = minimize(problem,
-                   algorithm,
-                   termination,
+    res = minimize(problem=problem,
+                   algorithm=algorithm,
+                   termination=termination,
                    seed=seed,
                    verbose=False)
 
@@ -485,31 +401,15 @@ def blocal_search(x_center,
 
     # Remove constraint violated
     X = X[~G.any(1)]
+    # Remove duplocates
+    X = np.unique(X, axis=0)
+
     # Turn back to maximise problem
     fX = -1.0 * F
-    # Remove constraint violated
-    fX = fX[~G.any(1)]
 
-    if X.ndim == 1:
-        X = X[None, :]
-        fX = fX[None, :]
-
-    if not eliminate_duplicates:
-        # Remove duplocates
-        X, idX = np.unique(X, axis=0, return_index=True)
-        # Remove duplocates
-        fX = fX[idX]
-
-    if f2 is not None or f3 is not None or n_obj > 1:
-        idx = np.random.randint(0, X.shape[0], batch_size)
-        X_next = X[idx]
-        acq_next = np.array(fX).flatten()[idx]
-    else:
-        # Selects top batchsize from list
-        top_idices = np.argpartition(np.array(fX).flatten(), -batch_size)[-batch_size:]
-        X_next = np.array([x for i, x in enumerate(X) if i in top_idices])
-        acq_next = np.array(fX).flatten()[top_idices]
-    return X_next, acq_next
+    # Selects top batchsize from list
+    top_idices = np.argpartition(np.array(fX).flatten(), -batch_size)[-batch_size:]
+    return np.array([x for i, x in enumerate(X) if i in top_idices]), np.array(fX).flatten()[top_idices]
 
 
 def local_search(x_center,
@@ -523,7 +423,7 @@ def local_search(x_center,
                  dtype=torch.float32,
                  device=torch.device('cpu'),
                  step: int = 200,
-                 **kwargs):
+                 table_of_candidates=None):
     """
     Local search algorithm
     :param n_restart: number of restarts
@@ -533,8 +433,10 @@ def local_search(x_center,
     :param f: the function handle to evaluate x on (the acquisition function, in this case)
     :param max_hamming_dist: maximum Hamming distance from x_center
     :param step: number of maximum local search steps the algorithm is allowed to take.
+    :param table_of_candidates: search within a table of candidates (not supported for now)
     :return:
     """
+    assert table_of_candidates is None
 
     def _ls(hamming):
         """One restart of local search"""
