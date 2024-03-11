@@ -269,6 +269,7 @@ class BOExperiments:
                 optim.observe(X=x_seq_ind, y=y)
                 self.results(optim, x_seq_ind, self.start_itern, rtime=0)
                 self.start_itern += 1
+                self.save(optim)
 
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()
