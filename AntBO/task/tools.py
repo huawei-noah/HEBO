@@ -260,7 +260,7 @@ class TableFilling(BaseTool):
             assert key in config, f"\"{key}\" is not defined in config"
         self.config = config
         self.antigen = self.config["antigen"]
-        self.path_to_eval_csv = self.config["path_to_eval_csv"]
+        self.path_to_eval_csv = os.path.abspath(self.config["path_to_eval_csv"])
 
     def Energy(self, x):
         '''
@@ -278,21 +278,24 @@ class TableFilling(BaseTool):
         # save sequences
         dirname = os.path.dirname(self.path_to_eval_csv)
         os.makedirs(dirname, exist_ok=True)
-        to_eval = pd.DataFrame([[self.antigen, seq, None, 0] for seq in sequences],
+        to_eval = pd.DataFrame([[self.antigen, seq, None, 0] for i, seq in enumerate(sequences)],
                                columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
         to_eval.to_csv(self.path_to_eval_csv, index=False)
-        print(f"Saved candidates to evaluate in {os.path.abspath(self.path_to_eval_csv)}")
+        print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
 
         # Try to read the evaluations
 
         while True:
             table_of_results = pd.read_csv(self.path_to_eval_csv, index_col=None)
             if np.all(table_of_results["Validate (0/1)"].values):
-                energies = table_of_results["Validate (0/1)"].values
+                energies = table_of_results.Eval.values
                 break
             else:
                 time.sleep(5)
 
+        copy_path = self.path_to_eval_csv[:-4] + "_copy.csv"
+        os.system(f"mv {self.path_to_eval_csv} {copy_path}")
+        print(f"Save copy of evaluations in {copy_path}")
         return np.array(energies), sequences
 
 

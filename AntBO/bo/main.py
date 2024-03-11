@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Set, Any, Dict
 
+from task.tools import TableFilling
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
@@ -116,7 +117,7 @@ class BOExperiments:
             custom_init_id = os.path.basename(os.path.dirname(custom_init_dataset_path))
             custom_init_id_seed = os.path.basename(os.path.dirname(os.path.dirname(custom_init_dataset_path)))
             path += f"_custom-init-id-{custom_init_id}_seed_{custom_init_id_seed}"
-        return path
+        return os.path.abspath(path)
 
     @property
     def path(self) -> str:
@@ -174,14 +175,13 @@ class BOExperiments:
             if os.path.exists(self.random_rd_state_path):
                 rd_state = load_w_pickle(self.random_rd_state_path)
                 random.setstate(rd_state)
-        else:
-            optim = None
-        if os.path.exists(res_path):
-            self.res = pd.read_csv(res_path,
-                                   usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
-            self.start_itern = (len(self.res) - self.res['Index'].isna().sum()) // self.config['batch_size']
-        print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
-        return optim
+            if os.path.exists(res_path):
+                self.res = pd.read_csv(res_path,
+                                       usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein',
+                                                'BestProtein'])
+                self.start_itern = (len(self.res) - self.res['Index'].isna().sum()) // self.config['batch_size']
+            print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
+            return optim
 
     def save(self, optim):
         optim_path = os.path.join(self.path, 'optim.pkl')
@@ -254,6 +254,21 @@ class BOExperiments:
                 optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
                 optim.observe(pre_eval_x, pre_eval_y)
                 print(f"Observed {len(pre_eval_y)} already evaluated points")
+
+        # check if there are points that have been suggested and evaluated since the last antbo call
+        if isinstance(self.f_obj.fbox, TableFilling) and os.path.exists(self.f_obj.fbox.path_to_eval_csv):
+            table_of_results = pd.read_csv(self.f_obj.fbox.path_to_eval_csv, index_col=None)
+            if np.all(table_of_results["Validate (0/1)"].values):
+                print(f"Get already evaluated points from table {self.f_obj.fbox.path_to_eval_csv}")
+                y = torch.tensor(table_of_results["Validate (0/1)"].values)
+                x_seqs = table_of_results.Antibody.values
+                # convert strings to array
+                x_seq_ind = np.array(
+                    [np.array([self.f_obj.fbox.AA_to_idx[char] for char in x_seq]) for x_seq in x_seqs]
+                )
+                optim.observe(X=x_seq_ind, y=y)
+                self.results(optim, x_seq_ind, self.start_itern, rtime=0)
+                self.start_itern += 1
 
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()

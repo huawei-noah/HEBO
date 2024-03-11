@@ -199,3 +199,25 @@ def update_table_of_candidates(original_table: np.ndarray, observed_candidates: 
             raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
         original_table = original_table[~filtr]
     return original_table
+
+
+def update_table_of_candidates_torch(original_table: torch.Tensor, observed_candidates: torch.Tensor,
+                               check_candidates_in_table: bool) -> np.ndarray:
+    """ Update the table of candidates, removing the newly observed candidates from the table
+
+    Args:
+        original_table: table of candidates before observation
+        observed_candidates: new observed points
+        check_candidates_in_table: whether the observed candidates should be in the original_table or not
+
+    Returns:
+          Updated table
+    """
+    if observed_candidates.ndim == 1:
+        observed_candidates = observed_candidates.reshape(1, -1)
+    for candidate in observed_candidates:
+        filtr = torch.all(original_table == candidate.reshape(1, -1), axis=1)
+        if not torch.any(filtr) and check_candidates_in_table:
+            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
+        original_table = original_table[~filtr]
+    return original_table

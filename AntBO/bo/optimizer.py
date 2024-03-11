@@ -11,7 +11,7 @@ from gpytorch.utils.errors import NotPSDError, NanError
 from bo.localbo_cat import CASMOPOLITANCat
 from bo.localbo_utils import from_unit_cube, latin_hypercube, onehot2ordinal, \
     random_sample_within_discrete_tr_ordinal, check_cdr_constraints, space_fill_table_sample
-from bo.utils import update_table_of_candidates
+from bo.utils import update_table_of_candidates, update_table_of_candidates_torch
 from utilities.constraint_utils import check_constraint_satisfaction_batch
 
 COUNT_AA = 5
@@ -314,7 +314,7 @@ class Optimizer:
         suggestions = X_next
         return suggestions
 
-    def observe(self, X, y):
+    def observe(self, X: np.ndarray, y: torch.Tensor):
         """Send an observation of a suggestion back to the optimizer.
 
         Parameters
@@ -326,6 +326,15 @@ class Optimizer:
         # XX = torch.cat([ordinal2onehot(x, self.n_categories) for x in X]).reshape(len(X), -1)
         XX = X
         yy = np.array(y.detach().cpu())[:, None]
+
+        # check if some points are in X_init:
+        if isinstance(self.X_init, torch.Tensor):
+            self.X_init = update_table_of_candidates_torch(original_table=self.X_init,
+                                                       observed_candidates=torch.tensor(XX).to(self.X_init),
+                                                       check_candidates_in_table=False)
+        else:
+            assert len(self.X_init) == 0 or self.X_init is None
+
         # if self.wrap_discrete:
         #     XX = self.warp_discrete(XX, )
 
