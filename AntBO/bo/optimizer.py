@@ -99,7 +99,7 @@ class Optimizer:
         self.auxiliary_gp = None
         self.X_init, itern = [], 0
 
-    def restart(self):
+    def restart(self) -> None:
         from bo.gp import train_gp
         if self.guided_restart and len(self.casmopolitan._fX) and self.kwargs['search_strategy'] == 'local':
             best_idx = self.casmopolitan._fX.argmin()

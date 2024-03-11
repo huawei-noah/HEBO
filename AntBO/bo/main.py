@@ -4,11 +4,10 @@ import sys
 from pathlib import Path
 from typing import Optional, Set, Any, Dict
 
-from task.tools import TableFilling
-
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
 
+from task import TableFilling
 from task import BaseTool
 from utilities.misc_utils import log
 from bo.custom_init import get_initial_dataset_path, InitialBODataset, get_top_cut_ratio_per_cat, get_n_per_cat
@@ -183,7 +182,7 @@ class BOExperiments:
             print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
             return optim
 
-    def save(self, optim):
+    def save(self, optim) -> None:
         optim_path = os.path.join(self.path, 'optim.pkl')
         res_path = os.path.join(self.path, 'results.csv')
         save_w_pickle(optim, optim_path)
@@ -263,13 +262,20 @@ class BOExperiments:
                 y = torch.tensor(table_of_results["Validate (0/1)"].values)
                 x_seqs = table_of_results.Antibody.values
                 # convert strings to array
-                x_seq_ind = np.array(
+                x_seqs_ind = np.array(
                     [np.array([self.f_obj.fbox.AA_to_idx[char] for char in x_seq]) for x_seq in x_seqs]
                 )
-                optim.observe(X=x_seq_ind, y=y)
-                self.results(optim, x_seq_ind, self.start_itern, rtime=0)
+                if optim.batch_size is None:
+                    optim.batch_size = len(x_seqs)
+                    optim.casmopolitan.batch_size = len(x_seqs)
+                    optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
+                    optim.restart()
+                optim.observe(X=x_seqs_ind, y=y)
+                self.results(optim, x_seqs_ind, self.start_itern, rtime=0)
                 self.start_itern += 1
                 self.save(optim)
+                self.f_obj.fbox.make_copy_eval_table()
+
 
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()

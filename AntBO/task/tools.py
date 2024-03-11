@@ -293,10 +293,14 @@ class TableFilling(BaseTool):
             else:
                 time.sleep(5)
 
+        self.make_copy_eval_table()
+        return np.array(energies), sequences
+
+    def make_copy_eval_table(self) -> None:
+        """ Create a copy of the eval table - the original one is removed """
         copy_path = self.path_to_eval_csv[:-4] + "_copy.csv"
         os.system(f"mv {self.path_to_eval_csv} {copy_path}")
         print(f"Save copy of evaluations in {copy_path}")
-        return np.array(energies), sequences
 
 
 ###########################################
