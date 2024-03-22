@@ -218,13 +218,13 @@ If you use this library, please cite [MCBO paper](https://arxiv.org/pdf/2306.098
 ###### bibtex
 
 ```bibtex 
-@misc{dreczkowski2023mcbo,
-      title={Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization}, 
-      author={Kamil Dreczkowski and Antoine Grosnit and Haitham Bou Ammar},
-      year={2023},
-      eprint={2306.09803},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@inproceedings{
+dreczkowski2023framework,
+title={Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization},
+author={Kamil Dreczkowski and Antoine Grosnit and Haitham Bou Ammar},
+booktitle={Thirty-seventh Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+year={2023},
+url={https://openreview.net/forum?id=qi0Zrm6E5E}
 }
 ```
 
