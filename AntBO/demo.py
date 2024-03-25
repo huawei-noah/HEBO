@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('--tabular_search_csv', type=str,
                         help='Path to csv file containing the set of eligible antibodies with their pre-computed '
                              'binding energy (to test optimisation in a controlled scenario).')
-    parser.add_argument('--path_to_eval_csv', type=str, default="./table_of_evals.csv",
+    parser.add_argument('--path_to_eval_csv', type=str, default="./eval.csv",
                         help='If the black-box evaluations are provided by filling a table, path to this table.')
     parser.add_argument('--cuda_id', type=int, default=0, help='ID of the cuda device to use.')
     parser.add_argument('--seed', type=int, nargs="+", default=[42], help='Seed for reproducibility.')
