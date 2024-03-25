@@ -169,7 +169,7 @@ class HEBO(AbstractOptimizer):
                     break 
             if rec.shape[0] < n_suggestions:
                 rand_rec = self.quasi_sample(n_suggestions - rec.shape[0], fix_input)
-                rec      = pd.concat([rec, rand_rec], axsi = 0, ignore_index = True)
+                rec      = pd.concat([rec, rand_rec], axis = 0, ignore_index = True)
 
             select_id = np.random.choice(rec.shape[0], n_suggestions, replace = False).tolist()
             x_guess   = []
