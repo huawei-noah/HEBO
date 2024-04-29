@@ -21,6 +21,7 @@ from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.means import ConstantMean
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.constraints import GreaterThan
+from gpytorch.settings import cholesky_jitter
 
 from ..util import filter_nan
 from ..base_model import BaseModel
@@ -28,7 +29,8 @@ from ..layers import EmbTransform
 from ..scalers import TorchMinMaxScaler, TorchStandardScaler
 from ..nn.sgld import pSGLD
 
-from .gp_util import DummyFeatureExtractor, default_kern, default_kern_rd
+from .gp_util import DummyFeatureExtractor, default_kern
+
 
 class GP(BaseModel):
     support_grad = True
@@ -50,7 +52,7 @@ class GP(BaseModel):
         if Xc is not None and Xc.shape[1] > 0:
             self.xscaler.fit(Xc)
         self.yscaler.fit(y)
-    
+
     def xtrans(self, Xc : Tensor, Xe : Tensor, y : Tensor = None):
         if Xc is not None and Xc.shape[1] > 0:
             Xc_t = self.xscaler.transform(Xc)
@@ -99,31 +101,69 @@ class GP(BaseModel):
             opt = torch.optim.Adam(self.gp.parameters(), lr = self.lr)
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.lik, self.gp)
         for epoch in range(self.num_epochs):
-            def closure():
-                dist = self.gp(self.Xc, self.Xe)
-                loss = -1 * mll(dist, self.y.squeeze())
-                opt.zero_grad()
-                loss.backward()
-                return loss
-            opt.step(closure)
+            jitter = 10 ** -8
+            cont = True
+            success = False
+            while cont:
+                cont = False
+                cholesky_jitter._set_value(
+                    double_value=jitter, float_value=100*jitter, half_value=10000*jitter)
+                def closure():
+                    dist = self.gp(self.Xc, self.Xe)
+                    loss = -1 * mll(dist, self.y.squeeze())
+                    opt.zero_grad()
+                    loss.backward()
+                    return loss
+                try:
+                    opt.step(closure)
+                    success = True
+                except:
+                    jitter *= 10
+                    if jitter > 10:
+                        print('jitter is too large, give up fitting GP')
+                    else:
+                        cont = True
+                        print(f'jitter = {jitter}')
             if self.verbose and ((epoch + 1) % self.print_every == 0 or epoch == 0):
-                print('After %d epochs, loss = %g' % (epoch + 1, closure().item()), flush = True)
+                if success:
+                    loss = closure().item()
+                else:
+                    loss = np.inf
+
+                print('After %d epochs, loss = %g' % (epoch + 1, loss), flush = True)
         self.gp.eval()
         self.lik.eval()
 
     def predict(self, Xc, Xe):
         Xc, Xe = self.xtrans(Xc, Xe)
         with gpytorch.settings.fast_pred_var(), gpytorch.settings.debug(False):
-            pred = self.gp(Xc, Xe)
-            if self.pred_likeli:
+            jitter = 10 ** -8
+            cont = True
+            success = False
+            while cont:
+                cont = False
+                cholesky_jitter._set_value(
+                    double_value=jitter, float_value=100 * jitter, half_value=10000 * jitter)
+                try:
+                    pred = self.gp(Xc, Xe)
+                    success = True
+                except:
+                    jitter *= 10
+                    if jitter > 10:
+                        print('jitter is too large, output random predictions')
+                        pred = torch.distributions.normal.Normal(torch.zeros(len(Xc)), torch.eye(len(Xc)))
+                    else:
+                        cont = True
+                        print(f'jitter = {jitter}')
+            if self.pred_likeli and success:
                 pred = self.lik(pred)
-            mu_  = pred.mean.reshape(-1, self.num_out)
+            mu_ = pred.mean.reshape(-1, self.num_out)
             var_ = pred.variance.reshape(-1, self.num_out)
-        mu  = self.yscaler.inverse_transform(mu_)
-        var = var_ * self.yscaler.std**2
-        return mu, var.clamp(min = torch.finfo(var.dtype).eps)
+        mu = self.yscaler.inverse_transform(mu_)
+        var = var_ * self.yscaler.std ** 2
+        return mu, var.clamp(min=torch.finfo(var.dtype).eps)
 
-    def sample_y(self, Xc, Xe, n_samples = 1) -> FloatTensor:
+    def sample_y(self, Xc, Xe, n_samples=1) -> FloatTensor:
         """
         Should return (n_samples, Xc.shape[0], self.num_out) 
         """
@@ -141,19 +181,21 @@ class GP(BaseModel):
 
     @property
     def noise(self):
-        return (self.gp.likelihood.noise * self.yscaler.std**2).view(self.num_out).detach()
+        return (self.gp.likelihood.noise * self.yscaler.std ** 2).view(self.num_out).detach()
+
 
 class GPyTorchModel(gpytorch.models.ExactGP):
-    def __init__(self, 
+    def __init__(self,
             x   : torch.Tensor,
             xe  : torch.Tensor,
             y   : torch.Tensor,
-            lik : GaussianLikelihood, 
+            lik : GaussianLikelihood,
             **conf):
         super().__init__((x, xe), y.squeeze(), lik)
         self.fe   = deepcopy(conf.get('fe',   DummyFeatureExtractor(x.shape[1], xe.shape[1], conf.get('num_uniqs'), conf.get('emb_sizes'))))
         self.mean = deepcopy(conf.get('mean', ConstantMean()))
         if conf.get("rd", False):
+            from .gp_util import default_kern_rd
             self.cov  = deepcopy(conf.get('kern', default_kern_rd(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'), E=conf.get("E", 0.2))))
         else:
             self.cov  = deepcopy(conf.get('kern', default_kern(x, xe, y, self.fe.total_dim, conf.get('ard_kernel', True), conf.get('fe'))))
