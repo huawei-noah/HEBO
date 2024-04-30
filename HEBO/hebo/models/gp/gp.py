@@ -151,7 +151,7 @@ class GP(BaseModel):
                     jitter *= 10
                     if jitter > 10:
                         print('jitter is too large, output random predictions')
-                        pred = torch.distributions.MultivariateNormal(torch.zeros(len(Xc)), torch.eye(len(Xc))).sample()
+                        pred = torch.distributions.MultivariateNormal(torch.zeros(len(Xc)), torch.eye(len(Xc)))
                     else:
                         cont = True
                         print(f'jitter = {jitter}')
