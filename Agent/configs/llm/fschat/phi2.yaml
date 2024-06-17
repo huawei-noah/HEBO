@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: microsoft/phi-2
+context_length: 2048

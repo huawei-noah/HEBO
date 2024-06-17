@@ -1,0 +1,52 @@
+{% include "system_prompt.jinja" %}
+
+[[ USER ]]
+{%- if cot_type in ["few_shot", "few_shot_cot", "react"] %}
+{% include "context_example.jinja" %}
+{%- endif %}
+
+{%- set subproblem = memory.retrieve({memory.mem_keys.SUBPROBLEM: 1.0}) %}
+{%- if subproblem %}
+{% include "subproblem_example.jinja" %}
+{% endif %}
+
+
+{% include "trajectory.jinja" %}
+
+{%- set thought = memory.retrieve({memory.mem_keys.THOUGHT: 1.0}) %}
+{%- if thought %}
+
+Here are some thoughts you had before:
+
+{{thought}}
+{%- endif %}
+
+{%- if subproblem %}
+
+Here are some subproblems you had before:
+
+{{subproblem}}
+
+{%- endif %}
+
+{%- set reflection = memory.retrieve({memory.mem_keys.REFLECTION: 1.0}) %}
+{%- if reflection is not none %}
+Here are your past reflections and plans:
+{{reflection}}
+{%- endif %}
+
+
+{%- if memory.retrieve({memory.mem_keys.AVAILABLE_ACTIONS: 1.0}) %}
+
+{% include "available_actions.jinja" %}
+{%- endif %}
+
+{% if cot_type in ["zero_shot_cot", "few_shot_cot"] %}
+{% include "cot_prompt.jinja" %}
+{%- elif cot_type in ["few_shot_least_to_most"] %}
+{%- if subproblem %}
+{% include "subproblem.jinja" %}
+{%- endif %}
+{%- else %}
+{% include "direct_prompt.jinja" %}
+{%- endif %}

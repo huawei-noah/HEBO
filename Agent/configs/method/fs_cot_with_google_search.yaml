@@ -1,0 +1,19 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.SequentialFlow
+    name: retrieve and answer
+    description: Search google and answer to a quetion
+    sequence:
+      - _target_: agent.commands.GoogleSearch
+        search_engine:
+          _target_: langchain_community.utilities.GoogleSearchAPIWrapper
+        top_k: 1
+      - _target_: agent.commands.URLRetrieval
+        top_k: 1
+      - _target_: agent.commands.ChunkSummarization
+      - _target_: agent.commands.Act
+
+  prompt_builder:
+    default_kwargs:
+      cot_type: few_shot

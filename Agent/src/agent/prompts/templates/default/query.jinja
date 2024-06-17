@@ -1,0 +1,12 @@
+{% include "system_prompt.jinja" %}
+
+[[ USER ]]
+{%- if cot_type in ["few_shot", "few_shot_cot", "react"] %}
+{% include "context_example_retrieval.jinja" %}
+{%- endif %}
+
+{% include "trajectory.jinja" %}
+
+Now propose a query that summarises the question and will be used to search a database or the internet for the answer.
+Provide the query in the format
+Query: <query>

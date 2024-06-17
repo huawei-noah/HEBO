@@ -1,0 +1,19 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - hyperopt
+
+task:
+  _target_: agent.tasks.hyperopt.HyperOpt
+  task_id: ???
+  workspace_path: ./workspace/hyperopt
+
+  name: hyperopt
+  description:
+  subtask: null
+  version: v0.1
+
+max_episodes: 1
+max_env_steps: 1

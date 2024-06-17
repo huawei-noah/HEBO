@@ -1,0 +1,15 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - autoregressive
+      - webshop
+      - default
+
+task:
+  _target_: agent.tasks.webshop.WebShop
+
+starting_episode: 200
+max_episodes: 80
+max_env_steps: 10

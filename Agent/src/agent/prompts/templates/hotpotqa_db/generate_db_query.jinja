@@ -1,0 +1,15 @@
+[[SYSTEM]]
+
+You are an answer search agent. You have to summarise the question in a simple sentence that will be used as a query to search a database.
+You need to provide your answer in the form Query: <query>.
+
+[[ USER ]]
+{%- if cot_type in ["few_shot", "few_shot_cot", "react"] %}
+{% include "context_example_retrieval.jinja" %}
+{%- endif %}
+
+{% include "trajectory.jinja" %}
+
+Now propose a query that summarises the question and will be used to search a database for the answer.
+Provide the query in the format
+Query: <query>

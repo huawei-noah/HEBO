@@ -1,0 +1,101 @@
+You are attempting to complete a coding function. Three examples of solving similar tasks are presented below:
+
+Prompt:
+from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    """ Check if in given list of numbers, are any two numbers closer to each other than
+    given threshold.
+    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)
+    False
+    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+    True
+    """
+
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought:
+    - Iterate over the list of numbers
+    - For each number, iterate over the list of numbers again
+    - If the two numbers are not the same, calculate the distance between them
+    - If the distance is smaller than the threshold, return True
+    - If the loop finishes, return False
+{%- endif %}
+Answer:
+[BEGIN]
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = abs(elem - elem2)
+                if distance < threshold:
+                    return True
+
+    return False
+[END]
+
+
+Prompt:
+from typing import List
+
+
+def separate_paren_groups(paren_string: str) -> List[str]:
+    """ Input to this function is a string containing multiple groups of nested parentheses. Your goal is to
+    separate those group into separate strings and return the list of those.
+    Separate groups are balanced (each open brace is properly closed) and not nested within each other
+    Ignore any spaces in the input string.
+    >>> separate_paren_groups(\'( ) (( )) (( )( ))\')
+    [\'()\', \'(())\', \'(()())\']
+    """
+
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought:
+    - Iterate over the string
+    - If the character is an open brace, increase the depth counter and add it to the current string
+    - If the character is a close brace, decrease the depth counter and add it to the current string
+    - If the depth counter is 0, add the current string to the result list and clear the current string
+    - Return the result list
+{%- endif %}
+Answer:
+[BEGIN]
+    result = []
+    current_string = []
+    current_depth = 0
+
+    for c in paren_string:
+        if c == '(':
+            current_depth += 1
+            current_string.append(c)
+        elif c == ')':
+            current_depth -= 1
+            current_string.append(c)
+
+            if current_depth == 0:
+                result.append(''.join(current_string))
+                current_string.clear()
+
+    return result
+[END]
+
+
+Prompt:
+from typing import List
+
+
+def truncate_number(number: float) -> float:
+    """ Given a positive floating point number, it can be decomposed into
+    and integer part (largest integer smaller than given number) and decimals
+    (leftover part always smaller than 1).
+
+    Return the decimal part of the number.
+    >>> truncate_number(3.5)
+    0.5
+    """
+
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought:
+    - Return the number modulo 1
+{%- endif %}
+Answer:
+[BEGIN]
+    return number % 1.0
+[END]

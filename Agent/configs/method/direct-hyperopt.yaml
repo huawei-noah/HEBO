@@ -1,0 +1,15 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.hyperopt_custom_commands.HyperOpt
+    summarize_code_prompt_template: 'summarize_code.jinja'
+    loop_flow_prompt_template: 'flow_loop_continue.jinja'
+    search_space_prompt_template: 'suggest_search_space.jinja'
+    workspace_path: ${task.workspace_path}/${task.task_id}
+    bo_steps: 100
+    max_repetitions: 1
+    max_retries: 5
+  prompt_builder:
+    template_paths: [ "hyperopt/" ]
+    default_kwargs:
+      cot_type: zero_shot

@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+  - override /hydra: parallel
+  - _self_
+
+hydra:
+  launcher:
+    n_jobs: 100
+  mode: MULTIRUN
+  sweeper:
+    params:
+      task: alfworld,gsm8k
+      method: fs,fs-cot,zs-cot,direct
+      llm@agent.llm: fschat/openchat_3.5
+      +agent.llm.temperature: 0.5
+      +seed: 0,1,3,4,5

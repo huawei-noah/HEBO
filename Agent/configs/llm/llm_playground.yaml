@@ -1,0 +1,4 @@
+_target_: agent.models.fastchat_api.FastChatAPILanguageBackend
+_partial_: true
+server_ip:  http://10.227.91.60:4000/v1
+api_key: sk-1234

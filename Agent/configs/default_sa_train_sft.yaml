@@ -1,0 +1,36 @@
+# @package _global_
+defaults:
+  - extras: default
+  - paths: default
+  - hydra: default
+  - logger: default
+  - llm: huggingface
+  - training/supervised@_here_
+  - override /training/dataset@dataset: textworld
+  - _self_
+
+# Use these to override how the trainer identifies the agent-generated sections
+#instruction_template: "<s> [INST]"
+#response_template: "["
+
+llm:
+  model_kwargs:
+#    device_map:
+#      "":
+#        _target_: hydra.utils.get_object
+#        path: accelerator.local_process_index
+    torch_dtype: # This is how you need to specify torch.bfloat16 using hydra
+      _target_: hydra.utils.get_object
+      path: torch.bfloat16
+
+  tokenizer_kwargs:
+    pad_token: <unk> # If this is a new token the embedding model needs to be resized
+    padding_side: right # SFTTrainer prefers padding on the right
+    verbose: False # The new huggingface conversation template builder generates a lot of pointless warnings when this is true
+
+#  peft:
+#    is_trainable: True
+
+project_name: "agent-sft"
+experiment_name: "huggingface-sft"
+tags: ["dev", "sft", "finetuning"]

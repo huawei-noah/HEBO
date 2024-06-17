@@ -1,0 +1,6 @@
+defaults:
+  - llm_playground
+
+model_id: qwen2-72b-128k
+context_length: 32000
+temperature: 0.3

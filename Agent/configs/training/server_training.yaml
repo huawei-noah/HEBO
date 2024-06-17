@@ -1,0 +1,20 @@
+
+client:
+  _target_: redis.Redis
+  host: localhost
+  port: 6379
+  db: 0
+  decode_responses: true
+
+training:
+  on_policy: True
+  dataset_size: 4
+  update_frequency: 4 # in on-policy this should be equal to dataset_size
+  batch_size_per_worker: 2
+
+model:
+  model_id: ???
+  response_template: "GPT4 Correct Assistant:"
+  instruction_template: "GPT4 Correct User:"
+  model_kwargs: {}
+  tokenizer_kwargs: {}

@@ -1,0 +1,29 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - autoregressive
+      - babyai
+      - default
+
+task:
+  _target_: agent.tasks.babyai.BabyAI
+
+  env_name: BabyAI-GoToObj-v0 #This is the easiest environment
+  # BabyAI-GoToRedBlueBall-v0
+  # BabyAI-GoToRedBallGrey-v0
+  # BabyAI-GoToLocalS8N7-v0
+  # BabyAI-PickupLoc-v0
+  # BabyAI-PickupDist-v0
+  # BabyAI-GoToDoor-v0
+  # BabyAI-OpenRedDoor-v0
+  # BabyAI-PutNextS7N4Carrying-v0
+  # BabyAI-UnlockPickup-v0
+
+  invalid_action_effect: "feedback"
+
+  action_space: discrete
+
+max_episodes: 100
+max_env_steps: 20

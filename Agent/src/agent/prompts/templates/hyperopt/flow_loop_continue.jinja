@@ -1,0 +1,33 @@
+{% include "system_prompt.jinja" %}
+[[ USER ]]
+{% if memory.retrieve({memory.mem_keys.BO_ERROR: 1.0}) != None %}
+Your previous attempt had the following error:
+{{ memory.retrieve({memory.mem_keys.BO_ERROR: 1.0}) }}
+
+Try again by responding
+```json
+{
+    "action": "Continue"
+}
+```
+{% else %}
+In your previous attempt, your search space was:
+{{ memory.retrieve({memory.mem_keys.BO_SEARCH_SPACE: 1.0}) }}
+
+During optimization you observed the following points:
+{{ memory.retrieve({memory.mem_keys.BO_OBSERVATIONS: 1.0}) }}
+
+The best parameter setting found after optimization is:
+{{ memory.retrieve({memory.mem_keys.BO_BEST_CANDIDATE: 1.0}) }}
+
+and its associated best score is:
+{{ memory.retrieve({memory.mem_keys.BO_BEST_SCORE: 1.0}) }}
+
+Now choose if you want to continue the optimization or stop here.
+Respond by following the format
+```json
+{
+    "action": <"Continue"/"Terminate">
+}
+```
+{% endif %}

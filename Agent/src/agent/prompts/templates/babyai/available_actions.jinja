@@ -1,0 +1,5 @@
+Available Actions:
+
+{%- for action in memory.retrieve({memory.mem_keys.AVAILABLE_ACTIONS: 1.0})[:-1] %}
+* {{ action }}
+{%- endfor %}

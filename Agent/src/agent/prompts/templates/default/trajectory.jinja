@@ -1,0 +1,6 @@
+Here is what happened so far:
+{% set action = memory.retrieve({memory.mem_keys.EXTERNAL_ACTION: 1.0}) %}
+{%- if action %}
+Action: {{action}}
+{%- endif %}
+Observation: {{memory.retrieve({memory.mem_keys.OBSERVATION: 1.0})}}

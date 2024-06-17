@@ -1,0 +1,18 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.DecisionFlow
+    choices:
+      - _target_: agent.commands.SequentialFlow
+        name: think_and_code
+        description: Think and then code
+        sequence:
+          - _target_: agent.commands.Think
+          - _target_: agent.commands.UseTool
+            prompt_template: code_interpreter.jinja
+            tool:
+              _target_: agent.tools.python_interpreter.PythonInterpreter
+      - _target_: agent.commands.Act
+  prompt_builder:
+    default_kwargs:
+      cot_type: few_shot

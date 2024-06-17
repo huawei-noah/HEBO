@@ -1,0 +1,4 @@
+subdirs:
+  linux-64:
+    packages:
+      __cuda: "12.1"

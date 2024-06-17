@@ -1,0 +1,40 @@
+{% include "system_prompt.jinja" %}
+
+[[ USER ]]
+OBS: {{ memory.retrieve({memory.mem_keys.OBSERVATION: 1.0}) }}
+{%- set model_code = memory.retrieve({memory.mem_keys.CODE: 1.0}) %}
+{%- if model_code %}
+This is your model code:
+```python
+{{ memory.retrieve({memory.mem_keys.CODE: 1.0}) }}
+```
+{% endif %}
+{% if memory.retrieve({memory.mem_keys.BO_ERROR: 1.0}) == "" %}
+Your last attempt had this error: {{ memory.retrieve({memory.mem_keys.BO_ERROR: 1.0}) }}
+Try to fix this and give a correct hyperparameter space.
+{% endif %}
+Now, you must provide a hyperparameter space on which a bayesian optimization tool will find the best params ONLY for the model(s) in the ABOVE code.
+Provide it in the following dictionary format:
+{"model1_name": {"hyperparameter1_name": [range_of_values],
+"hyperparameter2_name": [range_of_values]},
+"model2_name": {"hyperparameter1_name": [range_of_values],
+"hyperparameter2_name": [range_of_values]}}
+
+If your best model code above has only one model, you should define just that model and param search space, else if there are multiple models, you can add them to the dictionary.
+Only provide hyperparam search space for the model(s) in your best model code.
+
+Some examples include:
+{"RandomForestClassifier": {'bootstrap': [True, False],
+'max_depth': [10, 20, 30, None],
+'max_features': ['log2', 'sqrt'],
+'min_samples_leaf': [1, 2, 4],
+'min_samples_split': [2, 5, 10],
+'n_estimators': [200, 400, 600]},
+"XGBClassifier": {'min_child_weight': [1, 5, 10],
+'gamma': [0.5, 1, 1.5, 2, 5],
+'subsample': [0.6, 0.8, 1.0],
+'colsample_bytree': [0.6, 0.8, 1.0],
+'max_depth': [3, 4, 5]},
+"TabPFNClassifier": {'N_ensemble_configurations': [10, 20, 30, 35, 40]}}
+
+Now provide the final parameters to search from for your best model, in the above format.

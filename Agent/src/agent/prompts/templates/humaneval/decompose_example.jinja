@@ -1,0 +1,63 @@
+You are an agent attempting to decompose a task (the task is to complete a coding function). Examples of solving a similar task decompositions are presented below:
+
+Prompt:
+from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    """ Check if in given list of numbers, are any two numbers closer to each other than
+    given threshold.
+    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)
+    False
+    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+    True
+    """
+
+Decomposed subproblems:
+1. Iterate over the list of numbers
+2. For each number, iterate over the list of numbers again
+3. If the two numbers are not the same, calculate the distance between them
+4. If the distance is smaller than the threshold, return True
+5. If the loop finishes, return False
+
+
+
+Prompt:
+from typing import List
+
+
+def separate_paren_groups(paren_string: str) -> List[str]:
+    """ Input to this function is a string containing multiple groups of nested parentheses. Your goal is to
+    separate those group into separate strings and return the list of those.
+    Separate groups are balanced (each open brace is properly closed) and not nested within each other
+    Ignore any spaces in the input string.
+    >>> separate_paren_groups(\'( ) (( )) (( )( ))\')
+    [\'()\', \'(())\', \'(()())\']
+    """
+
+Decomposed subproblems:
+1. Initialize needed variables
+2. Iterate over the string
+3. If the character is an open brace, increase the depth counter and add it to the current string
+4. If the character is a close brace, decrease the depth counter and add it to the current string
+5. If the depth counter is 0, add the current string to the result list and clear the current string
+6. Return the result list
+
+
+
+Prompt:
+from typing import List
+
+
+def truncate_number(number: float) -> float:
+    """ Given a positive floating point number, it can be decomposed into
+    and integer part (largest integer smaller than given number) and decimals
+    (leftover part always smaller than 1).
+
+    Return the decimal part of the number.
+    >>> truncate_number(3.5)
+    0.5
+    """
+
+Decomposed subproblems:
+ 1. Return the number modulo 1

@@ -1,0 +1,14 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - hotpotqa
+      - default
+
+task:
+  _target_: agent.tasks.hotpotqa.HotpotQA
+  split: validation
+
+max_episodes: 1000
+max_env_steps: 1

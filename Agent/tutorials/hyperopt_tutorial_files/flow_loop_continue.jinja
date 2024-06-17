@@ -1,0 +1,19 @@
+{% include "system_prompt.jinja" %}
+[[ USER ]]
+Your response should not be an action or a thought, but an available option from the list, using the following format:
+Command: <command>
+{% if memory.retrieve({memory.mem_keys.RAN_HYPEROPT: 1.0}) == "True" %}
+{% if memory.retrieve({memory.mem_keys.BO_PERF: 1.0}) %}
+Your previous attempt had a validation performance of {{ memory.retrieve({memory.mem_keys.BO_PERF: 1.0}) }}
+Here is a list of the available commands:
+    Continue: Optimize the hyperparameters of the model
+    Terminate: Save your model with the final optimized hyperparameters
+Please focus only on outputting a command.
+Please use the format "Command: <command>".
+{% else %}
+Your previous attempt had an error, please try again.
+Please only output the following string: 'Command: Continue'
+{% endif %}
+{% else %}
+Please only output the following string: 'Command: Continue'
+{% endif %}

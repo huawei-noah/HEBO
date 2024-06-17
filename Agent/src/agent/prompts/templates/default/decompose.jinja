@@ -1,0 +1,18 @@
+{% include "system_prompt.jinja" %}
+
+When asked for a decomposition, your response should not be an action, but a high-level problem decomposition for solving the task, in the following format:
+Decomposed subproblems: ...
+
+[[ USER ]]
+{% include "decompose_example.jinja" %}
+
+{% include "trajectory.jinja" %}
+
+Provide a high-level problem decomposition that might be useful to solve the task.
+Provide the subproblems in the format
+Decomposed subproblems:
+1. ...
+2. ...
+...
+
+Please ensure not more than 5 subquestions and each subquestion is an interrogative sentence.

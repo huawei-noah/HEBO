@@ -1,0 +1,14 @@
+{% include "system_prompt.jinja" %}
+
+Your response should not be an action or a thought, but whether or not to repeat the previous sequence of commands again.
+Respond in the following format.
+Answer: <answer>
+[[ USER ]]
+{% include "trajectory.jinja" %}
+Do you want to repeat {{loop_body.description}}.
+You have repeated this {{current_repeat}} times.
+Or do you want to break from this loop?
+Respond with "Continue" if you believe that repeating the loop will be beneficial towards completing the task.
+Otherwise respond with "Terminate"
+Respond in the following format.
+Answer: <answer>, where answer can be either Continue or Terminate

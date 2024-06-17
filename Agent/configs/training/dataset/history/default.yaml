@@ -1,0 +1,4 @@
+role_key: role
+content_key: content
+assistant_role: assistant
+user_role: user

@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: deepseek-coder-7b-instruct-v1.5
+context_length: 16384

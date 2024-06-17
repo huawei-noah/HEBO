@@ -1,0 +1,4 @@
+_target_: agent.models.OpenAIAPILanguageBackend
+_partial_: true
+server_ip: https://api.openai.com/v1
+api_key: ${oc.env:OPENAI_API_KEY}

@@ -1,0 +1,25 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.SequentialFlow
+    name: hyperopt_example
+    description: Entire HyperOpt pipeline example
+    sequence:
+      - _target_: agent.commands.LoopFlow
+        max_repetitions: 2
+        allow_early_break: true
+        loop_body:
+          _target_: agent.commands.UseToolCall
+          prompt_template: hyperopt.jinja
+          tool:
+            _target_: agent.tools.hyperopt_tool.HyperOptTool
+            bo_steps: 2
+            path_to_python: './workspace/hyperopt/python_path.txt'
+            workspace_path: ${task.workspace_path}
+      - _target_: agent.commands.Act
+        name: terminate
+        description: save model script with final optimized hyperparameters
+  prompt_builder:
+    template_paths: [ "hyperopt/" ]
+    default_kwargs:
+      cot_type: zero_shot

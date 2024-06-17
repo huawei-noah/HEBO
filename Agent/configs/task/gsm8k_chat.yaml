@@ -1,0 +1,15 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - autoregressive
+      - gsm8k
+      - default
+
+task:
+  _target_: agent.tasks.gsm8k.GSM8K
+  split: test
+
+max_episodes: 1319
+max_env_steps: 1

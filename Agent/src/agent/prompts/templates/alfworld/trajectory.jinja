@@ -1,0 +1,32 @@
+{%- set observations = memory.retrieve_all({memory.mem_keys.OBSERVATION: 1.0})[::-1] -%}
+{%- set actions = memory.retrieve_all({memory.mem_keys.EXTERNAL_ACTION: 1.0})[::-1] -%}
+{%- if memory.history_summary is not none %}
+Here is the summarization of the history of what happened in this episode before:
+{{memory.history_summary}}
+
+Here is what happened in this episode so far after the summarization:
+{%- for obs in observations %}
+Action: {{actions[loop.index0]}}
+Observation: {{observations[loop.index0]}}
+{%- endfor %}
+{%- else %}
+
+{%- if observations|length > 0 %}
+Here is what happened in this episode so far:
+Observation: {{observations[0]}}
+
+{%- set observations = observations[1:] %}
+{%- if max_trajectory_len is not none %}
+{%- if max_trajectory_len == 0 %}
+{%- set observations = [] %}
+{%- else %}
+{%- set observations = observations[-max_trajectory_len:] %}
+{%- set actions = actions[-max_trajectory_len:] %}
+{%- endif %}
+{%- endif %}
+{%- for obs in observations %}
+Action: {{actions[loop.index0]}}
+Observation: {{obs}}
+{% endfor %}
+{%- endif %}
+{%- endif -%}

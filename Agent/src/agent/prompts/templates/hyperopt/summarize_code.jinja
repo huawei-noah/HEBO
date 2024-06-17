@@ -1,0 +1,24 @@
+{% include "system_prompt.jinja" %}
+
+[[ USER ]]
+This is the code provided by the user:
+
+```python
+{{ memory.retrieve({memory.mem_keys.CODE: 1.0}) }}
+```
+
+
+Provide a summary of what this code does and in particular:
+- how many models are used what models
+- what are the hyperparameters of these models
+
+{% if format_err_msg %}
+{{ format_err_msg }}
+{% else %}
+Now write a summary text of that information in a JSON format
+```json
+{
+    "summary": "<summary>"
+}
+```
+{% endif %}
