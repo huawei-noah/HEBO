@@ -18,16 +18,17 @@ First, please ensure ROS Noetic and [catkin_tools](https://catkin-tools.readthed
 Then step through the following steps:
 1. Open a new terminal and ensure ROS Noetic is sourced: `source /opt/ros/noetic/setup.bash`
 2. Create catkin workspace: `mkdir -p rosllm_ws/src`
-3. Initialize workspace: `cd rosllm_ws; catkin init`
-4. Clone HEBO:
+3. Change directory: `cd rosllm_ws`
+4. Initialize workspace: `catkin init`
+5. Clone HEBO:
   * **IMPORTANT**: make sure you *do not* clone the `HEBO` package in the `src` directory. It should be cloned into the `rosllm_ws/` directory.
   * **IMPORTANT**: also make sure to include the `--recursive` flag when cloning.
   * Clone via ssh: `git clone --recursive git@github.com:huawei-noah/HEBO.git`
   * Clone via https: `git clone --recursive https://github.com/huawei-noah/HEBO.git`
-5. Change directory: `cd src`
-6. Create a symbolic link: `ln -s ../HEBO/ROSLLM/`
-5. Install dependancies: `rosdep install -i -r -y --from-paths . --ignore-src`
-6. Build workspace: `catkin build -s`
+6. Change directory: `cd src`
+7. Create a symbolic link: `ln -s ../HEBO/ROSLLM/`
+8. Install dependancies: `rosdep install -i -r -y --from-paths . --ignore-src`
+9. Build workspace: `catkin build -s`
 
 # Support
 
