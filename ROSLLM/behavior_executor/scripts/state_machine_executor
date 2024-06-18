@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import rospy
+
+from rosllm_srvs.srv import ExecuteBehavior, ExecuteBehaviorResponse
+
+OK = 0
+
+class Node:
+
+    def __init__(self):
+        rospy.init_node('state_machine_executor')
+        rospy.Service('behavior_executor', ExecuteBehavior, self.srv_callback)
+
+    def execute(self, state_machine_code):
+        # TODO: execute state machine
+        pass
+
+    def srv_callback(self, req):
+        success, message, info = self.execute(req.behavior)
+        return ExecuteBehavior(success=success, message=message, info=info)
+
+    def spin(self):
+        rospy.spin()
+
+def main():
+    Node().spin()
+
+if __name__ == '__main__':
+    main()

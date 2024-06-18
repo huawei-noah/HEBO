@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import json
+
+import rospy
+from behavior_executor.test import TestBehaviorExecutor, main
+from rosllm_srvs.srv import AtomicAction, AtomicActionRequest, AtomicActionResponse
+
+
+class DummyAtomicActionLibrary:
+
+    def __init__(self):
+        rospy.loginfo("setting up a dummy atomic action library ...")
+        rospy.Service("aalib/get_location", AtomicAction, self.aa_get_location)
+        rospy.Service("aalib/reach", AtomicAction, self.aa_reach)
+        rospy.sleep(1.0)  # ensure services are registered with master
+        rospy.loginfo("initialized atomic action library")
+
+    def aa_get_location(self, req: AtomicActionRequest) -> AtomicActionResponse:
+        rospy.loginfo(f"get_location recieved request\n{req}")
+        rospy.loginfo(" ... performing get_location atomic action ...")
+        rospy.sleep(2.0)
+        fake_pose = dict(pose=[1.0, 2.0, 3.0, 0.0, 0.0, 1.0, 0.0])
+        resp = AtomicActionResponse(success=True, output=json.dumps(fake_pose))
+        rospy.loginfo(f"completed get_location:\n{resp}")
+        return resp
+
+    def aa_reach(self, req: AtomicActionRequest) -> AtomicActionResponse:
+        rospy.loginfo(f"reach recieved request\n{req}")
+        rospy.loginfo(" ... performing reach atomic action ...")
+        rospy.sleep(2.0)
+        fake_final_pos = dict(pose=[2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 1.0])
+        resp = AtomicActionResponse(success=True, output=json.dumps(fake_final_pos))
+        rospy.loginfo(f"completed reach:\n{resp}")
+        return resp
+
+
+class TestSequenceExecutor(TestBehaviorExecutor):
+    behavior = """{"name": "aalib/get_location", "input": {"child_frame": "child", "parent": "parent"}}
+{"name": "aalib/reach", "input": ""}"""
+
+    def __init__(self):
+        self.dummy_aal = DummyAtomicActionLibrary()
+        super().__init__()
+
+
+if __name__ == "__main__":
+    main(TestSequenceExecutor)
