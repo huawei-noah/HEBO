@@ -1,0 +1,3 @@
+[submodule "ROSLLM/extern/BehaviorTree.ROS"]
+	path = ROSLLM/extern/BehaviorTree.ROS
+	url = https://github.com/BehaviorTree/BehaviorTree.ROS.git
