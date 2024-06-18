@@ -1,0 +1,5 @@
+string input        # input for the atomic action
+string prev_output  # output from the previous atomic action
+---
+bool success        # True when atomic action executed successfully, false otherwise
+string output       # Text output from the atomic action
