@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+import json
+from typing import Generator, Tuple
+
+import rospy
+from rosllm_srvs.srv import AtomicAction, AtomicActionRequest
+from behavior_executor.node import BehaviorExecutor, main
+from behavior_executor.info import Info
+
+
+class SequenceExecutor(BehaviorExecutor):
+    """Behavior is defined as a sequence of ROS services."""
+
+    node_name = "sequence_executor_node"
+    timeout = 30.0  # seconds
+
+    @staticmethod
+    def iter_atomic_actions(behavior: str) -> Generator:
+        for atomic_action_str in behavior.split("\n"):
+            atomic_action = json.loads(atomic_action_str)
+            name = atomic_action["name"]
+            input = atomic_action.get("input", "")
+
+            # Input may be json and then is serialized by
+            # above, but atomic action service expects input
+            # to be a string. Make sure input is a string
+            # before yielding.
+            if not isinstance(input, str):
+                input = json.dumps(input)
+
+            yield name, input
+
+    def wait_for_atomic_action(self, name: str):
+        try:
+            rospy.wait_for_service(name, timeout=self.timeout)
+            success, message, info = True, "", Info.OK
+        except rospy.ROSException:
+            success = False
+            message = "atomic action unavailable, is the server running?"
+            info = Info.ATOMIC_ACTION_UNAVAILABLE
+        return success, message, info
+
+    def execute_atomic_action(
+        self,
+        name: str,
+        input: str,
+        prev_output: str,
+    ) -> Tuple[bool, str]:
+        success, message, info = self.wait_for_atomic_action(name)
+        if not success:
+            return success, message, info
+
+        try:
+            handler = rospy.ServiceProxy(name, AtomicAction)
+            req = AtomicActionRequest(input=input, prev_output=prev_output)
+            resp = handler(req)
+            success = resp.success
+            output = resp.output
+        except rospy.ROSException:
+            success = False
+            output = resp.output
+            info = Info.ERROR_ATOMIC_ACTION
+
+        return success, output, info
+
+    def execute_behavior(self, behavior: str):
+        # Make sure atomic action service exists
+        success, message, info = self.init_request()
+        if not success:
+            return success, message, info
+
+        # Iterate over atomic actions
+        prev_output = ""
+        for name, input in self.iter_atomic_actions(behavior):
+            # 'name' is the service name for the atomic action
+            rospy.loginfo(f"executing atomic action '{name}' ...")
+            success, prev_output, info = self.execute_atomic_action(
+                name, input, prev_output
+            )
+            if success:
+                rospy.loginfo(f"executed atomic action '{name}'")
+            else:
+                rospy.logwarn(f"failed to execute atomic action '{name}'")
+                message = prev_output
+                break
+
+        return success, message, info
+
+
+if __name__ == "__main__":
+    main(SequenceExecutor)

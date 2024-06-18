@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+from behavior_executor.test import TestBehaviorExecutor, main
+
+
+class TestCodeExecutor(TestBehaviorExecutor):
+    behavior = """
+import os
+from time import time_ns
+from behavior_executor.info import Info
+
+
+def main():
+    home = os.environ["HOME"]
+    filename = "test_" + str(time_ns()) + ".txt"
+    path = os.path.join(home, filename)
+
+    success = True
+    message = "SUCCESS"
+    info = Info.OK
+
+    with open(path, "w") as f:
+        print(message, file=f)
+
+    return success, message, info
+"""
+
+
+if __name__ == "__main__":
+    main(TestCodeExecutor)

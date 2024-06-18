@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+from behavior_executor.test import TestBehaviorExecutor, main
+
+
+class TestBehaviorTreeExecutor(TestBehaviorExecutor):
+    behavior = """<root>
+     <BehaviorTree>
+        <Sequence>
+            <AddTwoInts service_name = "add_two_ints"
+                        first_int = "3" second_int = "4"
+                        sum = "{add_two_result}" />
+            <PrintValue message="{add_two_result}"/>
+
+            <RetryUntilSuccessful num_attempts="4">
+                <Timeout msec="300">
+                    <Fibonacci server_name="fibonacci" order="5"
+                               result="{fibonacci_result}" />
+                </Timeout>
+            </RetryUntilSuccessful>
+            <PrintValue message="{fibonacci_result}"/>
+        </Sequence>
+     </BehaviorTree>
+ </root>
+ """
+
+
+if __name__ == "__main__":
+    main(TestBehaviorTreeExecutor)

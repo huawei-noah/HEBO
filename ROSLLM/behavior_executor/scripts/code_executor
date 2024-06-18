@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import sys
+import time
+import importlib
+from typing import Callable, Tuple
+
+import rospy
+from behavior_executor.node import BehaviorExecutor, main
+from behavior_executor.info import Info
+
+
+class CodeExecutor(BehaviorExecutor):
+    """Behavior is defined as a python script."""
+
+    node_name = "code_executor_node"
+
+    @staticmethod
+    def from_behavior_code_import_main(path: str) -> Callable:
+        """Imports main method from a given path to a script."""
+        module_name = "behavior_code"
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return getattr(module, "main")
+
+    def save_code(self, code: str) -> str:
+        """Saves the code and returns the filename (code is saved to /tmp directory)."""
+        stamp = time.time_ns()
+        filename = f"/tmp/rosllm_{stamp}.py"
+        with open(filename, "w") as f:
+            f.write(code)
+        rospy.loginfo(f"saved {filename}")
+        return filename
+
+    def execute_behavior(self, behavior: str) -> Tuple[bool, str, Info]:
+
+        success, message, info = self.init_request()
+
+        try:
+            filename = self.save_code(behavior)
+        except Exception as e:
+            success = False
+            message = f"failed to save code:\n{e}"
+            info = Info.SAVE_CODE_FAILED
+            return success, message, info
+
+        try:
+            main_function = self.from_behavior_code_import_main(filename)
+        except Exception as e:
+            success = False
+            message = f"failed to import main function from code:\n{e}"
+            info = Info.CODE_IMPORT_ERROR
+            return success, message, info
+
+        try:
+            success, message, info = main_function()
+        except Exception as e:
+            success = False
+            message = f"failed to run main function:\n{e}"
+            info = Info.CODE_EXECUTION_ERROR
+
+        return success, message, info
+
+
+if __name__ == "__main__":
+    main(CodeExecutor)
