@@ -13,7 +13,6 @@ Currently, the following nodes are implemented:
 * `behavior_tree_executor`: input is a behaviour tree.
 * `code_executor`: input is a python script containing a `main` function.
 * `sequence_executor`: input is a sequence of ROS action/service names separated by newlines (i.e. `\n`).
-* ~~`state_machine_executor`: input is a state machine using the ROS SMACH library.~~
 
 # Examples
 
@@ -24,4 +23,3 @@ For each executor, follow these steps:
 2. In a new terminal, run: `rosrun behavior_executor NAME_executor` where `NAME` specifies the executor type (e.g. `code`)
 3. If you ran the `behavior_tree_executor` then in a new terminal run: `rosrun behaviortree_ros test_server`
 4. In a new terminal, run `rosrun behavior_executor test_NAME_executor` where `NAME` is the same as in step 2.
-
