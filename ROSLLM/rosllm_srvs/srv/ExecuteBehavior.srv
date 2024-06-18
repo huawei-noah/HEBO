@@ -1,0 +1,5 @@
+string behavior        # behavior string
+---
+bool success           # success flag
+string message         # human-readable message
+int32 info             # information flag
