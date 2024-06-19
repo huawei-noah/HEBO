@@ -1,4 +1,3 @@
-string prompt
+string prompt    # Prompt for the LLM
 ---
-bool success
-string response
+rosllm_msgs/LLMResponse response # Prompt from LLM
