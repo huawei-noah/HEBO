@@ -11,6 +11,7 @@ add_service_files(
   FILES
   ExecuteBehavior.srv
   AtomicAction.srv
+  LLM.srv
 )
 
 generate_messages(
