@@ -3,6 +3,7 @@ project(rosllm_srvs)
 
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
+  sensor_msgs
   message_generation
   message_runtime
 )
@@ -12,6 +13,7 @@ add_service_files(
   ExecuteBehavior.srv
   AtomicAction.srv
   LLM.srv
+  Observation.srv
 )
 
 generate_messages(
