@@ -27,7 +27,9 @@ Then step through the following steps:
   * Clone via https: `git clone --recursive https://github.com/huawei-noah/HEBO.git`
 6. Change directory: `cd src`
 7. Create a symbolic link: `ln -s ../HEBO/ROSLLM/`
-8. Install dependancies: `rosdep install -i -r -y --from-paths . --ignore-src`
+8. Install dependancies:
+  * `rosdep install -i -r -y --from-paths . --ignore-src`
+  * `pip3 install openai`
 9. Build workspace: `catkin build -s`
 
 # Support
