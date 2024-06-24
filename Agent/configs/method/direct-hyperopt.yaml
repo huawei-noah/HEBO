@@ -7,7 +7,7 @@ agent:
     search_space_prompt_template: 'suggest_search_space.jinja'
     workspace_path: ${task.workspace_path}/${task.task_id}
     bo_steps: 100
-    max_repetitions: 5
+    max_repetitions: 1
     max_retries: 5
   prompt_builder:
     template_paths: [ "hyperopt/" ]

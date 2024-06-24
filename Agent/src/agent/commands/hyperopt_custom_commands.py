@@ -37,10 +37,12 @@ class HyperOpt(SequentialFlow):
                      - RunHyperopt
         """
         summarize_cmd = SummarizeCode(
-            required_prompt_templates={"summarize_code_prompt_template": summarize_code_prompt_template}
+            required_prompt_templates={"summarize_code_prompt_template": summarize_code_prompt_template},
+            max_retries=max_retries,
         )
         suggest_cmd = SuggestSearchSpace(
-            required_prompt_templates={"search_space_prompt_template": search_space_prompt_template}
+            required_prompt_templates={"search_space_prompt_template": search_space_prompt_template},
+            max_retries=max_retries,
         )
         hyperopt_cmd = RunHyperOpt(
             workspace_path=workspace_path,
