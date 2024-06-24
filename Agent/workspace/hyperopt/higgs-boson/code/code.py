@@ -1,18 +1,14 @@
-"""
-Code adapted directly from this submission
-https://kaggle.com/
-"""
-
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 
 train_data = pd.read_csv('workspace/hyperopt/higgs-boson/data/training.zip')
 test_data = pd.read_csv('workspace/hyperopt/higgs-boson/data/test.zip')
 
-# DELETED WEIGHT BECAUSE IT WAS NOT IN THE TESTING SET SO I DON'T WANT TO TRAIN THE MODEL ON THE TRAINING SET WHICH HAS
+# DELETED WEIGHT BEACAUSE IT WAS NOT IN THE TESTING SET SO I DON'T WANT TO TRAIN THE MODEL ON THE TRAINING SET WHICH HAS
 # AN EXTRA VARIABLE WHICH IS TO BE CONSIDERED BY THE ALGORITHMS
 train_data = train_data.drop(['Weight'], axis=1)
 
@@ -40,6 +36,8 @@ x_test = sc.transform(x_test)
 
 xg = XGBClassifier()
 xg.fit(x_train, y_train)
+
+cb = CatBoostClassifier()
 
 xg_pred = xg.predict(x_test)
 print(classification_report(y_test, xg_pred))
