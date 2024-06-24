@@ -5,6 +5,17 @@ from typing import Any, Dict, List, Tuple, Union
 import pandas as pd
 
 
+def strip_comments(code: str) -> str:
+    # remove all single-line comments
+    stripped_code = re.sub(r'#.*', '', code)
+
+    # remove multi-line comments
+    stripped_code = re.sub(r'\'\'\'(.*?)\'\'\'', '', stripped_code)
+    stripped_code = re.sub(r'\"\"\"(.*?)\"\"\"', '', stripped_code)
+
+    return stripped_code
+
+
 def convert_to_single_line_blocks(code: str) -> List[str]:
     """Remove multi-line expressions from code and outputs list of single-line expressions.
 
@@ -14,6 +25,7 @@ def convert_to_single_line_blocks(code: str) -> List[str]:
     Returns:
         blocks: list of single-line expressions
     """
+    code = strip_comments(code)
     blocks = []
     code = code.split("\n")
     i = 0
