@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import os
 import pickle
 import re
@@ -94,14 +95,21 @@ def extract_json_with_bools(raw_response: str) -> Dict[str, bool]:
 def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
     """Catch the result of a response given in json style"""
     json_elements = re.findall("```json([\s\S]*?)```", raw_response)
+
+    def get_val_from_dict_str(candidate_) -> str:
+        candidate_ = ast.literal_eval(candidate_)
+        if matchname is not None:
+            assert list(candidate_.keys())[0].lower() == matchname.lower()
+        return list(candidate_.values())[0].strip()
+
     if len(json_elements) == 0:
         try:
-            candidate = raw_response.replace("\n", "")
-            candidate = re.sub("[\"'\{\}]", "", candidate)
-            k, v = candidate.split(":")
-            if matchname is not None:
-                assert k.strip().lower() == matchname.lower()
-            return v.strip()
+            dict_elements = re.findall("{([\s\S]*?)}", raw_response)
+            if len(dict_elements) > 0:
+                candidate = "{" + dict_elements[0].replace("\n", "") + "}"
+            else:
+                candidate = raw_response.replace("\n", "")
+            return get_val_from_dict_str(candidate_=candidate)
         except Exception:
             raise ParsingError(
                 f"No match found in raw response:\n{raw_response}",
@@ -115,14 +123,8 @@ def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
             "Did you return more than one json code blocks? Please return only one."
         )
     try:
-        return eval(json_elements[0])[matchname]
-    except (SyntaxError, TypeError):
         candidate = json_elements[0].replace("\n", "")
-        candidate = re.sub("[\"'\{\}]", "", candidate)
-        k, v = candidate.split(":")
-        if matchname is not None:
-            assert k.strip().lower() == matchname.lower()
-        return v.strip()
+        return get_val_from_dict_str(candidate_=candidate)
     except Exception as e:
         print("Raw:\n", raw_response)
         raise ParsingError(f"Failed to extract key '{matchname}' from {json_elements[0]}",
@@ -164,9 +166,32 @@ def save_w_pickle(obj: Any, path: str, filename: Optional[str] = None) -> None:
         path = os.path.dirname(path)
     if len(filename) < 4 or filename[-4:] != ".pkl":
         filename += ".pkl"
-    os.makedirs(path, exist_ok=True)
-    with open(os.path.join(path, filename), "wb") as f:
+    if not os.path.exists(path):
+        os.makedirs(path)
+        os.chmod(path, 0o777)
+    filepath = os.path.join(path, filename)
+    with open(filepath, "wb") as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+    os.chmod(filepath, 0o777)
+
+
+def load_w_pickle(path: str, filename: Optional[str] = None) -> Any:
+    """ Load object from file exp_path/filename.pkl """
+    if filename is None:
+        filename = os.path.basename(path)
+        path = os.path.dirname(path)
+    if len(filename) < 4 or filename[-4:] != '.pkl':
+        filename += '.pkl'
+    p = os.path.join(path, filename)
+    with open(p, 'rb') as f:
+        try:
+            return pickle.load(f)
+        except EOFError:
+            raise Exception(f"EOFError with {p}")
+        except UnicodeDecodeError:
+            raise Exception(f"UnicodeDecodeError with {p}")
+        except pickle.UnpicklingError:
+            raise Exception(f"UnpicklingError with {p}")
 
 
 def extras(cfg: DictConfig) -> None:
@@ -334,7 +359,7 @@ def human_input(allow_cancel: bool, w=150) -> str:
     redo_flag = "[REDO]"
     cancel_flag = "[CANCEL]"
 
-    lines = ["-" * w]
+    lines = ["─" * w]
     text = ("Rules for manual input in terminal:\n"
             "- write as many lines as you want\n"
             f"- when you're done, put stop flag: {stop_signal}\n"
@@ -344,7 +369,7 @@ def human_input(allow_cancel: bool, w=150) -> str:
     text_lines = justify_text(text=text, w=w - 4)
     text_lines = list(map(lambda t: f"| {t} |", text_lines))
     lines.extend(text_lines)
-    lines.append("-" * w)
+    lines.append("─" * w)
 
     print("\n".join(lines))
 
@@ -530,6 +555,14 @@ def catch_error_wrap(code: str, code_error_path: str, code_warnings_path: str) -
     return wrapped_code
 
 
+def unwrap_code(wrapped_code: str) -> str:
+    """
+    Finds the code inside a try/except and returns it indented left
+    """
+    inner_code = re.findall("try:([\s\S]*?)except", wrapped_code)[0]
+    return inner_code.replace("\n    ", "\n").strip()
+
+
 def get_path_to_python(path_to_python: str) -> str:
     while not os.path.exists(path_to_python):
         python_exe = input(
@@ -541,3 +574,14 @@ def get_path_to_python(path_to_python: str) -> str:
     with open(path_to_python) as f:
         python_exe = f.readline().replace("\n", "")
     return python_exe
+
+
+if __name__ == "__main__":
+    example = 'sad\n{"summary": "it;sa\'as sdfas \nsadasfd asd "\n}'
+    assert extract_as_json(raw_response=example, matchname="summary")
+    example = '\n{"summary": "it;sa\'as sdfas \nsadasfd asd "\n}'
+    assert extract_as_json(raw_response=example, matchname="summary")
+    example = '\n```{"summary": "it;sa\'as sdfas \nsadasfd asd "\n}```'
+    assert extract_as_json(raw_response=example, matchname="summary")
+    example = '\n```json{"summary": "it;sa\'as sdfas \nsadasfd asd "\n}```'
+    assert extract_as_json(raw_response=example, matchname="summary")
