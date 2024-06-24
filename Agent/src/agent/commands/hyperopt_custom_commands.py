@@ -155,7 +155,12 @@ class RunHyperOpt(HumanTakeoverCommand):
     def get_hebo_design_space(search_space: Dict[str, Dict[str, Any]]):
         search_spaces = []
         for model_name in search_space:
-            search_spaces += search_space[model_name]
+            model_name_str = model_name.lower() + '_'
+            model_search_space = []
+            for param_dict in search_space[model_name]:
+                param_dict['name'] = model_name_str + param_dict['name']
+                model_search_space.append(param_dict)
+            search_spaces += model_search_space
         space = DesignSpace().parse(search_spaces)
         return space
 

@@ -117,7 +117,6 @@ def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
     try:
         return eval(json_elements[0])[matchname]
     except (SyntaxError, TypeError):
-        breakpoint()
         candidate = json_elements[0].replace("\n", "")
         candidate = re.sub("[\"'\{\}]", "", candidate)
         k, v = candidate.split(":")

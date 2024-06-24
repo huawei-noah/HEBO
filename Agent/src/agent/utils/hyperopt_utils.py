@@ -162,13 +162,13 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
     keyword_arguments = {}
     keyword_arguments_str = ""
     for model_name in space:
-        arguments[model_name] = ", ".join([param_dict['name'] for param_dict in space[model_name]])
+        model_name_str = model_name.lower() + '_'
+        arguments[model_name] = ", ".join([model_name_str + param_dict['name'] for param_dict in space[model_name]])
         arguments_str += arguments[model_name] + ", "
         keyword_arguments[model_name] = ", ".join([
-            f"{param_dict['name']}={param_dict['name']}" for param_dict in space[model_name]
+            f"{param_dict['name']}={model_name_str}{param_dict['name']}" for param_dict in space[model_name]
         ])
         keyword_arguments_str += keyword_arguments[model_name] + ", "
-
     blocks = convert_to_single_line_blocks(code)
     blackbox_code = f"def blackbox({arguments_str}) -> float:\n"
     for line in blocks:
