@@ -1,0 +1,127 @@
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # list of supported hooks: https://pre-commit.com/hooks.html
+      - id: trailing-whitespace
+        exclude: ^third_party/
+      - id: end-of-file-fixer
+        exclude: ^third_party/
+      - id: check-docstring-first
+        exclude: ^third_party/
+      - id: check-yaml
+        exclude: ^third_party/
+      - id: debug-statements
+        exclude: ^third_party/
+      - id: detect-private-key
+        exclude: ^third_party/
+      - id: check-executables-have-shebangs
+        exclude: ^third_party/
+      - id: check-toml
+        exclude: ^third_party/
+      - id: check-case-conflict
+        exclude: ^third_party/
+      - id: check-added-large-files
+        exclude: ^third_party/
+
+  # python code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        args: [--line-length, "120"]
+        exclude: ^third_party/
+
+  # python upgrading syntax to newer version
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.3.1
+    hooks:
+      - id: pyupgrade
+        args: [--py38-plus]
+        exclude: ^third_party/
+
+  # python docstring formatting
+  - repo: https://github.com/myint/docformatter
+    rev: v1.5.1
+    hooks:
+      - id: docformatter
+        args: [--in-place, --wrap-summaries=99, --wrap-descriptions=99]
+        exclude: ^third_party/
+
+  # python security linter
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: "1.7.5"
+  #   hooks:
+  #     - id: bandit
+  #       args: ["-s", "B101"]
+
+  # yaml formatting
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v3.0.0-alpha.6
+  #   hooks:
+  #     - id: prettier
+  #       types: [yaml]
+  #       exclude: "environment.yaml"
+
+  # shell scripts linter
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.2
+    hooks:
+      - id: shellcheck
+        exclude: ^third_party/
+
+  # md formatting
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.16
+    hooks:
+      - id: mdformat
+        args: ["--number"]
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-tables
+          - mdformat_frontmatter
+          # - mdformat-toc
+          # - mdformat-black
+        exclude: ^third_party/
+
+  # word spelling linter
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        args:
+          - --skip=logs/**,data/**,*.ipynb,poetry.lock
+          # - --ignore-words-list=abc,def
+        exclude: ^third_party/
+
+  # jupyter notebook cell output clearing
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+
+  # jupyter notebook linting
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.6.3
+    hooks:
+      - id: nbqa-black
+        args: ["--line-length=99"]
+      - id: nbqa-isort
+        args: ["--profile=black"]
+      - id: nbqa-flake8
+        args:
+          [
+            "--extend-ignore=E203,E402,E501,F401,F841",
+            "--exclude=logs/*,data/*",
+          ]
+        exclude: ^third_party/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.2.1
+    hooks:
+      - id: ruff
+        exclude: ^third_party/

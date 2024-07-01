@@ -1,0 +1,17 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.SequentialFlow
+    name: retrieve and answer
+    description: Search Database and answer to a question
+    sequence:
+      - _target_: agent.commands.VectorDB
+        path_to_database: ???
+        database_name: database_all
+
+        top_k: 2
+      - _target_: agent.commands.Act
+
+  prompt_builder:
+    default_kwargs:
+      cot_type: few_shot

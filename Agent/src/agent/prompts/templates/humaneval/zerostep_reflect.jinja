@@ -1,0 +1,18 @@
+{% include "system_prompt.jinja" %}
+[[ USER ]]
+{%- if reflect_cot_type in ["few_shot_cot", "few_shot"] %}
+Here are some examples:
+{% include "reflect_examples.jinja" %}
+{% endif %}
+To this question:
+{% include "trajectory.jinja" %}
+Your answer was:
+[BEGIN]{{ memory.retrieve({memory.mem_keys.NEXT_PLANNED_ACTION: 1.0}) }}[END]
+Are you sure about this answer? Please reflect carefully and be sure of your final answer.
+Now please provide ONLY the function body.
+Answer in the format
+Reflection: <reflection>
+Answer:
+[BEGIN]
+    <function body>
+[END]

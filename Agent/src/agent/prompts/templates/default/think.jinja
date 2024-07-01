@@ -1,0 +1,12 @@
+{% include "system_prompt.jinja" %}
+
+When asked for a thought, your response should not be an action, but a high-level thought useful for solving the task, in the following format:
+Thought: ...
+[[ USER ]]
+{% include "context_example.jinja" %}
+
+{% include "trajectory.jinja" %}
+
+Provide a high-level thought that might be useful to solve the task.
+Provide the thought in the format
+Thought: ...

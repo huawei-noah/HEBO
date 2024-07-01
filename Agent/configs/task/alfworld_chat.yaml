@@ -1,0 +1,203 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - autoregressive
+      - alfworld
+      - default
+
+task:
+  _target_: agent.tasks.alfworld.AlfWorld
+
+  train_eval: 'eval_out_of_distribution'
+
+  filter_game_files:
+    - "pick_and_place_simple-Pencil-None-Shelf-308/trial_T20190908_121952_610012"
+    - "pick_and_place_simple-PepperShaker-None-Drawer-10/trial_T20190918_154424_844749"
+    - "pick_and_place_simple-Watch-None-Safe-219/trial_T20190907_074643_810052"
+    - "pick_and_place_simple-SaltShaker-None-Drawer-10/trial_T20190909_021613_077537"
+    - "pick_and_place_simple-SaltShaker-None-Drawer-10/trial_T20190909_021728_339782"
+    - "pick_and_place_simple-SaltShaker-None-Cabinet-10/trial_T20190906_191501_563086"
+    - "pick_and_place_simple-SoapBottle-None-Toilet-424/trial_T20190907_004351_281384"
+    - "pick_and_place_simple-SoapBottle-None-Toilet-424/trial_T20190907_004321_405868"
+    - "pick_and_place_simple-SaltShaker-None-Cabinet-10/trial_T20190906_191429_743650"
+    - "pick_clean_then_place_in_recep-Mug-None-CoffeeMachine-10/trial_T20190907_221355_558505"
+    - "pick_clean_then_place_in_recep-Egg-None-Microwave-10/trial_T20190909_120712_273910"
+    - "pick_clean_then_place_in_recep-Bowl-None-Cabinet-10/trial_T20190909_061158_110530"
+    - "pick_clean_then_place_in_recep-Plate-None-CounterTop-10/trial_T20190908_213533_897289"
+    - "pick_clean_then_place_in_recep-SoapBar-None-CounterTop-424/trial_T20190907_074045_109439"
+    - "pick_clean_then_place_in_recep-SoapBar-None-CounterTop-424/trial_T20190907_074124_966890"
+    - "pick_clean_then_place_in_recep-Knife-None-CounterTop-10/trial_T20190909_110347_624008"
+    - "pick_clean_then_place_in_recep-Spatula-None-Drawer-10/trial_T20190907_080730_211959"
+    - "pick_clean_then_place_in_recep-Cloth-None-Cabinet-424/trial_T20190908_022321_380927"
+    - "pick_heat_then_place_in_recep-Mug-None-Cabinet-10/trial_T20190909_021247_306737"
+    - "pick_heat_then_place_in_recep-Apple-None-GarbageCan-10/trial_T20190908_145356_918528"
+    - "pick_heat_then_place_in_recep-Egg-None-GarbageCan-10/trial_T20190908_113610_425142"
+    - "pick_heat_then_place_in_recep-Apple-None-GarbageCan-10/trial_T20190908_145143_820541"
+    - "pick_heat_then_place_in_recep-Apple-None-GarbageCan-10/trial_T20190908_145050_918567"
+    - "pick_heat_then_place_in_recep-Tomato-None-GarbageCan-10/trial_T20190908_225359_617900"
+    - "pick_heat_then_place_in_recep-Potato-None-GarbageCan-10/trial_T20190907_161745_664033"
+    - "pick_heat_then_place_in_recep-Mug-None-Cabinet-10/trial_T20190909_021200_669381"
+    - "pick_cool_then_place_in_recep-Mug-None-Cabinet-10/trial_T20190909_121635_622676"
+    - "pick_cool_then_place_in_recep-Lettuce-None-CounterTop-10/trial_T20190909_174807_646433"
+    - "pick_cool_then_place_in_recep-Mug-None-Cabinet-10/trial_T20190909_121710_650938"
+    - "pick_cool_then_place_in_recep-Lettuce-None-CounterTop-10/trial_T20190909_123133_763972"
+    - "pick_cool_then_place_in_recep-Tomato-None-Microwave-10/trial_T20190909_102608_318800"
+    - "pick_cool_then_place_in_recep-Potato-None-Microwave-10/trial_T20190907_033228_194678"
+    - "pick_cool_then_place_in_recep-Tomato-None-Microwave-10/trial_T20190909_102644_926781"
+    - "pick_cool_then_place_in_recep-Mug-None-CoffeeMachine-10/trial_T20190907_183715_299073"
+    - "look_at_obj_in_light-CD-None-DeskLamp-308/trial_T20190908_141942_810052"
+    - "look_at_obj_in_light-Book-None-DeskLamp-308/trial_T20190908_020048_814402"
+    - "look_at_obj_in_light-Mug-None-DeskLamp-308/trial_T20190908_201421_021646"
+    - "look_at_obj_in_light-Pencil-None-DeskLamp-308/trial_T20190908_220604_010430"
+    - "look_at_obj_in_light-Pencil-None-DeskLamp-308/trial_T20190908_220545_153480"
+    - "look_at_obj_in_light-CD-None-DeskLamp-308/trial_T20190908_142046_281296"
+    - "look_at_obj_in_light-Bowl-None-DeskLamp-308/trial_T20190907_133919_856963"
+    - "look_at_obj_in_light-Mug-None-DeskLamp-308/trial_T20190908_201444_037645"
+    - "pick_two_obj_and_place-KeyChain-None-Safe-219/trial_T20190909_012027_782483"
+    - "pick_two_obj_and_place-PepperShaker-None-Drawer-10/trial_T20190912_221016_460197"
+    - "pick_two_obj_and_place-SoapBar-None-GarbageCan-424/trial_T20190909_064309_357168"
+    - "pick_two_obj_and_place-CD-None-Safe-308/trial_T20190907_051056_585414"
+    - "pick_two_obj_and_place-SoapBar-None-GarbageCan-424/trial_T20190909_064221_368939"
+    - "pick_two_obj_and_place-CD-None-Safe-308/trial_T20190907_050942_897916"
+    - "pick_two_obj_and_place-KeyChain-None-Safe-219/trial_T20190909_011803_423115"
+    - "pick_two_obj_and_place-PepperShaker-None-Drawer-10/trial_T20190908_010306_215435"
+
+  dataset:
+    data_path: '$ALFWORLD_DATA/json_2.1.1/train'
+    eval_id_data_path: '$ALFWORLD_DATA/json_2.1.1/valid_seen'    # null/None to disable
+    eval_ood_data_path: '$ALFWORLD_DATA/json_2.1.1/valid_unseen' # null/None to disable
+    num_train_games: -1                                          # max training games (<=0 indicates full dataset)
+    num_eval_games: -1                                           # max evaluation games (<=0 indicates full dataset)
+
+  logic:
+    domain: '$ALFWORLD_DATA/logic/alfred.pddl'                   # PDDL domain file that defines the world dynamics
+    grammar: '$ALFWORLD_DATA/logic/alfred.twl2'                  # Grammar file that defines the text feedbacks
+
+  env:
+    type: 'AlfredTWEnv'                                          # 'AlfredTWEnv' or 'AlfredThorEnv' or 'AlfredHybrid'
+    regen_game_files: False                                      # check if game is solvable by expert and save to game.tw-pddl file
+    domain_randomization: False                                  # shuffle Textworld print order and object id nums
+    task_types: [1, 2, 3, 4, 5, 6]                               # task-type ids: 1 - Pick & Place, 2 - Examine in Light, 3 - Clean & Place, 4 - Heat & Place, 5 - Cool & Place, 6 - Pick Two & Place
+    expert_timeout_steps: 150                                    # max steps before timeout for expert to solve the task
+    expert_type: "handcoded"                                     # 'handcoded' or 'downward'. Note: the downward planner is very slow for real-time use
+    goal_desc_human_anns_prob: 0.0                               # prob of using human-annotated goal language instead of templated goals (1.0 indicates all human annotations from ALFRED)
+    process_actions: False                                       # whether to process generated actions by matching to available actions
+
+  controller:
+    type: 'oracle'                                               # 'oracle' or 'oracle_astar' or 'mrcnn' or 'mrcnn_astar' (aka BUTLER)
+    debug: False
+    load_receps: True                                            # load receptacle locations from precomputed dict (if available)
+
+  mask_rcnn:
+    pretrained_model_path: '$ALFWORLD_DATA/detectors/mrcnn.pth'
+
+  general:
+    random_seed: 42
+    use_cuda: True                                               # disable this when running on machine without cuda
+    visdom: False                                                # plot training/eval curves, run with visdom server
+    task: 'alfred'
+    training_method: 'dagger'                                    # 'dqn' or 'dagger'
+    save_path: './training/'                                     # path to save pytorch models
+    observation_pool_capacity: 3                                 # k-size queue, 0 indicates no observation
+    hide_init_receptacles: False                                 # remove initial observation containing navigable receptacles
+
+    training:
+      batch_size: 10
+      max_episode: 50000
+      smoothing_eps: 0.1
+      optimizer:
+        learning_rate: 0.001
+        clip_grad_norm: 5
+
+    evaluate:
+      run_eval: True
+      batch_size: 10
+      env:
+        type: "AlfredTWEnv"
+
+    checkpoint:
+      report_frequency: 1000                                    # report every N episode
+      experiment_tag: 'test'                                    # name of experiment
+      load_pretrained: False                                    # during test, enable this so that the agent load your pretrained model
+      load_from_tag: 'not loading anything'                     # name of pre-trained model to load in save_path
+
+    model:
+      encoder_layers: 1
+      decoder_layers: 1
+      encoder_conv_num: 5
+      block_hidden_dim: 64
+      n_heads: 1
+      dropout: 0.1
+      block_dropout: 0.1
+      recurrent: True
+
+  rl:
+    action_space: "admissible"                                  # 'admissible' (candidates from text engine) or 'generation' (seq2seq-style generation) or 'beam_search_choice' or 'exhaustive' (not working)
+    max_target_length: 20                                       # max token length for seq2seq generation
+    beam_width: 10                                              # 1 means greedy
+    generate_top_k: 3
+
+    training:
+      max_nb_steps_per_episode: 50                              # terminate after this many steps
+      learn_start_from_this_episode: 0                          # delay updates until this episode
+      target_net_update_frequency: 500                          # sync target net with online net per this many epochs
+
+    replay:
+      accumulate_reward_from_final: True
+      count_reward_lambda: 0.0                                  # 0 to disable
+      novel_object_reward_lambda: 0.0                           # 0 to disable
+      discount_gamma_game_reward: 0.9
+      discount_gamma_count_reward: 0.5
+      discount_gamma_novel_object_reward: 0.5
+      replay_memory_capacity: 500000                            # adjust this depending on your RAM size
+      replay_memory_priority_fraction: 0.5
+      update_per_k_game_steps: 5
+      replay_batch_size: 64
+      multi_step: 3
+      replay_sample_history_length: 4
+      replay_sample_update_from: 2
+
+    epsilon_greedy:
+      noisy_net: False                                          # if this is true, then epsilon greedy is disabled
+      epsilon_anneal_episodes: 1000                             # -1 if not annealing
+      epsilon_anneal_from: 0.3
+      epsilon_anneal_to: 0.1
+
+  dagger:
+    action_space: "generation"                                  # 'admissible' (candidates from text engine) or 'generation' (seq2seq-style generation) or 'exhaustive' (not working)
+    max_target_length: 20                                       # max token length for seq2seq generation
+    beam_width: 10                                              # 1 means greedy
+    generate_top_k: 5
+    unstick_by_beam_search: False                               # use beam-search for failed actions, set True during evaluation
+
+    training:
+      max_nb_steps_per_episode: 50                              # terminate after this many steps
+
+    fraction_assist:
+      fraction_assist_anneal_episodes: 50000
+      fraction_assist_anneal_from: 1.0
+      fraction_assist_anneal_to: 0.01
+
+    fraction_random:
+      fraction_random_anneal_episodes: 0
+      fraction_random_anneal_from: 0.0
+      fraction_random_anneal_to: 0.0
+
+    replay:
+      replay_memory_capacity: 500000
+      update_per_k_game_steps: 5
+      replay_batch_size: 64
+      replay_sample_history_length: 4
+      replay_sample_update_from: 2
+
+  vision_dagger:
+    model_type: "resnet"                                        # 'resnet' (whole image features) or 'maskrcnn_whole' (whole image MaskRCNN feats) or 'maskrcnn' (top k MaskRCNN detection feats) or 'no_vision' (zero vision input)
+    resnet_fc_dim: 64
+    maskrcnn_top_k_boxes: 10                                    # top k box features
+    use_exploration_frame_feats: False                          # append feats from initial exploration (memory intensive!)
+    sequence_aggregation_method: "average"                      # 'sum' or 'average' or 'rnn'
+
+max_episodes: 50
+max_env_steps: 50

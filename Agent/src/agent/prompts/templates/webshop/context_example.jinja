@@ -1,0 +1,37 @@
+{# One-shot example parsed from AgentBench #}You are attempting to solve a task. An example of solving a similar task is presented below:
+
+Observation: WebShop [SEP] Instruction: [SEP] i need a long lasting 6.76 fl oz bottle of l'eau d'issey, and price lower than 100.00 dollars [SEP] Search
+Available Actions:
+Has search bar: True,
+Clickables: ['...']
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: I think I should use the search bar to look for the product I need.
+{%- endif %}
+Action: search[l'eau d'issey 6.76 fl oz bottle price < 100.00]
+
+Observation: Instruction: [SEP] i need a long lasting 6.76 fl oz bottle of l'eau d'issey, and price lower than 100.00 dollars [SEP] Back to Search [SEP] Page 1 (Total results: 50) [SEP] Next > [SEP] B000VOHH8I [SEP] L'eau D'issey By Issey Miyake for MenEau De Toilette Spray, 6.7 Fl Oz Bottle [SEP] $64.98 [SEP] B000MJZOPK [SEP] L'eau d'Issey by Issey Miyake for Women 3.3 oz Eau de Toilette Spray [SEP] $49.98 [SEP] B0012S249E [SEP] L'eau D'issey By Issey Miyake For Women. Shower Cream 6.7-Ounces [SEP] $31.36 [SEP] B01H8PGKZS [SEP] L'eau D'Issey FOR MEN by Issey Miyake - 6.7 oz EDT Spray [SEP] $67.97 [SEP] B00G3C8FHE [SEP] L'Eau d'Issey pour Homme - Eau de Toilette 4.2 fl oz [SEP] $51.25 [SEP] B000R94HRG [SEP] Issey Miyake L'Eau D'Issey Pour Homme Eau De Toilette Natural Spray [SEP] $44.99 [SEP] B000C214CO [SEP] Issey Miyake L'eau D'issey Eau de Toilette Spray for Men, 4.2 Fl Oz [SEP] $53.99 [SEP] B0018SBRDC [SEP] Issey Miyake L'eau d'Issey for Women EDT, White, 0.84 Fl Oz [SEP] $27.04 [SEP] B000XEAZ9Y [SEP] L'eau De Issey By Issey Miyake For Men. Eau De Toilette Spray 6.7 Fl Oz [SEP] $67.08 [SEP] B079HZR2RX [SEP] L'eau d'Issey Pure by Issey Miyake for Women 3.0 oz Nectar de Parfum Spray [SEP] $71.49"
+Available Actions:
+Has search bar: False,
+Clickables: ["...", "...", "...", "...", "...", "...", "...", "...", "...", "...", "...", "..."]
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: I think I should click on the product I need, which is B000VOHH8I.
+{%- endif %}
+Action: click[B000VOHH8I]
+
+Observation: Instruction: [SEP] i need a long lasting 6.76 fl oz bottle of l'eau d'issey, and price lower than 100.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] size [SEP] 2.5 fl oz [SEP] 6.76 fl oz (pack of 1) [SEP] L'eau D'issey By Issey Miyake for MenEau De Toilette Spray, 6.7 Fl Oz Bottle [SEP] Price: $64.98 [SEP] Rating: N.A. [SEP] Description [SEP] Features [SEP] Reviews [SEP] Buy Now
+Available Actions:
+Has search bar: False,
+Clickables: ["...", "...", "...", "...", "...", "...", "...", "..."]
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: I think I should click on the '6.76 fl oz (pack of 1)' option to select the size I need.
+{%- endif %}
+Action: click[6.76 fl oz (pack of 1)]
+
+Observation: Instruction: [SEP] i need a long lasting 6.76 fl oz bottle of l'eau d'issey, and price lower than 100.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] size [SEP] 2.5 fl oz [SEP] 6.76 fl oz (pack of 1) [SEP] L'eau D'issey By Issey Miyake for MenEau De Toilette Spray, 6.7 Fl Oz Bottle [SEP] Price: $64.98 [SEP] Rating: N.A. [SEP] Description [SEP] Features [SEP] Reviews [SEP] Buy Now
+Available Actions:
+Has search bar: False,
+Clickables: ["...", "...", "...", "...", "...", "...", "...", "..."]
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: I think I should click on the 'Buy Now' button to purchase the product.
+{%- endif %}
+Action: click[Buy Now]

@@ -1,0 +1,16 @@
+[[ SYSTEM ]]
+You are an question answering agent.
+I will give you the supportive context and the question.
+Try to answer the question based on the context.
+
+{%- if cot_type in ["zero_shot_cot", "few_shot_cot"] %}
+When asked for an answer, you should think step by step, and then finish by providing an answer to the question.
+Your response should be in the following format:
+Thought: ...
+Answer: <answer>
+{%- elif cot_type in ["few_shot_least_to_most"] %}
+{%- else %}
+When asked for an answer, your response should be an answer, using the following format:
+Answer: <answer>
+You must answer the question even if the information that is provided is not enough.
+{%- endif %}

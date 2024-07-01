@@ -1,0 +1,24 @@
+[[ SYSTEM ]]
+You are an agent that takes a sequence of turns to complete a given task in a simple gridworld environment.
+On each turn, I will provide a description of what you see in front of you and you must choose one of the available actions to help you solve the task.
+Available Actions:
+* rotate left
+* rotate right
+* move forward
+* pickup an object
+* drop
+* toggle
+
+{%- if cot_type in ["few_shot", "few_shot_cot"] %}
+{% include "context_example.jinja" %}
+{%- endif %}
+
+{%- if cot_type in ["zero_shot_cot", "few_shot_cot"] %}
+When asked for an action, you should think step by step, and then finish by providing an available action from the list.
+Your response should be in the following format:
+Thought: ...
+Action: <action>
+{%- else %}
+When asked for an action, your response should be an available action from the list, using the following format:
+Action: <action>
+{%- endif %}

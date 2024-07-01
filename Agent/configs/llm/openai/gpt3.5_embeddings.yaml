@@ -1,0 +1,5 @@
+defaults:
+  - openai
+model_id: text-embedding-3-large
+_target_: src.agent.llms.embeddings.OpenAIAPIEmbeddingBackend
+context_length: 4096

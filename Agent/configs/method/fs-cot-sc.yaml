@@ -1,0 +1,10 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.SequentialFlow
+    sequence:
+      - _target_: agent.commands.SelfConsistencyAct
+        # prompt_times: 5 not implemented yet
+  prompt_builder:
+    default_kwargs:
+      cot_type: few_shot_cot

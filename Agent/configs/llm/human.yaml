@@ -1,0 +1,4 @@
+_target_: agent.models.StdinLanguageBackend
+_partial_: true
+model_id: human
+context_length: 9999

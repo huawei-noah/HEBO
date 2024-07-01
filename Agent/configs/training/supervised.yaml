@@ -1,0 +1,25 @@
+defaults:
+  - dataset: default
+  - _self_ # This has to be before loading peft/quantization to set _convert_: object
+#  - llm/local/quantization@llm.quantization: 8bit
+  - peft: lora
+
+#_convert_: object # This stops dataclasses from being converted to dicts
+
+training:
+  learning_rate: 1.41e05
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: ${.per_device_train_batch_size}
+  gradient_accumulation_steps: 4
+  num_train_epochs: -1
+  max_steps: 800
+  gradient_checkpointing: True
+
+output:
+  output_dir: sft_output # Make this output in logging dir?
+  save_steps: 40
+  save_total_limit: 20
+  logging_steps: 10
+#  report_to: wandb
+
+#peft:

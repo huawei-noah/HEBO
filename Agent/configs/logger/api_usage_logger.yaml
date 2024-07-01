@@ -1,0 +1,3 @@
+api_usage_logger:
+  _target_: src.agent.loggers.APIUsageLogger
+  project_name: ${project_name}

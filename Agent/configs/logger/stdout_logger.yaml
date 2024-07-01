@@ -1,0 +1,3 @@
+stdout_logger:
+  _target_: src.agent.loggers.StdoutLogger
+  project_name: ${project_name}

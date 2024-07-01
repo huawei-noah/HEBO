@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: vicuna-13b-v1.5
+context_length: 4096

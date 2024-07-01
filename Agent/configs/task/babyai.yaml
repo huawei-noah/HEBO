@@ -1,0 +1,19 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - babyai
+      - default
+
+task:
+  _target_: agent.tasks.babyai.BabyAI
+
+  env_name: BabyAI-GoToObj-v0 #This is the easiest environment
+  #env_name: BabyAI-GoToRedBall-v0 #This is also quite easy but has distractors
+  invalid_action_effect: "feedback"
+
+  action_space: discrete
+
+max_episodes: 100
+max_env_steps: 20

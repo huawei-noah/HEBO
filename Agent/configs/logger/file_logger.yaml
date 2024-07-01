@@ -1,0 +1,4 @@
+file_logger:
+  _target_: src.agent.loggers.FileSystemLogger
+  project_name: ${project_name}
+  save_to_file: "output.jsonl"

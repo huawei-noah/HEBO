@@ -1,0 +1,7 @@
+defaults:
+  - fschat
+
+_target_: src.agent.models.openai_api.OpenAIAPIEmbeddingBackend
+
+model_id: openchat_3.5_embeddings
+context_length: 4096

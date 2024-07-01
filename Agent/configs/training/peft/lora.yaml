@@ -1,0 +1,6 @@
+_target_: peft.LoraConfig
+r: 64
+lora_alpha: 16
+lora_dropout: 0.05
+bias: "none"
+target_modules: null # When this is null, peft uses the model defaults

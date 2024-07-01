@@ -1,0 +1,19 @@
+_target_: src.agent.models.distributed_hf.DistributedHFLanguageBackend
+_partial_: true
+
+model_id: ???
+
+client:
+  _target_: redis.Redis
+  host: localhost
+  port: 6379
+  db: 0
+  decode_responses: true
+
+server_only:
+  model_kwargs: {}
+  tokenizer_kwargs: {}
+
+# generation params:
+do_sample: True
+max_new_tokens: 300

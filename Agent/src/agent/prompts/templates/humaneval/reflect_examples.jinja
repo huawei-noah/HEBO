@@ -1,0 +1,73 @@
+You are attempting to complete a coding function.
+
+Prompt:
+from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    """ Check if in given list of numbers, are any two numbers closer to each other than
+    given threshold.
+    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)
+    False
+    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+    True
+    """
+
+Answer:
+[BEGIN]
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = abs(elem - elem2)
+                if distance > threshold:
+                    return True
+
+    return False
+[END]
+
+Observation: Are you sure about this answer? Please reflect carefully and be sure of your final answer.
+
+Reflection: Upon reflecting, I realised that distance should be less than the threshold in line 5.
+Answer:
+[BEGIN]
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = abs(elem - elem2)
+                if distance < threshold:
+                    return True
+
+    return False
+[END]
+
+Status: PASS
+
+Prompt:
+from typing import List
+
+
+def largest_divisor(n: int) -> int:
+    """ For a given number n, find the largest
+    number smaller than n that divides n evenly
+    >>> largest_divisor(15)
+    5
+    """
+
+Answer:
+[BEGIN]
+    for i in reversed(range(n)):
+        if n % i == 0:
+    return i
+[END]
+
+Observation: Are you sure about this answer? Please reflect carefully and be sure of your final answer.
+
+Reflection: Upon reflecting, I realised that there is an indentation error and return should be inside the if statement.
+Answer:
+[BEGIN]
+    for i in reversed(range(n)):
+        if n % i == 0:
+            return i
+[END]
+
+Status: PASS

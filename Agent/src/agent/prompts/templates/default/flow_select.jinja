@@ -1,0 +1,12 @@
+{% include "system_prompt.jinja" %}
+
+Your response should not be an action or a thought, but an available command from the list, using the following format:
+Command: <command>
+[[ USER ]]
+{% include "trajectory.jinja" %}
+Here is a list of the available commands:
+{% for flow in flows -%}
+{{loop.index}}. "{{flow.name}}": {{flow.description}}
+{% endfor %}
+
+Choose a command that will help you complete the task.

@@ -1,0 +1,10 @@
+{%- set observations = memory.retrieve_all({memory.mem_keys.OBSERVATION: 1.0})[::-1] -%}
+{%- set raw_outputs = memory.retrieve_all({memory.mem_keys.RAW_ACTION_OUTPUT: 1.0})[::-1] -%}
+{%- for obs in observations -%}
+{%- if loop.index0 > 0 %}
+[[ ASSISTANT ]]
+{{raw_outputs[loop.index0-1]}}
+{%- endif %}
+[[ USER ]]
+{{observations[loop.index0]}}
+{% endfor %}
