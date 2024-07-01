@@ -1,3 +1,3 @@
 ---
-string text
-sensor_msgs/Image image  # currently not used
+string[] text
+sensor_msgs/Image[] image  # currently not used
