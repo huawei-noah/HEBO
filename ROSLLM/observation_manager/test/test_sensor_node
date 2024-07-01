@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import rospy
+from rosllm_msgs.msg import Observation as Obs
+from rosllm_srvs.srv import Observation, ObservationResponse
+
+
+class Sensor:
+
+    def __init__(self, name, text):
+        self.name = name
+        self.text = text
+        rospy.Service(self.name, Observation, self.handler)
+
+    def handler(self, req):
+        resp = ObservationResponse()
+        resp.observation.append(Obs(name=self.name, text=[self.text]))
+        return resp
+
+
+class TestNode:
+
+    def __init__(self):
+        rospy.init_node("test_sensor_server")
+        Sensor("sensor_one", "robot is in mode A")
+        Sensor("sensor_two", "red cube is seen")
+
+    def spin(self):
+        rospy.spin()
+
+
+def main():
+    TestNode().spin()
+
+
+if __name__ == "__main__":
+    main()

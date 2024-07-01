@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+import rospy
+from rosllm_srvs.srv import Observation, ObservationRequest, ObservationResponse
+
+import yaml
+
+
+class ObservationManagerNode:
+
+    timeout = 10.0  # seconds
+
+    def __init__(self):
+        rospy.init_node("observation_manager_node")
+        self.observations = self.load_observation_service_list()
+        rospy.Service("get_observation", Observation, self.callback_handler)
+
+    def load_observation_service_list(self):
+        config_filename = rospy.get_param("~config_filename")
+        with open(config_filename, "r") as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+        return config["observations"]
+
+    def get_single_observation(self, srv_name: str) -> ObservationResponse:
+        obs = []
+        rospy.loginfo(f"sending request to '{srv_name}'")
+        rospy.wait_for_service(srv_name, timeout=self.timeout)
+        try:
+            handler = rospy.ServiceProxy(srv_name, Observation)
+            obs = handler().observation
+            rospy.loginfo(f"recieved response from '{srv_name}'")
+        except Exception as e:
+            rospy.logwarn(f"failed to recieve a response from '{srv_name}':\n{e}")
+        return obs
+
+    def callback_handler(self, req: ObservationRequest) -> ObservationResponse:
+        rospy.loginfo("recieved request for an observation")
+        resp = ObservationResponse()
+        for name in self.observations:
+            resp.observation += self.get_single_observation(name)
+        rospy.loginfo("retrieved observation")
+        return resp
+
+    def spin(self):
+        rospy.spin()
+
+
+def main():
+    ObservationManagerNode().spin()
+
+
+if __name__ == "__main__":
+    main()
