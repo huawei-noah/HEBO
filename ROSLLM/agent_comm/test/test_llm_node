@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+import rospy
+from rosllm_srvs.srv import LLM, LLMRequest
+
+srv_name = "call_llm"
+prompt = """You are a software engineer.
+Your goal is to implement the heap sort algorithm in Python.
+Put the code you implement inside
+
+```python
+def heap_sort(arr):
+    ...your code here...
+```
+
+so it can be easily extracted from your response.
+Please make sure to use the signature shown above.
+Note, there is no need to provide test code, just the implementation of the sorting algorithm.
+Think step by step when implementing the code.
+
+"""
+
+
+def main():
+    rospy.init_node("test_llm_node")
+
+    rospy.loginfo("sending request to LLM")
+
+    rospy.wait_for_service(srv_name)
+    try:
+        req = LLMRequest(prompt=prompt)
+        handler = rospy.ServiceProxy(srv_name, LLM)
+        resp = handler(req)
+        rospy.loginfo(
+            f"recieved response from LLM:\n{resp.response}\n----\n{resp.response.response}\n"
+        )
+    except:
+        rospy.logwarn("request to LLM failed")
+
+    rospy.loginfo("goodbye")
+
+
+if __name__ == "__main__":
+    main()

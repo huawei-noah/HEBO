@@ -1,0 +1,9 @@
+<launch>
+
+    <node name="llm_node" type="llm_node" pkg="agent_comm" output="screen">
+        <param name="model" type="string" value="deepseek-coder-1.3b-instruct"/>
+        <param name="base_url" type="string" value="http://10.227.91.35:1234/v1"/>
+        <param name="temperature" type="double" value="0.8"/>
+    </node>
+
+</launch>

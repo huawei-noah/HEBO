@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+import traceback
+from time import time_ns
+
+import rospy
+from agent_comm.llm import LLM
+from std_msgs.msg import String
+from rosllm_msgs.msg import LLMResponse
+from rosllm_srvs.srv import LLM as LLMSrv
+from rosllm_srvs.srv import LLMResponse as LLMSrvResponse
+
+
+class LLMNode:
+
+    def __init__(self):
+        rospy.init_node("llm_node")
+        self.model = rospy.get_param("~model")
+        self.llm = LLM(
+            model=self.model,
+            base_url=rospy.get_param("~base_url"),
+            temperature=rospy.get_param("~temperature"),
+            timeout=rospy.get_param("~timeout", 30.0),  # seconds
+            api_key=rospy.get_param("~api_key", "EMPTY"),  # required for GPT
+        )
+        self.srv_req_num = 0
+        rospy.Service("call_llm", LLMSrv, self.handle_service_request)
+
+        self.sub_req_num = 0
+        rospy.Subscriber("llm_prompt", String, self.llm_prompt_callback)
+        self.pub = rospy.Publisher("llm_response", LLMResponse, queue_size=1)
+
+        rospy.loginfo("initialized llm_node, ready to recieve requests")
+
+    def llm_prompt_callback(self, msg):
+
+        # Setup
+        self.sub_req_num += 1
+        prompt = msg.data
+
+        # Make request to LLM
+        resp = self.call_llm(prompt)
+
+        # Update response information and publisher
+        resp.response.req = self.sub_req_num
+        self.pub.publish(resp)
+
+    def call_llm(self, prompt) -> LLMResponse:
+        try:
+            t0 = time_ns()
+            resp = self.llm(prompt)
+            t1 = time_ns()
+            success = True
+            info = f"successfully recieved response from '{self.model}'"
+        except:
+            resp = ""
+            success = False
+            info = traceback.format_exc()
+            t1 = time_ns()
+        resp = LLMResponse(
+            success=success,
+            response=resp,
+            info=info,
+            req_time=t0,
+            res_time=t1,
+        )
+        resp.header.stamp = rospy.Time.now()
+        return resp
+
+    def handle_service_request(self, req):
+        rospy.loginfo("llm_node recieved request")
+        self.srv_req_num += 1
+        resp = LLMSrvResponse(response=self.call_llm(req.prompt))
+        resp.response.req = self.srv_req_num
+        if resp.response.success:
+            rospy.loginfo(resp.response.info)
+        else:
+            rospy.logwarn(resp.response.info)
+        return resp
+
+    def spin(self):
+        rospy.spin()
+
+
+def main():
+    LLMNode().spin()
+
+
+if __name__ == "__main__":
+    main()
