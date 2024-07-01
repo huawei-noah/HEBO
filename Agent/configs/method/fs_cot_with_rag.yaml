@@ -6,10 +6,8 @@ agent:
     description: Search Database and answer to a question
     sequence:
       - _target_: agent.commands.VectorDB
-        path_to_database: /nfs/aiml/shino/
+        path_to_database:
         database_name: database_all
-        # path_to_docs: /nfs/aiml/shino/hotpot_db_1
-        # path_to_save_db: /nfs/aiml/shino/
 
         top_k: 2
       - _target_: agent.commands.Act
