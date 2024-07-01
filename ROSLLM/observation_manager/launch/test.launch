@@ -1,0 +1,9 @@
+<launch>
+
+    <node name="observation_manager" type="observation_manager_node" pkg="observation_manager" output="screen">
+        <param name="config_filename" type="string" value="$(find observation_manager)/config/example.yaml"/>
+    </node>
+
+    <node name="test_sensor_node" type="test_sensor_node" pkg="observation_manager" output="screen"/>
+
+</launch>

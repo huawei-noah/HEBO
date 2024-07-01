@@ -1,0 +1,5 @@
+# List of service names that the observation_manager_node will call.
+# NOTE: all observation services must be of type rosllm_srvs/Observation.
+observations:
+  - sensor_one
+  - sensor_two
