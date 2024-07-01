@@ -6,25 +6,22 @@
 #include <rosllm_srvs/ExecuteBehavior.h>
 #include <iostream>
 
-"""
-
-Developer note
-==============
-
-
-Currently, you can define ROS actions/services in Python or C++ in other packages.
-However, each action/service needs a wrapper implemented in this script so that
-the BehaviorTree.CPP library knows how to handle the execution of the action or
-service (i.e. did it fail or not).
-
-For now, I am leaving this as a requirement. I.e. we need to wrap each atomic action.
-However, there should be a better way to do this from a config file or something.
-
-One potential way of doing this is to specify a ROS action/service type that is then used
-for all atomic actions. Then it is the job of a user to implement their atomic action with one
-of these types. 
-
-"""
+//
+// Developer note
+// ==============
+//
+// Currently, you can define ROS actions/services in Python or C++ in other packages.
+// However, each action/service needs a wrapper implemented in this script so that
+// the BehaviorTree.CPP library knows how to handle the execution of the action or
+// service (i.e. did it fail or not).
+//
+// For now, I am leaving this as a requirement. I.e. we need to wrap each atomic action.
+// However, there should be a better way to do this from a config file or something.
+//
+// One potential way of doing this is to specify a ROS action/service type that is then used
+// for all atomic actions. Then it is the job of a user to implement their atomic action with one
+// of these types.
+//
 
 using namespace BT;
 
