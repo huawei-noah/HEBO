@@ -4,7 +4,7 @@ This package is responsible for executing behaviors in ROS.
 Several nodes are implemented for executing different behavior representations.
 Each node implements a service called `behavior_executor` with type `rosllm_srvs/ExecuteBehavior`.
 The service has a string input defining the behaviour (this is assumed to be the output from an LLM).
-A response from the service contains four peices of information:
+A response from the service contains four pieces of information:
 a success flag (true/false),
 a human-readable message, and
 an integer information flag.
