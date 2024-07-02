@@ -5,7 +5,7 @@ The ROS-LLM framework.
 # Packages
 
 * `agent_comm`: communication interface with the AI agent.
-* `behavior_exector`: contains nodes for executing behaviours in ROS produced by an LLM.
+* `behavior_executor`: contains nodes for executing behaviours in ROS produced by an LLM.
 * `rosllm_msgs`: common message types used by the ROSLLM framework.
 * `rosllm_srvs`: common service types used by the ROSLLM framework.
 * External packages are found in the `extern` directory:
