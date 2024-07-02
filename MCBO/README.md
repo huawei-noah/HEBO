@@ -4,8 +4,9 @@ This library provides an easy way to mix-and-match Bayesian optimization compone
 and existing mixed-variable or combinatorial Bayesian optimization. Motivations and principles are described in
 [this paper](https://arxiv.org/pdf/2306.09803.pdf).
 
-<p align="center">
-<img src="paper_results/images/all_mix_match.PNG" width="750"/>
+<p float="center">
+<img src="paper_results/images/all_mix_match.PNG" width="400"/>
+<img src="paper_results/images/results.png" width="400"/>
 </p>
 
 **Disclaimer:** the figure above shows that this library allows to build and run BO
