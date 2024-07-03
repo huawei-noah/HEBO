@@ -2,6 +2,11 @@
 
 The ROS-LLM framework.
 
+Please see the following links
+* [Paper (arXiv)](https://arxiv.org/abs/2406.19741)
+* [Website](https://rosllm.github.io/)
+* [Code](https://github.com/huawei-noah/HEBO/tree/master/ROSLLM)
+
 # Packages
 
 * `agent_comm`: communication interface with the AI agent.
@@ -36,3 +41,18 @@ Then step through the following steps:
 
 Currently, only ROS Noetic is supported.
 Support for ROS2 is planned for the future.
+
+# Citation
+
+If you use the ROS-LLM framework in your work, please cite
+```
+@misc{mower2024rosllmrosframeworkembodied,
+      title={ROS-LLM: A ROS framework for embodied AI with task feedback and structured reasoning},
+      author={Christopher E. Mower and Yuhui Wan and Hongzhan Yu and Antoine Grosnit and Jonas Gonzalez-Billandon and Matthieu Zimmer and Jinlong Wang and Xinyu Zhang and Yao Zhao and Anbang Zhai and Puze Liu and Davide Tateo and Cesar Cadena and Marco Hutter and Jan Peters and Guangjian Tian and Yuzheng Zhuang and Kun Shao and Xingyue Quan and Jianye Hao and Jun Wang and Haitham Bou-Ammar},
+      year={2024},
+      eprint={2406.19741},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2406.19741},
+}
+```
