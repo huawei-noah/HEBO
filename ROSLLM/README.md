@@ -34,7 +34,7 @@ Then step through the following steps:
 7. Create a symbolic link: `ln -s ../HEBO/ROSLLM/`
 8. Install dependancies:
   * `rosdep install -i -r -y --from-paths . --ignore-src`
-  * `pip3 install openai PyYAML`
+  * `pip3 install openai PyYAML gradio`
 9. Build workspace: `catkin build -s`
 
 # Support
