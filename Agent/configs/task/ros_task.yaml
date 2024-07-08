@@ -1,0 +1,16 @@
+# @package _global_
+agent:
+  prompt_builder:
+    template_paths:
+      - default
+  
+    
+task:
+  _target_: agent.tasks.ros_task.ROSTask
+  name: simplebot_test_env
+  description:
+  subtask: null
+  version: v0.1
+
+max_env_steps: 1
+max_episodes: 100
