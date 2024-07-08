@@ -17,6 +17,8 @@ Huawei, Noah's Ark Lab.
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
     - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+- Robotics Research
+    - [ROS-LLM: A ROS framework for embodied AI with task feedback and structured reasoning](./ROSLLM)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -89,7 +91,7 @@ design, and logic synthesis for electronic design automation.
 ## [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
 
 <p align="center">
-  <img src="./RDUCB/figures/ToyProblem.PNG" width="400" /> 
+  <img src="./RDUCB/figures/ToyProblem.PNG" width="400" />
 </p>
 
 Codebase associated
@@ -166,7 +168,7 @@ efficiency and QoR values.
 
 <p float="center">
   <img src="./T-LBO/figures/LSBO.png" width="400" />
-  <img src="./T-LBO/figures/magnets.png" width="400" /> 
+  <img src="./T-LBO/figures/magnets.png" width="400" />
 </p>
 
 Codebase associated
@@ -304,3 +306,12 @@ policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief
 iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
 condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
 results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Codebase Contributors
+
+<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek, Paul Daoudi, Merwan Barlier, Christopher E. Mower.
+
+<strong> Alumni / External contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
+
