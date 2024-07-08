@@ -1,0 +1,5 @@
+string action
+---
+bool success
+string response
+float64 reward
