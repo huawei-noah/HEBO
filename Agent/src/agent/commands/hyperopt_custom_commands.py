@@ -219,7 +219,7 @@ class RunHyperOpt(HumanTakeoverCommand):
             # catch errors when retraining GP and suggesting a new candidate
             try:
                 candidate = optimizer.suggest()
-            except ValueError as e:
+            except (ValueError, RuntimeError) as e:
                 print(e)
                 return optimizer, e
 
