@@ -44,7 +44,7 @@ class Tag(str, enum.Enum):
 
 
 class Logger:
-    def __init__(self, project_name, project_cfg: DictConfig):
+    def __init__(self, project_cfg: DictConfig):
         self._logs = []
 
         self.config_hash = sha256(
@@ -61,6 +61,7 @@ class Logger:
         self._start_time = time.time()
         self._prev_time = None
         self._cur_timestep = 0
+        self._message_timestep = 0
         self._cur_episode = 0
 
     def update_state(self, *args, **kwargs):
@@ -82,6 +83,8 @@ class Logger:
 
         for key, value in data.items():
             self._logs.append({**universal_tags, key: value})
+            if key == "llm:input":
+                self._message_timestep += 1
 
     def save_metrics(self):
         self._logs = []
@@ -106,7 +109,7 @@ class ManyLoggers(Logger):
 
 
 class StdoutLogger(Logger):
-    def save_metrics(self):
+    def save_metrics(self) -> None:
         tree = rich.tree.Tree("Logs")
         for log in self._logs:
             keys = set(log.keys()) - set(Tag.universal_tags().keys())
@@ -114,12 +117,13 @@ class StdoutLogger(Logger):
                 tree.add(key).add(escape(str(log[key])))
 
         rich.print(tree)
+        print(f"Number of llm inputs so far: {self._message_timestep}")
         self._logs = []
 
 
 class FileSystemLogger(Logger):
     def __init__(self, project_cfg: DictConfig, save_to_file: str, **kwargs):
-        super().__init__(project_cfg=project_cfg, **kwargs)
+        super().__init__(project_cfg=project_cfg)
         self.output_dir = project_cfg.paths.output_dir
         self.save_to_file = save_to_file
 
@@ -132,10 +136,11 @@ class FileSystemLogger(Logger):
 
 
 class APIUsageLogger(Logger):
-    def __init__(self, project_cfg: DictConfig, **kwargs):
-        super().__init__(project_cfg=project_cfg, **kwargs)
+    def __init__(self, project_cfg: DictConfig):
+        super().__init__(project_cfg=project_cfg)
         self.input_usage = 0
         self.output_usage = 0
+        self.llm_num_params = None
 
     def update_state(self, llm_num_params: int):
         self.llm_num_params = llm_num_params

@@ -117,6 +117,8 @@ class HumanTakeoverCommand(Command):
 
     def __call__(self, agent) -> None:
         self.trigger_human_takeover = agent.memory.retrieve(MemKey.TRIGGER_HUMAN_TAKEOVER)
+        if self.trigger_human_takeover:
+            agent.set_human_mode(human_mode=True)
 
         return super().__call__(agent=agent)
 
@@ -150,7 +152,7 @@ class UseTool(Command):
         # hardcode to use interpreter only for now
         llm_input = agent.prompt_builder([self.prompt_template], {"memory": agent.memory})
         if self.tool.requires_llm_prompt:
-            response = agent.llm.chat_completion(llm_input, agent.task.answer_parser)
+            response = agent.chat_completion(llm=agent.llm, messages=llm_input, parse_func=agent.task.answer_parser)
             tool_output = self.tool(response)
         else:
             tool_input = llm_input[0]["content"]

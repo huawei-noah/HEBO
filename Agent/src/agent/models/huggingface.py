@@ -36,7 +36,7 @@ class HuggingFaceLanguageBackend(LanguageBackend):
         tokens = self.tokenizer.encode(prompt)
         return len(tokens)
 
-    def chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
+    def _chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
         """Generates a text completion for a given prompt in a chat-like interaction.
 
         Args:
@@ -64,29 +64,3 @@ class HuggingFaceLanguageBackend(LanguageBackend):
         )
 
         return parsed_response
-
-    def choose_from_options(
-        self, messages: list[dict[str, str]], options: list[str], parse_func: Callable, **kwargs
-    ) -> str:
-        """Asks the model to choose from a list of options based on the given prompt.
-
-        Args:
-            messages (list[dict[str, str]]): The input text prompt to present along with options.
-            options (List[str]): A list of options for the model to choose from.
-            parse_func (Callable): A function to parse the model's response.
-            **kwargs: Additional keyword arguments that may be required for the choice-making process,
-                      such as temperature, max_tokens, etc.
-
-        Returns:
-            str: The chosen option. Can return either the option's text directly or its index in the list.
-        """
-        response = self.chat_completion(messages, parse_func, **kwargs)
-        selected_option = min(options, key=lambda x: jellyfish.levenshtein_distance(response, x))
-        self.history[-1]["parsed_response"] = selected_option
-        self.logger.log_metrics(
-            {
-                "llm:input_options": options,
-                "llm:chosen_option": selected_option,
-            }
-        )
-        return selected_option

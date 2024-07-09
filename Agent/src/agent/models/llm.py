@@ -1,8 +1,9 @@
 import dataclasses
 import os
+import traceback
 from abc import ABC
 from abc import abstractmethod
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 from agent.utils.utils import human_input
 
@@ -19,10 +20,6 @@ class LanguageBackend(ABC):
     def human_mode(self) -> bool:
         return self._human_mode
 
-    @human_mode.setter
-    def human_mode(self, human_mode: bool) -> None:
-        self._human_mode = human_mode
-
     @abstractmethod
     def count_tokens(self, messages: list[dict[str, str]]) -> int:
         """Counts the number of tokens in a given text according to the model's tokenizer.
@@ -36,7 +33,7 @@ class LanguageBackend(ABC):
         pass
 
     @abstractmethod
-    def chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
+    def _chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
         """Generates a text completion for a given prompt in a chat-like interaction.
 
         Args:
@@ -50,28 +47,8 @@ class LanguageBackend(ABC):
         """
         pass
 
-    @abstractmethod
-    def choose_from_options(
-            self, messages: list[dict[str, str]], options: list[str], parse_func: Callable, max_retries: int = 1,
-            **kwargs
-    ) -> str:
-        """Asks the model to choose from a list of options based on the given prompt.
-
-        Args:
-            messages (list[dict[str, str]]): The input text prompt to present along with options.
-            options (List[str]): A list of options for the model to choose from.
-            parse_func (Callable): A function to parse the model's response.
-            max_retries (int): number of retries allowed if choosing from options
-            **kwargs: Additional keyword arguments that may be required for the choice-making process,
-                      such as temperature, max_tokens, etc.
-
-        Returns:
-            str: The chosen option. Can return either the option's text directly or its index in the list.
-        """
-        pass
-
     @staticmethod
-    def message_to_human_str(message: Dict[str, Any]) -> str:
+    def message_to_human_str(message: dict[str, Any]) -> str:
         """ Convert a message object into a readable string """
         role = message["role"]
         content = message["content"]
@@ -88,6 +65,7 @@ class LanguageBackend(ABC):
             str: The text completion.
         """
         if os.getenv("NO_HUMAN", False):
+            traceback.print_stack()
             print("Queried human input in NO_HUMAN mode!")
             exit(1)
         stop_human_mode = "STOP MANUAL ASSISTANCE"
@@ -103,7 +81,7 @@ class LanguageBackend(ABC):
 
         reply = human_input(allow_cancel=False)
         if stop_human_mode in reply:
-            self.human_mode = False  # stop manual assistance
+            self._human_mode = False  # stop manual assistance
 
         reply = reply.replace(stop_human_mode, "")
 
@@ -113,7 +91,7 @@ class LanguageBackend(ABC):
 
 class HumanSupervisionAction:
     """ Type of action that a user can choose when user supervision is queried """
-    keys: List[str]
+    keys: list[str]
     description: str
 
 
@@ -161,6 +139,7 @@ class HumanSupervisionChecker:
                 action: the action chosen by the user
             """
         if os.getenv("NO_HUMAN", False):
+            traceback.print_stack()
             print("Queried human input in NO_HUMAN mode!")
             exit(1)
 
@@ -177,15 +156,15 @@ class HumanSupervisionChecker:
             for new_key in action.keys:
                 assert new_key not in options, f"duplicate key {new_key} for {options[new_key]} and {action}"
                 options[new_key] = action
-        lines.append("└" + "─" * (self.length  - 2) + "┘")
+        lines.append("└" + "─" * (self.length - 2) + "┘")
         print("\n".join(lines))
         control = ""
         while control not in options:
             control = input(f"Write the option ({'/'.join(options)}):").strip()
         return options[control]
 
-    def get_actions(self) -> List[HumanSupervisionAction]:
-        actions: List[HumanSupervisionAction] = []
+    def get_actions(self) -> list[HumanSupervisionAction]:
+        actions: list[HumanSupervisionAction] = []
         if self.allow_continue:
             actions.append(HumanContinueAction())
         if self.allow_fix:

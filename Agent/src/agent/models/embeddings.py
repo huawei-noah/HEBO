@@ -33,7 +33,8 @@ class EmbeddingBackend(ABC):
         """
         pass
 
-    def calculate_cosine_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+    @staticmethod
+    def calculate_cosine_similarity(embedding1: list[float], embedding2: list[float]) -> float:
         """Calculates similarity between two embeddings.
 
         Args:
@@ -54,7 +55,8 @@ class EmbeddingBackend(ABC):
         """
         raise NotImplementedError
 
-    def reduce_dimensionality(self, embeddings: list[list[float]], dimensions: int = 2) -> list[float]:
+    @staticmethod
+    def reduce_dimensionality(embeddings: list[list[float]], dimensions: int = 2) -> list[float]:
         """Reduces the dimensionality of embeddings using PCA.
 
         Args:

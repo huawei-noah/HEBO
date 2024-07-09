@@ -1,10 +1,9 @@
 import json
 import re
-from typing import Dict, List
 
 
 class JSONOutputParser:
-    def __init__(self, expected_keys: List[str]):
+    def __init__(self, expected_keys: list[str]):
         self.expected_keys = expected_keys
 
     def formatting_instructions(self) -> str:
@@ -17,7 +16,7 @@ class JSONOutputParser:
         base += "\n}\n```"
         return base
 
-    def parse_raw_output(self, raw_output: str) -> Dict[str, str]:
+    def parse_raw_output(self, raw_output: str) -> dict[str, str]:
         # Extract JSON string enclosed within ```json and ```
         pattern = r"```json(.*?)```"
         matches = re.search(pattern, raw_output, flags=re.DOTALL)

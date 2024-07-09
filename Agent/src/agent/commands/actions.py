@@ -54,15 +54,14 @@ class ConsiderAction(Command):
     def func(self, agent, avail_actions_mem_key, output_mem_key, ask_template):
         if agent.task.action_space == ActionSpace.DISCRETE:
             assert agent.memory.retrieve({avail_actions_mem_key: 1.0}) is not []
-            output = agent.llm.choose_from_options(
-                agent.prompt_builder([ask_template], {"memory": agent.memory}),
-                agent.memory.retrieve({avail_actions_mem_key: 1.0}),
-                agent.task.answer_parser,
+            options = agent.memory.retrieve({avail_actions_mem_key: 1.0})
+            output = agent.safe_choose_from_options(
+                ask_template=ask_template, parse_func=agent.task.answer_parser, format_error_message="",
+                options=options, prompt_kwargs={"memory": agent.memory}
             )
         else:
-            output = agent.llm.chat_completion(
-                agent.prompt_builder([ask_template], {"memory": agent.memory}), agent.task.answer_parser
-            )
+            messages = agent.prompt_builder([ask_template], {"memory": agent.memory})
+            output = agent.chat_completion(llm=agent.llm, messages=messages, parse_func=agent.task.answer_parser)
 
         if self.append:
             prev_actions = agent.memory.retrieve({output_mem_key: 1.0})

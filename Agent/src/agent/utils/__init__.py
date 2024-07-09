@@ -2,6 +2,9 @@ from agent.utils.pylogger import get_pylogger
 from agent.utils.rich_utils import enforce_tags
 from agent.utils.rich_utils import print_config_tree
 from agent.utils.utils import break_word_split
+from agent.utils.utils import extract_action_as_json
+from agent.utils.utils import extract_command_as_json
+from agent.utils.utils import check_code_safety
 from agent.utils.utils import extras
 from agent.utils.utils import normalize_answer
 from agent.utils.utils import pairwise_similarity

@@ -1,0 +1,6 @@
+defaults:
+  - llm_playground
+
+model_id: llama3-70b-8k
+context_length: 8192
+temperature: 0.1

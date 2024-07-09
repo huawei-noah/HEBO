@@ -62,6 +62,7 @@ class MemKey(str, ListableEnum):
     BO_SEARCH_SPACE = "bo_search_space"
     BO_BEST_SCORE = "bo_best_score"
     BO_BEST_CANDIDATE = "bo_best_candidate"
+    ERROR_INSTRUCT = "error_instruct"
 
 
 class MemoryEntry(BaseModel):

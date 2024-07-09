@@ -1,6 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Callable, Any
+from typing import Callable
 
 
 class OutputParser(ABC):
@@ -18,4 +18,8 @@ class OutputParser(ABC):
 
 
 class ParsingError(Exception):
+    pass
+
+
+class UnsupportedExtensionError(Exception):
     pass

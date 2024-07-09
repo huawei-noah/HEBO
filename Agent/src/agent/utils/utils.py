@@ -6,21 +6,24 @@ import pickle
 import re
 import string
 import subprocess as sp
+import time
+import traceback
 import typing
 import warnings
 from collections import Counter
 from enum import Enum
 from functools import partial
 from importlib.util import find_spec
-from typing import Callable, Optional, Any, List, Dict, Tuple
+from typing import Callable, Optional, Any, Tuple
 
 from omegaconf import DictConfig
 
-from agent.parsers.parser import ParsingError
+from agent.parsers.parser import ParsingError, UnsupportedExtensionError
 from agent.utils import pylogger
 from agent.utils import rich_utils
 
 log = pylogger.get_pylogger(__name__)
+SUPPORTED_FILE_EXTENSIONS = ['.txt', '.csv', '.tsv', '.json']
 
 
 def break_word_split(break_word: str, raw_response: str):
@@ -55,9 +58,10 @@ def extract_python(raw_response: str) -> str:
         raise ParsingError(f"Failed to parse", raw_response, e.args[0]) from e
 
 
-def extract_json(raw_response: str) -> Dict[str, Any]:
+def extract_json(raw_response: str) -> dict[str, Any]:
     """Extracts a returned json object from a raw response"""
     json_elements = re.findall("```json([\s\S]*?)```", raw_response)
+
     if len(json_elements) == 0:
         try:
             return eval(raw_response)
@@ -65,7 +69,8 @@ def extract_json(raw_response: str) -> Dict[str, Any]:
             raise ParsingError(
                 f"No match found in raw response:\n{raw_response}",
                 raw_response,
-                f"Did you forget to write 'json' at the beginning of the block in your response?"
+                f"Did you forget to write 'json' at the beginning of the block in your response?\n"
+                f"Did you forget to write your response in a ```json...``` block?"
             )
     if len(json_elements) > 1:
         raise ParsingError(
@@ -80,7 +85,7 @@ def extract_json(raw_response: str) -> Dict[str, Any]:
         raise ParsingError(f"Failed to run eval({json_elements[0]})", raw_response, e.args[0]) from e
 
 
-def extract_json_with_bools(raw_response: str) -> Dict[str, bool]:
+def extract_json_with_bools(raw_response: str) -> dict[str, bool]:
     raw_response = raw_response.replace(": true", ": True")
     raw_response = raw_response.replace(": false", ": False")
     response = extract_json(raw_response)
@@ -92,7 +97,7 @@ def extract_json_with_bools(raw_response: str) -> Dict[str, bool]:
     return response
 
 
-def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
+def extract_as_json(raw_response: str, matchname: str | None) -> str:
     """Catch the result of a response given in json style"""
     json_elements = re.findall("```json([\s\S]*?)```", raw_response)
 
@@ -100,7 +105,9 @@ def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
         candidate_ = ast.literal_eval(candidate_)
         if matchname is not None:
             assert list(candidate_.keys())[0].lower() == matchname.lower()
-        return list(candidate_.values())[0].strip()
+        if isinstance(list(candidate_.values())[0], str):
+            return list(candidate_.values())[0].strip()
+        return list(candidate_.values())[0]
 
     if len(json_elements) == 0:
         try:
@@ -108,7 +115,10 @@ def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
             if len(dict_elements) > 0:
                 candidate = "{" + dict_elements[0].replace("\n", "") + "}"
             else:
-                candidate = raw_response.replace("\n", "")
+                if matchname in raw_response:
+                    candidate = "{" + raw_response.replace("\n", "") + "}"
+                else:
+                    candidate = "{'" + matchname + "': '" + raw_response.replace("\n", "") + "'}"
             return get_val_from_dict_str(candidate_=candidate)
         except Exception:
             raise ParsingError(
@@ -131,11 +141,76 @@ def extract_as_json(raw_response: str, matchname: Optional[str]) -> str:
                            raw_response, e.args[0]) from e
 
 
+def extract_paths_as_json(raw_response: str) -> str:
+    paths = extract_as_json(raw_response=raw_response, matchname="paths")
+    # check if all files exist in response list
+    correct_paths = []
+    invalid_paths = []
+    unsupported_extension_paths = []
+    dir_paths = []
+    for path in paths:
+        if not os.path.exists(path):
+            invalid_paths.append(path)
+        elif not os.path.splitext(path)[-1] in SUPPORTED_FILE_EXTENSIONS:
+            unsupported_extension_paths.append(path)
+        elif os.path.isdir(path):
+            dir_paths.append(path)
+        else:
+            correct_paths.append(path)
+
+    if len(invalid_paths) > 0:
+        if len(invalid_paths) > 1:
+            err_str = '\n\t- '.join([path for path in invalid_paths])
+        else:
+            err_str = f'\n\t- {invalid_paths[0]}'
+        raise FileNotFoundError(f"The following paths do not exist:" + err_str, raw_response)
+
+    if len(unsupported_extension_paths) > 0:
+        if len(unsupported_extension_paths) > 1:
+            err_str = '\n\t- '.join([path for path in unsupported_extension_paths])
+        else:
+            err_str = f'\n\t- {unsupported_extension_paths[0]}'
+        raise UnsupportedExtensionError(
+            f"Only attempt to read files with extension in [{SUPPORTED_FILE_EXTENSIONS}].\n"
+            f"The following files have unsupported extensions:" + err_str, raw_response
+        )
+
+    if len(dir_paths) > 0:
+        if len(dir_paths) > 1:
+            err_str = '\n\t- '.join([path for path in dir_paths])
+        else:
+            err_str = f'\n\t- {dir_paths[0]}'
+        raise FileNotFoundError(f"The following paths are not files but directories:" + err_str, raw_response)
+
+    return paths
+
+
+def extract_detected_file_as_json(raw_response: str) -> str | None:
+    detected_file = extract_as_json(raw_response=raw_response, matchname="detected_file")
+    # check if file exists
+    if detected_file is None or "no file" in detected_file.lower():
+        return None
+    elif not os.path.exists(detected_file):
+        raise FileNotFoundError(f"The detected file {detected_file} do not exist.", raw_response)
+    elif not os.path.splitext(detected_file)[-1] in SUPPORTED_FILE_EXTENSIONS:
+        raise UnsupportedExtensionError(
+            f"Only attempt to read files with extension in [{SUPPORTED_FILE_EXTENSIONS}].\n"
+            f"The detected file {detected_file} has unsupported extension {os.path.splitext(detected_file)[-1]}",
+            raw_response
+        )
+    elif os.path.isdir(detected_file):
+        raise FileNotFoundError(f"The detected file path {detected_file} does not point to a file but to a directory",
+                                raw_response)
+    else:
+        return detected_file
+
+
 extract_action_as_json = partial(extract_as_json, matchname="action")
 extract_command_as_json = partial(extract_as_json, matchname="command")
 extract_summary_as_json = partial(extract_as_json, matchname="summary")
 extract_submission_as_json = partial(extract_as_json, matchname="submission")
 extract_metric_as_json = partial(extract_as_json, matchname="metric")
+extract_instruction_as_json = partial(extract_as_json, matchname="instruction")
 
 
 def concat_files(
@@ -159,8 +234,11 @@ def concat_files(
         f.writelines(out_content)
 
 
-def save_w_pickle(obj: Any, path: str, filename: Optional[str] = None) -> None:
-    """Save object obj in file exp_path/filename.pkl"""
+def save_w_pickle(obj: Any, path: str, filename: str | None = None, overwrite: bool = True) -> None:
+    """Save object obj in file exp_path/filename.pkl
+    Args:
+        overwrite: whether to overwrite existing file
+    """
     if filename is None:
         filename = os.path.basename(path)
         path = os.path.dirname(path)
@@ -170,12 +248,13 @@ def save_w_pickle(obj: Any, path: str, filename: Optional[str] = None) -> None:
         os.makedirs(path)
         os.chmod(path, 0o777)
     filepath = os.path.join(path, filename)
-    with open(filepath, "wb") as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-    os.chmod(filepath, 0o777)
+    if not os.path.exists(filepath) or overwrite:
+        with open(filepath, "wb") as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+        os.chmod(filepath, 0o777)
 
 
-def load_w_pickle(path: str, filename: Optional[str] = None) -> Any:
+def load_w_pickle(path: str, filename: str | None = None) -> Any:
     """ Load object from file exp_path/filename.pkl """
     if filename is None:
         filename = os.path.basename(path)
@@ -339,11 +418,11 @@ def check_code_safety(code: str) -> None:
 
 class ListableEnum(Enum):
     @classmethod
-    def list(cls) -> List[Any]:
+    def list(cls) -> list[Any]:
         return list(map(lambda c: c.value, cls))
 
     @classmethod
-    def rev_dict(cls) -> Dict[Any, Any]:
+    def rev_dict(cls) -> dict[Any, Any]:
         return {c.value: c for c in cls if isinstance(c.value, typing.Hashable)}
 
 
@@ -353,6 +432,7 @@ class HumanInputCancelError(Exception):
 
 def human_input(allow_cancel: bool, w=150) -> str:
     if os.getenv("NO_HUMAN", False):
+        traceback.print_stack()
         print("Queried human input in NO_HUMAN mode!")
         exit(1)
     stop_signal = "[STOP]"
@@ -402,7 +482,7 @@ def human_input(allow_cancel: bool, w=150) -> str:
     return reply
 
 
-def str_justify_one_line(s: str, w: int) -> List[str]:
+def str_justify_one_line(s: str, w: int) -> list[str]:
     """
     Given a string containing a single-line input, return a list of strings of fixed length to allow single
     -column display
@@ -425,7 +505,7 @@ def str_justify_one_line(s: str, w: int) -> List[str]:
     return lines
 
 
-def justify_text(text: str, w: int) -> List[str]:
+def justify_text(text: str, w: int) -> list[str]:
     """ Given a text, get a list of strings such that the text can be printed in a column of fixed length"""
     all_lines = text.split("\n")
     justified_text = []
@@ -565,6 +645,7 @@ def unwrap_code(wrapped_code: str) -> str:
 
 def get_path_to_python(path_to_python: str) -> str:
     while not os.path.exists(path_to_python):
+        os.makedirs(os.path.dirname(path_to_python), exist_ok=True)
         python_exe = input(
             rf"/!\ file {os.path.abspath(path_to_python)} should contain the absolute path to the python"
             f" executable to use, but {path_to_python} does not exists...\n"
@@ -574,6 +655,24 @@ def get_path_to_python(path_to_python: str) -> str:
     with open(path_to_python) as f:
         python_exe = f.readline().replace("\n", "")
     return python_exe
+
+
+def time_formatter(t: float, show_ms: bool = False) -> str:
+    """ Convert a duration in seconds to a str `dd:hh:mm:ss`
+
+    Args:
+        t: time in seconds
+        show_ms: whether to show ms on top of dd:hh:mm:ss
+    """
+    n_day = time.gmtime(t).tm_yday - 1
+    if n_day > 0:
+        ts = time.strftime('%H:%M:%S', time.gmtime(t))
+        ts = f"{n_day}:{ts}"
+    else:
+        ts = time.strftime('%H:%M:%S', time.gmtime(t))
+    if show_ms:
+        ts += f'{t - int(t):.3f}'.replace('0.', '.')
+    return ts
 
 
 if __name__ == "__main__":

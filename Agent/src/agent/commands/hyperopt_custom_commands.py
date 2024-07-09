@@ -22,11 +22,13 @@ class HyperOpt(SequentialFlow):
             self,
             summarize_code_prompt_template: str,
             loop_flow_prompt_template: str,
+            error_instruct_prompt_template: str,
             search_space_prompt_template: str,
             workspace_path: str,
             bo_steps: int,
             max_repetitions: int = -1,
             max_retries: int = 5,
+            use_error_instructions: bool = False,
     ):
         """
         Flow = SequentialFlow
@@ -38,18 +40,25 @@ class HyperOpt(SequentialFlow):
         """
         summarize_cmd = SummarizeCode(
             required_prompt_templates={"summarize_code_prompt_template": summarize_code_prompt_template},
-            max_retries=max_retries,
+            max_retries=max_retries
+        )
+        error_instruct_cmd = ErrorInstruct(
+            required_prompt_templates={"error_instruct_template": error_instruct_prompt_template},
+            max_retries=max_retries
         )
         suggest_cmd = SuggestSearchSpace(
             required_prompt_templates={"search_space_prompt_template": search_space_prompt_template},
-            max_retries=max_retries,
+            max_retries=max_retries
         )
         hyperopt_cmd = RunHyperOpt(
             workspace_path=workspace_path,
-            bo_steps=bo_steps,
+            bo_steps=bo_steps
         )
+        inner_cmd_seq = [suggest_cmd, hyperopt_cmd]
+        if use_error_instructions:
+            inner_cmd_seq = [error_instruct_cmd] + inner_cmd_seq
         inner_sequential_flow = SequentialFlow(
-            sequence=[suggest_cmd, hyperopt_cmd],
+            sequence=inner_cmd_seq,
             name="suggest_search_space_and_run_hyperopt",
             description="suggest search space and run hyperopt",
         )
@@ -207,7 +216,13 @@ class RunHyperOpt(HumanTakeoverCommand):
         optimizer = HEBO(design_space)
 
         for step_idx in range(self.bo_steps):
-            candidate = optimizer.suggest()
+            # catch errors when retraining GP and suggesting a new candidate
+            try:
+                candidate = optimizer.suggest()
+            except ValueError as e:
+                print(e)
+                return optimizer, e
+
             y, error_str = self.evaluate_candidate(params=candidate)
 
             print('-' * 50)
@@ -279,3 +294,42 @@ class RunHyperOpt(HumanTakeoverCommand):
         trajectory = optimizer.X
         trajectory['y'] = optimizer.y
         trajectory.to_csv(os.path.join(self.workspace_path, 'results', timestamp, 'optimization_trajectory.csv'))
+
+
+class ErrorInstruct(HumanTakeoverCommand):
+    """
+    Ask the Agent to interpret past errors and write a new instruction out of it in order to avoid doing the same
+    mistake in the future. These are continuously extended until the unit test passes.
+    """
+    name: str = 'error_instruct'
+    description: str = 'Transform past errors in new instructions'
+    input_keys: dict[str, MemKey] = {
+        MemKey.BO_RAN.value: MemKey.BO_RAN,
+        MemKey.BO_ERROR.value: MemKey.BO_ERROR,
+    }
+    output_keys: dict[str, MemKey] = {MemKey.ERROR_INSTRUCT.value: MemKey.ERROR_INSTRUCT}
+    max_retries: int = 5
+    human_takeover: bool = False
+    parse_func_id: str = "extract_instruction_as_json"
+
+    def func(self, agent, *args: Any, **kwargs: Any):
+        error_instructions = agent.memory.retrieve(MemKey.ERROR_INSTRUCT)  # cannot be in `input_keys` as it raises err
+        bo_ran = agent.memory.retrieve(self.input_keys[MemKey.BO_RAN.value])
+        bo_error = agent.memory.retrieve(self.input_keys[MemKey.BO_ERROR.value])
+
+        if bo_ran and bo_error is not None and len(bo_error) > 0:
+            response = safe_parsing_chat_completion(
+                agent=agent,
+                ask_template=self.required_prompt_templates['error_instruct_template'],
+                parse_func=PARSE_FUNC_MAP[self.parse_func_id],
+                format_error_message='Your response did no follow the required format'
+                                     '\n```json\n{\n\t"instruction": "<instruction>"\n}\n```. Correct it now.',
+                max_retries=self.max_retries,
+                human_takeover=self.check_trigger_human_takeover()
+            )
+            if len(response) > 0:
+                if error_instructions is not None:
+                    error_instructions += f'\n- {response}'
+                else:
+                    error_instructions = f"\n- {response}"
+                agent.memory.store(error_instructions, self.output_keys[MemKey.ERROR_INSTRUCT.value])

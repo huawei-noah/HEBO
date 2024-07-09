@@ -29,8 +29,8 @@ class DistributedHFLanguageBackend(LanguageBackend):
 
         self.generation_kwargs = kwargs
 
-    def chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
-        result = wdf.chat_completion(
+    def _chat_completion(self, messages: list[dict[str, str]], parse_func: Callable, **kwargs) -> str:
+        result = wdf._chat_completion(
             self.client,
             messages=messages,
             generation_kwargs={**self.generation_kwargs, **kwargs},
@@ -54,14 +54,14 @@ class DistributedHFLanguageBackend(LanguageBackend):
 
         return parsed_response
 
-    def choose_from_options(
+    def _choose_from_options(
         self, messages: list[dict[str, str]], options: list[str], parse_func: Callable, **kwargs
     ) -> str:
         """Asks the model to choose from a list of options based on the given prompt.
 
         Args:
             prompt (str): The input text prompt to present along with options.
-            options (List[str]): A list of options for the model to choose from.
+            options (list[str]): A list of options for the model to choose from.
             **kwargs: Additional keyword arguments that may be required for the choice-making process,
                       such as temperature, max_tokens, etc.
 
@@ -69,7 +69,7 @@ class DistributedHFLanguageBackend(LanguageBackend):
             str: The chosen option. Can return either the option's text directly or its index in the list.
         """
 
-        response = self.chat_completion(messages, parse_func, **kwargs)
+        response = self._chat_completion(messages, parse_func, **kwargs)
         selected_option = min(options, key=lambda x: jellyfish.levenshtein_distance(response, x))
         self.history[-1]["parsed_response"] = selected_option
         self.logger.log_metrics(
