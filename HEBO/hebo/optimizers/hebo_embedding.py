@@ -138,8 +138,8 @@ class HEBO_Embedding(AbstractOptimizer):
         df_suggest = self.mace.suggest(n_suggestions)
         return df_suggest 
 
-    def observe(self, X, y):
-        self.mace.observe(X, y)
+    def observe_new_data(self, X, y):
+        self.mace.observe_new_data(X, y)
 
     @property
     def best_x(self)->pd.DataFrame:

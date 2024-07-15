@@ -188,7 +188,7 @@ class HEBO(AbstractOptimizer):
     def check_unique(self, rec : pd.DataFrame) -> [bool]:
         return (~pd.concat([self.X, rec], axis = 0).duplicated().tail(rec.shape[0]).values).tolist()
 
-    def observe(self, X, y):
+    def observe_new_data(self, X, y):
         """Feed an observation back.
 
         Parameters

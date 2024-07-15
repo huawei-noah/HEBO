@@ -58,7 +58,7 @@ class BO(AbstractOptimizer):
             suggest = self.X.iloc[[np.argmin(self.y.reshape(-1))]]
             return opt.optimize(initial_suggest = suggest, fix_input = fix_input)
 
-    def observe(self, X, y):
+    def observe_new_data(self, X, y):
         """Feed an observation back.
 
         Parameters

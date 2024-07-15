@@ -88,7 +88,7 @@ class Evolution(AbstractOptimizer):
         rec = self.space.inverse_transform(x, xe)
         return rec
 
-    def observe(self, rec : pd.DataFrame, obs : np.ndarray):
+    def observe_new_data(self, rec : pd.DataFrame, obs : np.ndarray):
         x, xe = self.space.transform(rec)
         x_cat = torch.cat([x, xe.float()], dim = 1).numpy()
         obj   = obs[:, :self.num_obj]

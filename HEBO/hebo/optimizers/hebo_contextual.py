@@ -40,8 +40,8 @@ class HEBO_VectorContextual(AbstractOptimizer):
     def suggest(self, n):
         return self.hebo.suggest(n, fix_input = self.context_vector)
 
-    def observe(self, X, y):
-        self.hebo.observe(X, y)
+    def observe_new_data(self, X, y):
+        self.hebo.observe_new_data(X, y)
 
     @property
     def best_x(self) -> pd.DataFrame:

@@ -133,7 +133,7 @@ class GeneralBO(AbstractOptimizer):
                 select_id   += np.random.choice(candidate_id, n_suggestions - len(select_id), replace = False).tolist()
             return suggest.iloc[select_id]
 
-    def observe(self, X, y):
+    def observe_new_data(self, X, y):
         """Feed an observation back.
 
         Parameters

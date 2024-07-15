@@ -61,9 +61,9 @@ class NoMR_BO(AbstractOptimizer):
             self.opt2 = BO(space, acq_conf = {'kappa' : 0.6})  
 
 
-    def observe(self, x : pd.DataFrame, y : np.ndarray):
-        self.opt1.observe(x, y)
-        self.opt2.observe(x, y)
+    def observe_new_data(self, x : pd.DataFrame, y : np.ndarray):
+        self.opt1.observe_new_data(x, y)
+        self.opt2.observe_new_data(x, y)
 
     def suggest(self, n_suggestions = 1, fix_input : dict = None):
         assert n_suggestions == 1

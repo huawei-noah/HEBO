@@ -139,7 +139,7 @@ class CMAES(AbstractOptimizer):
         self.cx = self.space.inverse_transform(X, Xe).head(n_suggestions)
         return self.cx
 
-    def observe(self, x : pd.DataFrame, y : np.ndarray):
+    def observe_new_data(self, x : pd.DataFrame, y : np.ndarray):
         """
         Observe new data
         """
