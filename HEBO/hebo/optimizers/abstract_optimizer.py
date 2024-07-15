@@ -23,7 +23,9 @@ class AbstractOptimizer(ABC):
 
     def __init__(self, space: DesignSpace, save_path: Optional[str] = None):
         self.space = space
-        self.save_path = save_path # if path given, results are saved at each call to observe
+        self.save_path = (
+            save_path  # if path given, results are saved at each call to observe
+        )
 
     @abstractmethod
     def suggest(self, n_suggestions=1, fix_input: dict = None):
