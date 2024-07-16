@@ -24,17 +24,7 @@ If your best model code above has only one model, you should define just that mo
 Only provide hyperparam search space for the model(s) in your best model code.
 
 Some examples include:
-{"RandomForestClassifier": {'bootstrap': [True, False],
-'max_depth': [10, 20, 30, None],
-'max_features': ['log2', 'sqrt'],
-'min_samples_leaf': [1, 2, 4],
-'min_samples_split': [2, 5, 10],
-'n_estimators': [200, 400, 600]},
-"XGBClassifier": {'min_child_weight': [1, 5, 10],
-'gamma': [0.5, 1, 1.5, 2, 5],
-'subsample': [0.6, 0.8, 1.0],
-'colsample_bytree': [0.6, 0.8, 1.0],
-'max_depth': [3, 4, 5]},
-"TabPFNClassifier": {'N_ensemble_configurations': [10, 20, 30, 35, 40]}}
+{"AgentParams": {'switch_tactics_min_steps': [1, 10],
+'max_prediction_time': [2, 4]}}
 
 Now provide the final parameters to search from for your best model, in the above format.

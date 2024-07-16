@@ -7,7 +7,7 @@ agent:
     error_instruct_prompt_template: "error_instruction.jinja"
     search_space_prompt_template: 'suggest_search_space.jinja'
     workspace_path: ${task.workspace_path}/${task.task_id}
-    bo_steps: 10
+    bo_steps: 100
     max_repetitions: 1
     max_retries: 5
     use_error_instructions: ${task.use_error_instructions}

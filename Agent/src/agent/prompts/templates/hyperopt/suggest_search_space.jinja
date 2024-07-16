@@ -37,24 +37,18 @@ Note that if the 'type' is 'int' or 'num', you should specify a lower and upper 
 Note that if the 'type' is 'cat' then you should only specify a list of categories and no upper or lower bounds.
 Note that if the 'type' is 'bool' there is no need to specify lower and upper bounds or categories.
 
-For example if there are two models, a `RandomForestRegressor` and a `XGBClassifier`, an example of search space is:
+For example if there is a model, a `AgentParams`, an example of search space is:
 ```json
 {
-    "RandomForestRegressor": [
-        {'name': 'max_depth', 'type': 'int', 'lb': 1, 'ub': 20},
-        {'name': 'min_samples_leaf', 'type': 'num', 'lb': 1e-4, 'ub': 0.5},
-        {'name': 'max_features', 'type': 'cat', 'categories': ['auto', 'sqrt', 'log2']},
-        {'name': 'bootstrap', 'type': 'bool'},
-        {'name': 'min_impurity_decrease', 'type': 'pow', 'lb': 1e-4, 'ub': 1.0},
-    ],
-    "XGBClassifier": [
-        {'name': 'min_child_weight', 'type': 'cat', 'categories': [1, 5, 10]},
-        {'name': 'gamma', 'type': 'num', 'lb': 0.5 'ub': 5},
-        {'name': 'subsample', 'type': 'num', 'lb': 0.5, 'ub': 1},
-        {'name': 'colsample_bytree', 'type': 'num', 'lb': 0.6, 'ub': 1},
-        {'name': 'max_depth', 'type': 'int', 'lb': 2, 'ub': 5}
+  "AgentParams": [
+    {'name': 'switch_tactics_min_steps', 'type': 'int', 'lb': 5, 'ub': 10},
+    {'name': 'max_prediction_time', 'type': 'num', 'lb': 0.5, 'ub': 1.5},
+  ]
 }
 ```
+
+Note, you should think about the comments in the code.
+If the comments say that some variables should remain constant or not be modified, then you should ignore these when deciding which variables to optimize.
 
 {% if memory.retrieve({memory.mem_keys.BO_RAN: 1.0}) %}
 This is the search space you tried in a previous attempt:

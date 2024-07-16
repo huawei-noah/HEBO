@@ -15,7 +15,7 @@ class HyperOpt(Task):
         self.done = False
         self.step_num = 0
         self.max_steps = 1
-        self.id = 'hyperopt'
+        self.id = "hyperopt"
 
     def reset(self, next_subtask: str | None = None) -> Dict[str, str]:
         if next_subtask is not None:
@@ -35,9 +35,15 @@ class HyperOpt(Task):
         return f"{self.workspace_path}/data/"
 
     def _return_observation(self):
-        with open(self.workspace_path + "/code/code.py", "r") as f:
+        with open(self.workspace_path + "/code/executor_code.py", "r") as f:
             code = f.read()
-        return {MemKey.CODE: code}
+        # breakpoint()
+
+        start_idx = code.find("# @MODEL_START@") + len("# @MODEL_START@")
+        end_idx = code.find("# @MODEL_END@")
+        extract = code[start_idx:end_idx]
+
+        return {MemKey.CODE: extract}
 
     @staticmethod
     def answer_parser(raw_response):

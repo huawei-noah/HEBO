@@ -7,13 +7,16 @@ import pandas as pd
 
 def strip_comments(code: str) -> str:
     # remove all single-line comments
-    stripped_code = re.sub(r'#.*', '', code)
+    stripped_code = re.sub(r"#.*", "", code)
 
     # remove multi-line comments
-    stripped_code = re.sub(r'\'\'\'(.*?)\'\'\'', '', stripped_code)
-    stripped_code = re.sub(r'\"\"\"(.*?)\"\"\"', '', stripped_code)
+    stripped_code = re.sub(r"\'\'\'(.*?)\'\'\'", "", stripped_code)
+    stripped_code = re.sub(r"\"\"\"(.*?)\"\"\"", "", stripped_code)
+
+    # [b for b in blocks if '"""' in b]
 
     return stripped_code
+    # return code
 
 
 def convert_to_single_line_blocks(code: str) -> List[str]:
@@ -28,22 +31,23 @@ def convert_to_single_line_blocks(code: str) -> List[str]:
     code = strip_comments(code)
     blocks = []
     code = code.split("\n")
+    blocks = code  # TEMP
     i = 0
     new_block = ""
     n_diff = 0
-    while i < len(code):
-        #         comment_ind = code[i].find("#") --> we should exclude the comments from the count...
-        n_diff += code[i][:].count("(") - code[i].count(")")
-        assert n_diff >= 0, (n_diff, code[i])
-        new_block += re.sub(
-            r'(\s([?,.!"]))|(?<=\[|\()(.*?)(?=\)|\])', lambda x: x.group().strip(), code[i]
-        )  # remove space in parentheses
-        if n_diff == 0:
-            blocks.append(new_block)
-            new_block = ""
-            n_diff = 0
-        i += 1
-    assert n_diff == 0
+    # while i < len(code):
+    #     #         comment_ind = code[i].find("#") --> we should exclude the comments from the count...
+    #     n_diff += code[i][:].count("(") - code[i].count(")")
+    #     assert n_diff >= 0, (n_diff, code[i])
+    #     new_block += re.sub(
+    #         r'(\s([?,.!"]))|(?<=\[|\()(.*?)(?=\)|\])', lambda x: x.group().strip(), code[i]
+    #     )  # remove space in parentheses
+    #     if n_diff == 0:
+    #         blocks.append(new_block)
+    #         new_block = ""
+    #         n_diff = 0
+    #     i += 1
+    # assert n_diff == 0
     return blocks
 
 
@@ -141,9 +145,9 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
     """
     keyword_arguments = {}
     for model_name in space:
-        keyword_arguments[model_name] = ", ".join([
-            f'{param_dict["name"]}={candidate[param_dict["name"]].values[0]}' for param_dict in space[model_name]
-        ])
+        keyword_arguments[model_name] = ", ".join(
+            [f'{param_dict["name"]}={candidate[param_dict["name"]].values[0]}' for param_dict in space[model_name]]
+        )
 
     blocks = convert_to_single_line_blocks(code)
     optimized_code = ""
@@ -159,7 +163,7 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
     return optimized_code
 
 
-def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
+def wrap_code(code: str, space: Dict[str, Dict[str, Any]], indent=" " * 4) -> str:
     """Modify a code to add hyperparameters.
 
     Args:
@@ -174,14 +178,15 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
     keyword_arguments = {}
     keyword_arguments_str = ""
     for model_name in space:
-        model_name_str = model_name.lower() + '_'
-        arguments[model_name] = ", ".join([model_name_str + param_dict['name'] for param_dict in space[model_name]])
+        model_name_str = model_name.lower() + "_"
+        arguments[model_name] = ", ".join([model_name_str + param_dict["name"] for param_dict in space[model_name]])
         arguments_str += arguments[model_name] + ", "
-        keyword_arguments[model_name] = ", ".join([
-            f"{param_dict['name']}={model_name_str}{param_dict['name']}" for param_dict in space[model_name]
-        ])
+        keyword_arguments[model_name] = ", ".join(
+            [f"{param_dict['name']}={model_name_str}{param_dict['name']}" for param_dict in space[model_name]]
+        )
         keyword_arguments_str += keyword_arguments[model_name] + ", "
     blocks = convert_to_single_line_blocks(code)
+    # breakpoint()
     blackbox_code = f"def blackbox({arguments_str}) -> float:\n"
     for line in blocks:
         for model_name in space:
@@ -190,15 +195,13 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
             if ind != -1:
                 end_ind = find_matching_parenthesis(line=line, start_ind=ind + len(pattern) - 1, parenthesis_type="(")
                 line = line[:ind] + pattern + keyword_arguments[model_name] + line[end_ind:]
-        blackbox_code += "\t" + line + "\n"
+        blackbox_code += indent + line + "\n"
 
-    blackbox_code += "\treturn score"
-    return blackbox_code
+    blackbox_code += f"{indent}return score"
+    return strip_comments(blackbox_code)
 
 
-def format_f_inputs(
-        x: pd.DataFrame, param_space_with_model: Dict[str, Dict[str, List[Any]]]
-) -> List[Dict[str, Any]]:
+def format_f_inputs(x: pd.DataFrame, param_space_with_model: Dict[str, Dict[str, List[Any]]]) -> List[Dict[str, Any]]:
     formatted_inputs = []
     for i in range(len(x)):
         new_input = {}
