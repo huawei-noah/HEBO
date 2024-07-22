@@ -212,7 +212,11 @@ def main(
         for key, value in redis_client.hgetall("agents_pool").items()
     }
 
-    with open("agent/task_infos/all_task_infos_vecs_balanced_160_norm.json") as f:
+    # with open("/home/thomas/agent/task_infos/all_task_infos_vecs.json") as f:
+    # with open("/home/thomas/agent/task_infos/all_task_infos_vecs_balanced_160.json") as f:
+    # with open("/home/thomas/agent/task_infos/all_task_infos_vecs_balanced_160_onehot.json") as f:
+    # with open("/home/thomas/agent/task_infos/all_task_infos_vecs_balanced_160_onehot.json") as f:
+    with open("/home/thomas/agent/task_infos/all_task_infos_vecs_balanced_160_norm.json") as f:
         task_to_vec = json.load(f)
     task_to_vec = dict(random.sample(list(task_to_vec.items()), 400))
     print(task_to_vec)
