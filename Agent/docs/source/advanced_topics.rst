@@ -69,3 +69,22 @@ For multi-GPU training, use:
 .. code-block:: bash
 
    accelerate launch --config_file configs/training/deepspeed/stage0.yaml src/agent/train_rlft.py
+
+Proxy Issues and Solutions
+--------------------------
+
+.. _Proxy Issues and Solutions:
+
+Common Proxy Issues with Poetry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes proxy settings can interfere with poetry's ability to clone dependencies. Here's a quick fix:
+
+1. Patch `dulwich/client.py` to bypass SSL verification.
+2. If encountering issues with `fast-downward`, execute the following:
+
+   .. code-block:: bash
+
+      . /nfs/aiml/matthieu/certificates/fix_proxy.sh
+
+3. For shellcheck proxy issues, either comment it out in `.pre-commit-config.yaml` or set the `SKIP=shellcheck` environment variable.

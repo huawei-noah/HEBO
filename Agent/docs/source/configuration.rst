@@ -55,7 +55,7 @@ LLM (Large Language Model) configuration files specify settings for various lang
          _target_: agent.models.fastchat_api.FastChatAPILanguageBackend
          _partial_: true
          model_id: openchat_3.5
-         server_ip:
+         server_ip: http://127.0.0.1:8000/v1
          api_key: EMPTY
          context_length: 4096
 

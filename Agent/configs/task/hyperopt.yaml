@@ -9,6 +9,7 @@ task:
   _target_: agent.tasks.hyperopt.HyperOpt
   task_id: ???
   workspace_path: ./workspace/hyperopt
+  use_error_instructions: false
 
   name: hyperopt
   description:
