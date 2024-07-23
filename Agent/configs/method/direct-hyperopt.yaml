@@ -7,9 +7,10 @@ agent:
     error_instruct_prompt_template: "error_instruction.jinja"
     search_space_prompt_template: 'suggest_search_space.jinja'
     workspace_path: ${task.workspace_path}/${task.task_id}
-    bo_steps: 10
+    bo_steps: 24
+    bo_batch_size: 4
     max_repetitions: 1
-    max_retries: 5
+    max_retries: 3
     use_error_instructions: ${task.use_error_instructions}
   prompt_builder:
     template_paths: [ "hyperopt/" ]
