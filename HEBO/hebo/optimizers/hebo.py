@@ -54,13 +54,9 @@ class HEBO(AbstractOptimizer):
         self.X = pd.DataFrame(columns=self.space.para_names)
         self.y = np.zeros((0, 1))
         self.model_name = model_name
-        self.rand_sample = (
-            1 + self.space.num_paras if rand_sample is None else max(2, rand_sample)
-        )
+        self.rand_sample = (1 + self.space.num_paras if rand_sample is None else max(2, rand_sample))
         self.scramble_seed = scramble_seed
-        self.sobol = SobolEngine(
-            self.space.num_paras, scramble=True, seed=scramble_seed
-        )
+        self.sobol = SobolEngine(self.space.num_paras, scramble=True, seed=scramble_seed)
         self.acq_cls = acq_cls
         self._model_config = model_config
 
@@ -101,9 +97,7 @@ class HEBO(AbstractOptimizer):
             cfg = deepcopy(self._model_config)
 
         if self.space.num_categorical > 0:
-            cfg["num_uniqs"] = [
-                len(self.space.paras[name].categories) for name in self.space.enum_names
-            ]
+            cfg["num_uniqs"] = [len(self.space.paras[name].categories) for name in self.space.enum_names]
         return cfg
 
     def get_best_id(self, fix_input: dict = None) -> int:
@@ -124,9 +118,7 @@ class HEBO(AbstractOptimizer):
 
     def suggest(self, n_suggestions=1, fix_input=None):
         if self.acq_cls != MACE and n_suggestions != 1:
-            raise RuntimeError(
-                "Parallel optimization is supported only for MACE acquisition"
-            )
+            raise RuntimeError("Parallel optimization is supported only for MACE acquisition")
         if self.X.shape[0] < self.rand_sample:
             sample = self.quasi_sample(n_suggestions, fix_input)
             return sample
@@ -134,17 +126,11 @@ class HEBO(AbstractOptimizer):
             X, Xe = self.space.transform(self.X)
             try:
                 if self.y.min() <= 0:
-                    y = torch.FloatTensor(
-                        power_transform(self.y / self.y.std(), method="yeo-johnson")
-                    )
+                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="yeo-johnson"))
                 else:
-                    y = torch.FloatTensor(
-                        power_transform(self.y / self.y.std(), method="box-cox")
-                    )
+                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="box-cox"))
                     if y.std() < 0.5:
-                        y = torch.FloatTensor(
-                            power_transform(self.y / self.y.std(), method="yeo-johnson")
-                        )
+                        y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="yeo-johnson"))
                 if y.std() < 0.5:
                     raise RuntimeError("Power transformation failed")
                 model = get_model(
@@ -157,13 +143,7 @@ class HEBO(AbstractOptimizer):
                 model.fit(X, Xe, y)
             except:
                 y = torch.FloatTensor(self.y).clone()
-                model = get_model(
-                    self.model_name,
-                    self.space.num_numeric,
-                    self.space.num_categorical,
-                    1,
-                    **self.model_config
-                )
+                model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1, **self.model_config)
                 model.fit(X, Xe, y)
 
             best_id = self.get_best_id(fix_input)
@@ -177,24 +157,13 @@ class HEBO(AbstractOptimizer):
             upsi = 0.5
             delta = 0.01
             # kappa = np.sqrt(upsi * 2 * np.log(iter **  (2.0 + self.X.shape[1] / 2.0) * 3 * np.pi**2 / (3 * delta)))
-            kappa = np.sqrt(
-                upsi
-                * 2
-                * (
-                    (2.0 + self.X.shape[1] / 2.0) * np.log(iter)
-                    + np.log(3 * np.pi**2 / (3 * delta))
-                )
-            )
+            kappa = np.sqrt(upsi * 2 * ((2.0 + self.X.shape[1] / 2.0) * np.log(iter) + np.log(3 * np.pi**2 / (3 * delta))))
 
             acq = self.acq_cls(model, best_y=py_best, kappa=kappa)  # LCB < py_best
             mu = Mean(model)
             sig = Sigma(model, linear_a=-1.0)
-            opt = EvolutionOpt(
-                self.space, acq, pop=100, iters=100, verbose=False, es=self.es
-            )
-            rec = opt.optimize(
-                initial_suggest=best_x, fix_input=fix_input
-            ).drop_duplicates()
+            opt = EvolutionOpt(self.space, acq, pop=100, iters=100, verbose=False, es=self.es)
+            rec = opt.optimize(initial_suggest=best_x, fix_input=fix_input).drop_duplicates()
             rec = rec[self.check_unique(rec)]
 
             cnt = 0
@@ -210,9 +179,7 @@ class HEBO(AbstractOptimizer):
                 rand_rec = self.quasi_sample(n_suggestions - rec.shape[0], fix_input)
                 rec = pd.concat([rec, rand_rec], axis=0, ignore_index=True)
 
-            select_id = np.random.choice(
-                rec.shape[0], n_suggestions, replace=False
-            ).tolist()
+            select_id = np.random.choice(rec.shape[0], n_suggestions, replace=False).tolist()
             x_guess = []
             with torch.no_grad():
                 py_all = mu(*self.space.transform(rec)).squeeze().numpy()
@@ -227,9 +194,7 @@ class HEBO(AbstractOptimizer):
             return rec_selected
 
     def check_unique(self, rec: pd.DataFrame) -> [bool]:
-        return (
-            ~pd.concat([self.X, rec], axis=0).duplicated().tail(rec.shape[0]).values
-        ).tolist()
+        return (~pd.concat([self.X, rec], axis=0).duplicated().tail(rec.shape[0]).values).tolist()
 
     def observe_new_data(self, X, y):
         """Feed an observation back.

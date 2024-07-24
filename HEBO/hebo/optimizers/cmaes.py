@@ -34,35 +34,17 @@ class CMAES(AbstractOptimizer):
             self.child_size = int(4 + np.floor(3 * np.log(self.dim)))
         if self.pop_size is None:
             self.pop_size = int(self.child_size / 2)
-        assert (
-            self.pop_size < self.child_size
-        ), "Population size should be smaller than children size"
+        assert self.pop_size < self.child_size, "Population size should be smaller than children size"
 
-        self.weights = torch.FloatTensor(
-            np.log(self.pop_size + 0.5) - np.log(np.arange(1, self.pop_size + 1))
-        )
+        self.weights = torch.FloatTensor(np.log(self.pop_size + 0.5) - np.log(np.arange(1, self.pop_size + 1)))
         self.weights /= self.weights.sum()
         self.mu_eff = 1.0 / (self.weights**2).sum()
 
-        self.cc = algo_conf.get(
-            "cc",
-            (4 + self.mu_eff / self.dim) / (self.dim + 4 + 2 * self.mu_eff / self.dim),
-        )
+        self.cc = algo_conf.get("cc", (4 + self.mu_eff / self.dim) / (self.dim + 4 + 2 * self.mu_eff / self.dim))
         self.cs = algo_conf.get("cs", (self.mu_eff + 2) / (self.dim + self.mu_eff + 5))
         self.c_r1 = algo_conf.get("c_r1", 2.0 / ((self.dim + 1.3) ** 2 + self.mu_eff))
-        self.c_mu = algo_conf.get(
-            "c_mu",
-            min(
-                1 - self.c_r1,
-                2
-                * (self.mu_eff - 2 + 1.0 / self.mu_eff)
-                / ((self.dim + 2) ** 2 + self.mu_eff),
-            ),
-        )
-        self.damp = algo_conf.get(
-            "damp",
-            1.0 + 2 * max(0.0, np.sqrt((self.mu_eff - 1) / (self.dim + 1)) - 1.0),
-        )
+        self.c_mu = algo_conf.get("c_mu", min(1 - self.c_r1, 2 * (self.mu_eff - 2 + 1.0 / self.mu_eff) / ((self.dim + 2) ** 2 + self.mu_eff)))
+        self.damp = algo_conf.get("damp", 1.0 + 2 * max(0.0, np.sqrt((self.mu_eff - 1) / (self.dim + 1)) - 1.0))
 
         self.n_eval = 0.0
         self._best_x = None
@@ -74,9 +56,7 @@ class CMAES(AbstractOptimizer):
         self.p_c = torch.zeros(self.dim)
         self.n_resample = 10
 
-        self.norm_rand = np.sqrt(self.dim) * (
-            1 - 1.0 / (4 * self.dim) + 1.0 / (21 * self.dim**2)
-        )
+        self.norm_rand = np.sqrt(self.dim) * (1 - 1.0 / (4 * self.dim) + 1.0 / (21 * self.dim**2))
 
         self.px = None  # parents
         self.cx = None  # children
@@ -145,9 +125,7 @@ class CMAES(AbstractOptimizer):
                 sample = sample[:n_suggestions]
 
         if sample.shape[0] < n_suggestions:
-            sample = torch.cat(
-                [sample, dist.sample((n_suggestions - sample.shape[0],))], dim=0
-            )
+            sample = torch.cat([sample, dist.sample((n_suggestions - sample.shape[0],))], dim=0)
 
         while (sample < lb).any() or (sample > ub).any():
             for i in range(self.dim):
@@ -196,26 +174,15 @@ class CMAES(AbstractOptimizer):
         Dinv = (1.0 / D.diag()) * torch.eye(self.dim)
         C_half_inv = P.mm(Dinv.sqrt()).mm(P.t())
 
-        self.p_sigma = (1 - self.cs) * self.p_sigma + np.sqrt(
-            self.cs * (2 - self.cs) * self.mu_eff
-        ) * C_half_inv.mm((self.mu - mu_old).view(-1, 1) / self.sigma).view(
-            self.p_sigma.shape
-        )
+        self.p_sigma = (1 - self.cs) * self.p_sigma + np.sqrt(self.cs * (2 - self.cs) * self.mu_eff) * C_half_inv.mm((self.mu - mu_old).view(-1, 1) / self.sigma).view(self.p_sigma.shape)
 
         h_sig = 0.0
         gen = self.n_eval / self.child_size
-        if (
-            self.p_sigma.norm() / np.sqrt(1 - (1 - self.cs) ** (2 * gen + 1))
-            < (1.4 + 2 / (self.dim + 1)) * self.norm_rand
-        ):
+        if (self.p_sigma.norm() / np.sqrt(1 - (1 - self.cs) ** (2 * gen + 1)) < (1.4 + 2 / (self.dim + 1)) * self.norm_rand):
             h_sig = 1.0
-        self.p_c = (1 - self.cc) * self.p_c + h_sig * np.sqrt(
-            self.cc * (2 - self.cc) * self.mu_eff
-        ) * ((self.mu - mu_old) / self.sigma)
+        self.p_c = (1 - self.cc) * self.p_c + h_sig * np.sqrt(self.cc * (2 - self.cc) * self.mu_eff) * ((self.mu - mu_old) / self.sigma)
 
-        self.sigma *= np.exp(
-            (self.cs / self.damp) * (self.p_sigma.norm() / self.norm_rand - 1)
-        )
+        self.sigma *= np.exp((self.cs / self.damp) * (self.p_sigma.norm() / self.norm_rand - 1))
         if not torch.isfinite(self.sigma):
             self.sigma = self.init_sigma()
             self.p_sigma = torch.zeros(self.dim)
@@ -228,14 +195,9 @@ class CMAES(AbstractOptimizer):
             C_mu += self.weights[i] * y.mm(y.t())
 
         # rank-1 estimation
-        C_r1 = (
-            self.p_c.view(-1, 1).mm(self.p_c.view(1, -1))
-            + (1 - h_sig) * self.cc * (2 - self.cc) * self.C
-        )
+        C_r1 = (self.p_c.view(-1, 1).mm(self.p_c.view(1, -1)) + (1 - h_sig) * self.cc * (2 - self.cc) * self.C)
 
-        self.C = (
-            (1 - self.c_r1 - self.c_mu) * self.C + self.c_r1 * C_r1 + self.c_mu * C_mu
-        )
+        self.C = (1 - self.c_r1 - self.c_mu) * self.C + self.c_r1 * C_r1 + self.c_mu * C_mu
 
     @property
     def best_x(self) -> pd.DataFrame:

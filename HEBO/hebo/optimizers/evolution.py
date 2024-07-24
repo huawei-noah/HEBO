@@ -20,12 +20,7 @@ import torch
 from pymoo.core.problem import Problem
 from pymoo.config import Config
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.core.mixed import (
-    MixedVariableMating,
-    MixedVariableGA,
-    MixedVariableSampling,
-    MixedVariableDuplicateElimination,
-)
+from pymoo.core.mixed import MixedVariableMating, MixedVariableGA, MixedVariableSampling, MixedVariableDuplicateElimination
 
 Config.show_compile_hint = False
 
@@ -76,9 +71,7 @@ class Evolution(AbstractOptimizer):
                 **algo_conf,
             )
         else:
-            raise ValueError(
-                f"Only ga and nsga2 supported, unrecognized algorithm {algo}"
-            )
+            raise ValueError(f"Only ga and nsga2 supported, unrecognized algorithm {algo}")
         self.prob = DummyProb(self.space, self.num_obj, self.num_constr)
         self.algo.setup(self.prob, termination=("n_gen", np.inf), verbose=verbose)
         self.n_observation = 0

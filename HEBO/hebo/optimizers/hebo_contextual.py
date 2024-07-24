@@ -22,9 +22,7 @@ class HEBO_VectorContextual(AbstractOptimizer):
     support_combinatorial = True
     support_contextual = True
 
-    def __init__(
-        self, space, context_dict: dict, model_name: str = "gp", rand_sample: int = None
-    ):
+    def __init__(self, space, context_dict: dict, model_name: str = "gp", rand_sample: int = None):
         self.hebo = HEBO(space, model_name, rand_sample)
         self.context_dict = context_dict
         self.context = None

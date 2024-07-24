@@ -86,8 +86,8 @@ class NoMR_BO(AbstractOptimizer):
 
     @property
     def best_y(self) -> float:
-        return (
-            self.opt1.best_y
-            if self.opt1.best_y < self.opt2.best_y
-            else self.opt2.best_y
-        )
+        if self.opt1.best_y < self.opt2.best_y:
+            out = self.opt1.best_y
+        else:
+            out = self.opt2.best_y        
+        return out

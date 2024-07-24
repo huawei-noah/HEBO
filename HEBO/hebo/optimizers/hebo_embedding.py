@@ -132,10 +132,7 @@ class HEBO_Embedding(AbstractOptimizer):
         while samp.shape[0] < n:
             samp_hd = self.space.sample(100)
             alpha = B.mm(torch.FloatTensor(samp_hd.values.T))
-            samp_ld = pd.DataFrame(
-                factor * torch.cholesky_solve(alpha, L).t().numpy(),
-                columns=samp.columns,
-            )
+            samp_ld = pd.DataFrame(factor * torch.cholesky_solve(alpha, L).t().numpy(), columns=samp.columns)
             samp_pj = self.project(samp_ld)
             samp_ld = samp_ld[samp_pj.max(axis=1) <= 1.0]
             samp_ld = samp_ld[samp_pj.min(axis=1) >= -1.0]

@@ -53,14 +53,13 @@ class BO(AbstractOptimizer):
         else:
             X, Xe = self.space.transform(self.X)
             y = torch.FloatTensor(self.y)
-            num_uniqs = (
-                None
-                if Xe.shape[1] == 0
-                else [
-                    len(self.space.paras[name].categories)
-                    for name in self.space.enum_names
-                ]
-            )
+
+            if Xe.shape[1] == 0:
+                num_uniqs = None
+            else:
+                _num = lambda n: len(self.space.paras[name].categories)
+                num_uniqs = [_num(name) for name in self.space.enum_names]
+
             model = get_model(
                 self.model_name,
                 X.shape[1],

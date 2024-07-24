@@ -29,9 +29,7 @@ class NoisyOpt(HEBO):
     support_combinatorial = True
     support_contextual = True
 
-    def __init__(
-        self, space, model_name="gp", rand_sample=None, es="nsga2", model_config=None
-    ):
+    def __init__(self, space, model_name="gp", rand_sample=None, es="nsga2", model_config=None):
         """
         model_name : surrogate model to be used
         rand_iter  : iterations to perform random sampling
@@ -46,13 +44,7 @@ class NoisyOpt(HEBO):
         else:
             X, Xe = self.space.transform(self.X)
             y = torch.FloatTensor(self.y).clone()
-            model = get_model(
-                self.model_name,
-                self.space.num_numeric,
-                self.space.num_categorical,
-                1,
-                **self.model_config
-            )
+            model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1, **self.model_config)
             model.fit(X, Xe, y)
 
             best_id = self.get_best_id(fix_input)
@@ -63,9 +55,7 @@ class NoisyOpt(HEBO):
             ps_best = ps2_best.sqrt().detach().numpy().squeeze()
 
             acq = self.acq_cls(model, 1, 0)
-            opt = EvolutionOpt(
-                self.space, acq, pop=100, iters=100, verbose=False, es=self.es
-            )
+            opt = EvolutionOpt(self.space, acq, pop=100, iters=100, verbose=False, es=self.es)
             rec = opt.optimize(initial_suggest=best_x, return_pop=True)
             rec = rec[self.check_unique(rec)]
 
@@ -82,9 +72,7 @@ class NoisyOpt(HEBO):
                 rand_rec = self.quasi_sample(n_suggestions - rec.shape[0], fix_input)
                 rec = rec.append(rand_rec, ignore_index=True)
 
-            select_id = np.random.choice(
-                rec.shape[0], n_suggestions, replace=False
-            ).tolist()
+            select_id = np.random.choice(rec.shape[0], n_suggestions, replace=False).tolist()
             x_guess = []
             mu = Mean(model)
             sig = Sigma(model, linear_a=-1.0)

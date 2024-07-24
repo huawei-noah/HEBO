@@ -75,14 +75,13 @@ class GeneralBO(AbstractOptimizer):
         else:
             X, Xe = self.space.transform(self.X)
             y = torch.FloatTensor(self.y)
-            num_uniqs = (
-                None
-                if Xe.shape[1] == 0
-                else [
-                    len(self.space.paras[name].categories)
-                    for name in self.space.enum_names
-                ]
-            )
+
+            if Xe.shape[1] == 0:
+                num_uniqs = None
+            else:
+                _num = lambda n: len(self.space.paras[name].categories)
+                num_uniqs = [_num(name) for name in self.space.enum_names]
+                
             self.model = get_model(
                 self.model_name,
                 X.shape[1],
@@ -97,23 +96,9 @@ class GeneralBO(AbstractOptimizer):
             upsi = 0.1
             delta = 0.01
             if kappa is None:
-                kappa = np.sqrt(
-                    upsi
-                    * 2
-                    * (
-                        (2.0 + self.X.shape[1] / 2.0) * np.log(self.iter)
-                        + np.log(3 * np.pi**2 / (3 * delta))
-                    )
-                )
+                kappa = np.sqrt(upsi * 2 * ((2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi**2 / (3 * delta))))
             if c_kappa is None:
-                c_kappa = np.sqrt(
-                    upsi
-                    * 2
-                    * (
-                        (2.0 + self.X.shape[1] / 2.0) * np.log(self.iter)
-                        + np.log(3 * np.pi**2 / (3 * delta))
-                    )
-                )
+                c_kappa = np.sqrt(upsi * 2 * ((2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi**2 / (3 * delta))))
             acq = GeneralAcq(
                 self.model,
                 self.num_obj,
@@ -132,9 +117,7 @@ class GeneralBO(AbstractOptimizer):
                 with torch.no_grad():
                     py, ps2 = self.model.predict(*self.space.transform(suggest))
                     largest_uncert_id = np.argmax(np.log(ps2).sum(axis=1))
-                select_id = np.random.choice(
-                    suggest.shape[0], n_suggestions, replace=False
-                ).tolist()
+                select_id = np.random.choice(suggest.shape[0], n_suggestions, replace=False).tolist()
                 if largest_uncert_id not in select_id:
                     select_id[0] = largest_uncert_id
                 return suggest.iloc[select_id]
@@ -145,9 +128,7 @@ class GeneralBO(AbstractOptimizer):
                 hv = HV(ref_point=self.ref_point.reshape(-1))
                 with torch.no_grad():
                     py, ps2 = self.model.predict(*self.space.transform(suggest))
-                    y_samp = self.model.sample_y(
-                        *self.space.transform(suggest), n_mc
-                    ).numpy()
+                    y_samp = self.model.sample_y(*self.space.transform(suggest), n_mc).numpy()
                 y_curr = self.get_pf(self.y).copy()
                 select_id = []
                 for i in range(n_suggestions):
@@ -161,24 +142,19 @@ class GeneralBO(AbstractOptimizer):
                             hvi_est += hv.do(y_tmp) - base_hv
                         hvi_est /= n_mc
                         ehvi_lst.append(hvi_est)
-                    best_id = (
-                        np.argmax(ehvi_lst)
-                        if max(ehvi_lst) > 0
-                        else np.random.choice(suggest.shape[0])
-                    )
-                    y_curr = np.vstack(
-                        [y_curr, y_samp[:, best_id].min(axis=0, keepdims=True)]
-                    )
+
+                    if max(ehvi_lst) > 0:
+                        best_id = np.argmax(ehvi_lst)
+                    else:
+                        best_id = np.random.choice(suggest.shape[0])
+    
+                    y_curr = np.vstack([y_curr, y_samp[:, best_id].min(axis=0, keepdims=True)])
                     select_id.append(best_id)
 
             select_id = list(set(select_id))
             if len(select_id) < n_suggestions:
-                candidate_id = [
-                    i for i in range(suggest.shape[0]) if i not in select_id
-                ]
-                select_id += np.random.choice(
-                    candidate_id, n_suggestions - len(select_id), replace=False
-                ).tolist()
+                candidate_id = [i for i in range(suggest.shape[0]) if i not in select_id]
+                select_id += np.random.choice(candidate_id, n_suggestions - len(select_id), replace=False).tolist()
             return suggest.iloc[select_id]
 
     def observe_new_data(self, X, y):
