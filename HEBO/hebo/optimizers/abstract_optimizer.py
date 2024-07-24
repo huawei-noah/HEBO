@@ -21,11 +21,22 @@ class AbstractOptimizer(ABC):
     support_combinatorial = False
     support_contextual = False
 
-    def __init__(self, space: DesignSpace, save_path: Optional[str] = None):
+    def __init__(self, space: DesignSpace, csv_save_path: Optional[str] = None):
+        """
+        AbstractOptimizer constructor
+        -----------------------------
+
+        space (DesignSpace): The design space defining the bounds of the optimization problem.
+        csv_save_path (Optional[str]): Path to a CSV file where results are saved upon each call to observe. Defaults to None, in which case no results are saved.
+        """
         self.space = space
-        self.save_path = (
-            save_path  # if path given, results are saved at each call to observe
-        )
+
+        # Ensure csv_save_path ends with .csv
+        if isinstance(csv_save_path, str):
+            if not csv_save_path.endswith(".csv"):
+                csv_save_path += ".csv"
+
+        self.csv_save_path = csv_save_path
 
     @abstractmethod
     def suggest(self, n_suggestions=1, fix_input: dict = None):
@@ -45,10 +56,10 @@ class AbstractOptimizer(ABC):
         Observe new data
         """
         # Save results
-        if isinstance(self.save_path, str):
+        if isinstance(self.csv_save_path, str):
             results = x.copy()
             results["y"] = y.copy()
-            results.to_csv(self.save_path)
+            results.to_csv(self.csv_save_path)
 
         # Observe new data
         self.observe_new_data(x, y)
