@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+import sys
+import time
+import importlib
+from typing import Callable, Tuple
+
+import rospy
+from behavior_executor.node import BehaviorExecutor, main
+from behavior_executor.info import Info
+
+
+from demo_skills.srv import ExecuteDemoSkill, ExecuteDemoSkillRequest
+
+
+class StepExecutor(BehaviorExecutor):
+    """Behavior is defined as a python script."""
+
+    node_name = "step_executor_node"
+    demo_skills_srv_name = "execute_demo_skill"
+
+    def execute_behavior(self, behavior: str) -> Tuple[bool, str, Info]:
+
+        rospy.loginfo("recieved request to execute atomic action")
+        success, message, info = self.init_request()
+        rospy.wait_for_service(self.demo_skills_srv_name)
+
+        try:
+            demo_skills = rospy.ServiceProxy(
+                self.demo_skills_srv_name, ExecuteDemoSkill
+            )
+            resp = demo_skills(behavior)
+            success = resp.success
+            message = resp.feedback
+        except rospy.ServiceException as e:
+            rospy.logerr(f"failed to execute atomic action")
+            sys.exit(1)  # HACK: hope that this doesn't happen
+
+        return success, message, info
+
+
+if __name__ == "__main__":
+    main(StepExecutor)

@@ -167,6 +167,7 @@ target_link_libraries(behavior_tree_executor_node ${catkin_LIBRARIES} )
 catkin_install_python(PROGRAMS
   scripts/code_executor
   scripts/sequence_executor
+  scripts/step_executor
   test/test_code_executor
   test/test_sequence_executor
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
