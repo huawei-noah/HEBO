@@ -26,6 +26,7 @@ class HyperOpt(SequentialFlow):
             search_space_prompt_template: str,
             workspace_path: str,
             bo_steps: int,
+            bo_batch_size: int =4,
             max_repetitions: int = -1,
             max_retries: int = 5,
             use_error_instructions: bool = False,
@@ -52,7 +53,8 @@ class HyperOpt(SequentialFlow):
         )
         hyperopt_cmd = RunHyperOpt(
             workspace_path=workspace_path,
-            bo_steps=bo_steps
+            bo_steps=bo_steps,
+            bo_batch_size=bo_batch_size,
         )
         inner_cmd_seq = [suggest_cmd, hyperopt_cmd]
         if use_error_instructions:
@@ -161,12 +163,13 @@ class RunHyperOpt(HumanTakeoverCommand):
     }
     workspace_path: str
     bo_steps: int
+    bo_batch_size: int
 
     @staticmethod
     def get_hebo_design_space(search_space: Dict[str, Dict[str, Any]]):
         search_spaces = []
         for model_name in search_space:
-            model_name_str = model_name.lower() + '_'
+            model_name_str = ''.join(model_name.lower().split()) + '_'
             model_search_space = []
             for param_dict in search_space[model_name]:
                 param_dict['name'] = model_name_str + param_dict['name']
@@ -218,7 +221,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         for step_idx in range(self.bo_steps):
             # catch errors when retraining GP and suggesting a new candidate
             try:
-                candidate = optimizer.suggest()
+                candidate = optimizer.suggest(n_suggestions=self.bo_batch_size)
             except (ValueError, RuntimeError) as e:
                 print(e)
                 return optimizer, e
@@ -265,13 +268,28 @@ class RunHyperOpt(HumanTakeoverCommand):
 
         if error_str is None:
             # insert the best hyperparameters in code and write it to new file
-            user_code_path = os.path.join(self.workspace_path, 'code/code.py')
-            with open(user_code_path) as f:
-                code = "".join(f.readlines())
-            optimized_code = assign_hyperopt(code=code, candidate=optimizer.best_x, space=search_space)
-            updated_code_path = os.path.join(self.workspace_path, 'results', timestamp, 'optimized_code.py')
-            with open(updated_code_path, "w") as f:
-                f.write(optimized_code)
+
+
+            top5_indices = np.argsort(optimizer.y.flatten())[:5]
+            top5_configs = optimizer.X.iloc[top5_indices]
+
+            for i, iterrow in enumerate(top5_configs.iterrows()):
+                user_code_path = os.path.join(self.workspace_path, 'code/code.py')
+                with open(user_code_path) as f:
+                    code = "".join(f.readlines())
+                idx, row = iterrow
+                code = assign_hyperopt(code=code, candidate=row, space=search_space)
+                code+=f'import subprocess'
+                code+=f'\ncommand = ["kaggle", "competitions", "submit", taskname, "-f", "best_submission.csv", "-m", "best_submission_{i}"]'
+                code+='\nsubprocess.run(command)'
+                updated_code_path = os.path.join(self.workspace_path, 'results', timestamp, f'optimized_code_{i}.py')
+                with open(updated_code_path, "w") as f:
+                    f.write(code)
+
+            # optimized_code = assign_hyperopt(code=code, candidate=optimizer.best_x, space=search_space)
+            # updated_code_path = os.path.join(self.workspace_path, 'results', timestamp, 'optimized_code.py')
+            # with open(updated_code_path, "w") as f:
+            #     f.write(optimized_code)
 
         if len(optimizer.X) > 0:
             observations = optimizer.X
@@ -294,6 +312,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         trajectory = optimizer.X
         trajectory['y'] = optimizer.y
         trajectory.to_csv(os.path.join(self.workspace_path, 'results', timestamp, 'optimization_trajectory.csv'))
+
 
 
 class ErrorInstruct(HumanTakeoverCommand):

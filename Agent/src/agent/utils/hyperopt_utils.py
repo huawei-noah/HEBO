@@ -141,9 +141,15 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
     """
     keyword_arguments = {}
     for model_name in space:
+        # keyword_arguments[model_name] = ", ".join([
+        #     f'{param_dict["name"]}={candidate[param_dict["name"]].values[0]}' for param_dict in space[model_name]
+        # ])
+
         keyword_arguments[model_name] = ", ".join([
-            f'{param_dict["name"]}={candidate[param_dict["name"]].values[0]}' for param_dict in space[model_name]
-        ])
+        f'{param_dict["name"].split("_", 1)[-1]}={candidate[param_dict["name"]]}'
+        for param_dict in space[model_name]
+        if model_name.lower() in param_dict["name"]
+    ])
 
     blocks = convert_to_single_line_blocks(code)
     optimized_code = ""
@@ -157,6 +163,7 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
         optimized_code += line + "\n"
 
     return optimized_code
+
 
 
 def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
@@ -174,7 +181,7 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
     keyword_arguments = {}
     keyword_arguments_str = ""
     for model_name in space:
-        model_name_str = model_name.lower() + '_'
+        model_name_str = ''.join(model_name.lower().split()) + '_'
         arguments[model_name] = ", ".join([model_name_str + param_dict['name'] for param_dict in space[model_name]])
         arguments_str += arguments[model_name] + ", "
         keyword_arguments[model_name] = ", ".join([
@@ -182,6 +189,7 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
         ])
         keyword_arguments_str += keyword_arguments[model_name] + ", "
     blocks = convert_to_single_line_blocks(code)
+    arguments_str = arguments_str.lstrip().lstrip(',')
     blackbox_code = f"def blackbox({arguments_str}) -> float:\n"
     for line in blocks:
         for model_name in space:
