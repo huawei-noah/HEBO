@@ -28,10 +28,11 @@ class ROSLLM(Task):
         return {MemKey.OBSERVATION: obs}
 
     def get_reward(self):
-        return float(self.ros_resp.success)
+        failure = float(not self.ros_resp.success)
+        return -1.0 * (1.0 + failure)
 
     def get_done(self):
-        return False  # TODO
+        return rospy.is_shutdown()
 
     def execute_behavior(self, action):
         rospy.wait_for_service("execute_behavior")
