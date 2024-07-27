@@ -1,0 +1,6 @@
+_target_: agent.models.OpenAIAPILanguageBackend
+_partial_: true
+server_ip: http://localhost:8080/v1
+api_key: EMPTY
+model_id: deepseek-ai/deepseek-coder-33b-instruct
+context_length: 32000
