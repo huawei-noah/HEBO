@@ -5,6 +5,7 @@ agent:
     sequence:
       - _target_: agent.commands.Act
   prompt_builder:
-    template_paths: [ "rsl/" ]
+    template_paths:
+      - "rsl/demo"
     default_kwargs:
       cot_type: zero_shot

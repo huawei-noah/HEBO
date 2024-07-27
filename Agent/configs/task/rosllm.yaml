@@ -1,0 +1,8 @@
+# @package _global_
+agent:
+  prompt_builder:
+    template_paths:
+      - rsl/demo
+
+task:
+  _target_: agent.tasks.rosllm.ROSLLM

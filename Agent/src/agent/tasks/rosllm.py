@@ -1,4 +1,5 @@
 import abc
+from abc import ABC, abstractmethod
 import traceback
 
 import rospy
@@ -28,7 +29,6 @@ The environment observation for step t={time_index} is as follows.
 
 
 class Extractor(ABC):
-
     @property
     @abstractmethod
     def pattern(self):
@@ -44,13 +44,15 @@ class JsonExtractor(Extractor):
 
 
 class ROSLLM(Task):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         rospy.init_node("agent_node")
         self.ros_resp = None
         self.step_index = None
         self.observations = []
+
+    def answer_parser(self, raw):
+        return raw
 
     def reset(self):
         self.step_index = 0
