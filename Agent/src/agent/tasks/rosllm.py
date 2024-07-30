@@ -54,7 +54,7 @@ class ROSLLM(Task):
     def answer_parser(self, raw):
         return raw
 
-    def reset(self):
+    def reset(self, *args):
         self.step_index = 0
         return self.get_obs(init=True)
 
