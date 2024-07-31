@@ -44,6 +44,9 @@ class JsonExtractor(Extractor):
 
 
 class ROSLLM(Task):
+
+    debug = True
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         rospy.init_node("agent_node")
@@ -103,8 +106,17 @@ class ROSLLM(Task):
         except:
             pass
 
+    def wait_for_approval(self):
+        print(f"Step {self.step} action:")
+        print("----")
+        print(self.action)
+        print("----")
+        input("[TO CONTINUE PRESS ENTER]")
+
     def step(self, action):
         self.step += 1
         self.action = JsonExtractor.extract(action)
+        if self.debug:
+            self.wait_for_approval()
         self.execute_behavior()
         return self.get_obs(), self.get_reward(), self.get_done()
