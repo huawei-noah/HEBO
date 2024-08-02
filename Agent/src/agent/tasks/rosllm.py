@@ -61,11 +61,18 @@ class ROSLLM(Task):
         self.step_index = 0
         return self.get_obs(init=True)
 
+    def _parse_obs(self, observation):
+        out = ""
+        for obs in observation:
+            for text in obs.text:
+                out += f"* {text}\n"
+        return out
+
     def get_obs(self, init=False):
         rospy.wait_for_service("get_observation")
         try:
             get_obs = rospy.ServiceProxy("get_observation", Observation)
-            obs = get_obs().observation
+            obs = self._parse_obs(get_obs().observation)
         except:
             err = traceback.format_exc()
             obs = f"[ERROR] failed to get observation from ROS, exception:\n{err}"

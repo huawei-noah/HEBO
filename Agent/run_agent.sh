@@ -1,0 +1,1 @@
+python -u src/agent/start.py task=rosllm method=direct-rosllm llm@agent.llm=deepseek
