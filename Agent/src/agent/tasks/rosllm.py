@@ -43,12 +43,13 @@ class JsonExtractor(Extractor):
     pattern = r"```json(.*?)```"
 
 
-class ROSLLM(Task):
+class ROSLLM:  # (Task):
 
     debug = True
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        # def __init__(self, **kwargs):
+        # super().__init__(**kwargs)
         rospy.init_node("agent_node")
         self.ros_resp = None
         self.step_index = None
@@ -57,7 +58,8 @@ class ROSLLM(Task):
     def answer_parser(self, raw):
         return raw
 
-    def reset(self, *args):
+    def reset(self):
+        # def reset(self, *args):
         self.step_index = 0
         return self.get_obs(init=True)
 
@@ -83,14 +85,14 @@ class ROSLLM(Task):
             observation = observation_str.format(
                 obs=obs,
                 prev_action=self.action,
-                prev_time_index=self.step - 1,
-                time_index=self.step,
+                prev_time_index=self.step_index - 1,
+                time_index=self.step_index,
                 action_output=self.get_action_output(),
             )
 
         self.observations.append(observation)
 
-        return {MemKey.OBSERVATION: "\n".join(self.observations)}
+        return "\n".join(self.observations)  # {MemKey.OBSERVATION: "\n".join(self.observations)}
 
     def get_action_output(self):
         if self.ros_resp.message:
@@ -114,14 +116,14 @@ class ROSLLM(Task):
             pass
 
     def wait_for_approval(self):
-        print(f"Step {self.step} action:")
+        print(f"Step {self.step_index} action:")
         print("----")
         print(self.action)
         print("----")
         input("[TO CONTINUE PRESS ENTER]")
 
     def step(self, action):
-        self.step += 1
+        self.step_index += 1
         self.action = JsonExtractor.extract(action)
         if self.debug:
             self.wait_for_approval()

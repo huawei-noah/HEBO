@@ -1,1 +1,2 @@
-python -u src/agent/start.py task=rosllm method=direct-rosllm llm@agent.llm=deepseek
+# python -u src/agent/start.py task=rosllm method=direct-rosllm llm@agent.llm=deepseek
+python runme.py
