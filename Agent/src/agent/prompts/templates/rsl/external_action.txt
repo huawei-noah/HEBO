@@ -30,6 +30,12 @@ For example, if you want the robot to navigate to the kitchen, then you will pro
 
 Please also think step-by-step and provide a summary of your answer.
 
+When you think the task has been completed, make sure to output the following.
+
+```json
+{"__action__": "done"}
+```
+
 It is critically important that you only provide ONE action, when the environment is stepped you will be provided with an updated observation and asked again to provide the next action.
 Do NOT provide more than one action in your response.
 Your response should be the best next action for the robot.

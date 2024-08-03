@@ -4,6 +4,7 @@ import os
 from minillm.llm import LLM
 from minillm import config_path
 import rospy
+import json
 from abc import ABC, abstractmethod
 import re
 from rosllm_srvs.srv import Observation, ExecuteBehavior
@@ -133,6 +134,9 @@ class ROSLLM:  # (Task):
     def step(self, action):
         self.step_index += 1
         self.action = JsonExtractor.extract(action)
+        if json.loads(self.action)["__action__"] == "done":
+            print("--llm says we are done--")
+            return self.get_obs(), self.get_reward(), True
         if self.debug:
             self.wait_for_approval()
         self.execute_behavior()
@@ -144,6 +148,7 @@ class ROSLLM:  # (Task):
         path = f"data/rsl_demo_data_{stamp}.dat"
         with open(path, "wb") as f:
             pickle.dump(self.data, f)
+        print("Saved", path)
 
 
 prompt_preamble = """'{task_descr}'
@@ -157,7 +162,7 @@ def create_prompt(obs, task_descr):
     prompt_path = os.getcwd() + "/src/agent/prompts/templates/rsl/external_action.txt"
     with open(prompt_path, "r") as f:
         prompt = f.read()
-    prompt += prompt_preamble.format(task_descr)
+    prompt += prompt_preamble.format(task_descr=task_descr)
     return prompt + obs
 
 
