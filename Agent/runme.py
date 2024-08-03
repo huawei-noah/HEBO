@@ -146,11 +146,19 @@ class ROSLLM:  # (Task):
             pickle.dump(self.data, f)
 
 
+prompt_preamble = """'{task_descr}'
+
+The environment observations are listed below.
+
+"""
+
+
 def create_prompt(obs, task_descr):
     prompt_path = os.getcwd() + "/src/agent/prompts/templates/rsl/external_action.txt"
     with open(prompt_path, "r") as f:
         prompt = f.read()
-    return prompt.format(task_descr=task_descr) + obs
+    prompt += prompt_preamble.format(task_descr)
+    return prompt + obs
 
 
 def load_llm():
