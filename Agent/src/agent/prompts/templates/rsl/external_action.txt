@@ -39,7 +39,7 @@ Please also note the following.
 
 The task that is required by the human is stated as follows; note, the following, you can assume, is what they said to the robot.
 
-"please bring me a healthy snack"
+"{task_descr}"
 
 The environment observations are listed below.
 
