@@ -105,7 +105,10 @@ class ROSLLM:  # (Task):
 
     def get_action_output(self):
         if self.ros_resp.message:
-            return action_output_str.format(prev_action_output=self.ros_resp.message)
+            return action_output_str.format(
+                prev_action_output=self.ros_resp.message,
+                prev_action_name=json.loads(self.action)["__action__"],
+            )
         else:
             return ""
 
