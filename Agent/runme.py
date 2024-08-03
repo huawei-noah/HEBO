@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 import re
 from rosllm_srvs.srv import Observation, ExecuteBehavior
 import traceback
+from copy import deepcopy
 import time
 import pickle
 
@@ -164,9 +165,9 @@ def main():
     obs = env.reset()
     while not done:
         prompt = create_prompt(obs, env.task_descr)
-        env.data.append((time.time_ns(), "CREATED_PROMPT", prompt))
+        env.data.append((time.time_ns(), "CREATED_PROMPT", deepcopy(prompt)))
         response = llm(prompt)
-        env.data.append((time.time_ns(), "RECIEVED_RESPONSE", response))
+        env.data.append((time.time_ns(), "RECIEVED_RESPONSE", deepcopy(response)))
         print(f"======== Step {env.step_index+1} ========")
         print("--FULL PROMPT START--")
         print(prompt)
