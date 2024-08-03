@@ -68,7 +68,7 @@ class ROSLLM:  # (Task):
         self.step_index = 0
         print("Input task:")
         self.task_descr = input(">>")
-        self.time_data.append((time.time_ns(), "USER_INPUT_TASK_DESCR"))
+        self.data.append((time.time_ns(), "USER_INPUT_TASK_DESCR"))
         return self.get_obs(init=True)
 
     def _parse_obs(self, observation):
