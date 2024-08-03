@@ -16,7 +16,7 @@ class StepExecutor(BehaviorExecutor):
     """Behavior is defined as a python script."""
 
     node_name = "step_executor_node"
-    demo_skills_srv_name = "execute_demo_skill"
+    demo_skills_srv_name = "skill_server"
 
     def execute_behavior(self, behavior: str) -> Tuple[bool, str, Info]:
 
