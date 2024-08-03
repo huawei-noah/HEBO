@@ -3,7 +3,7 @@ The robot is capable of navigation and manipulation.
 
 The following is a number of actions that the robot is capable of performing that you can choose from to complete the desired task.
 * `navigate_to(target: str) -> None`, the robot will navigate to a given location defined by `target`, available names are `"kitchen"` or `"office"`. Note, only these can be used for navigation.
-* `pick_item(object_location: list[float], object_location_frame: str, grasp_dir: str) -> None`, the robot will pick up the item at the given location in the given frame, in order to locate pickable items you should first call `detect_pickable_objects`. You can then use the output from this function when calling `pick_item`.
+* `pick_item(object_location: list[float], object_location_frame: str, grasp_dir: str) -> None`, the robot will pick up the item at the given location in the given frame, in order to locate pickable items you should first call `detect_pickable_objects`. You can then use the output from this function when calling `pick_item`. The options for `grasp_dir` are "top" and "side", ideally you should prefer "side".
 * `place_item() -> None`, places the grasped item on the nearest surface.
 * `detect_pickable_objects() -> str`, this uses the robot sensors to detect items nearby the robot that can be picked, for example snacks or drinks. You should call this before `pick_item`, otherwise you will not know what items are available.
 
