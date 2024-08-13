@@ -121,24 +121,36 @@ def space_fill_table_sample(n_pts: int, table_of_candidates: np.ndarray) -> np.n
     Returns:
         samples: 2d array with shape (n_pts, n_dim) taken from table_of_candidates
     """
+    if n_pts == 0:
+        raise ValueError("n_pts should be strictly greater than 0")
+    if len(table_of_candidates) == 0:
+        raise ValueError("table_of_candidates should contain candidates")
+    if len(table_of_candidates) < n_pts:
+        raise ValueError(
+            f"table_of_candidates should contain at least {n_pts} candidates, got {len(table_of_candidates)}"
+        )
     selected_inds = set()
     candidates = np.zeros((n_pts, table_of_candidates.shape[-1]))
     ind = np.random.randint(0, len(table_of_candidates))
     selected_inds.add(ind)
-    candidates[0] = table_of_candidates[ind]  # sample first point at random
-    i = 1
-    for i in range(1, min(n_pts, 100)):  # sample the first 100 points with a space-filling strategy
+    next_ind = 0
+    candidates[next_ind] = table_of_candidates[ind]  # sample first point at random
+    next_ind += 1
+    for _ in range(1, min(n_pts, 100)):  # sample the first 100 points with a space-filling strategy
         # compute distance among table_of_candidates and already_selected candidates
-        distances = scipy.spatial.distance.cdist(table_of_candidates, candidates[:i], metric="hamming")
+        distances = scipy.spatial.distance.cdist(table_of_candidates, candidates[:next_ind], metric="hamming")
         distances[distances == 0] = -np.inf  # penalize already selected points
         mean_dist = distances.mean(-1)
         max_mean_dist = mean_dist.max()
         # sample among best
         ind = np.random.choice(np.arange(len(table_of_candidates))[mean_dist == max_mean_dist])
         selected_inds.add(ind)
-        candidates[i] = table_of_candidates[ind]
-    remaining_inds = [ind for ind in range(len(table_of_candidates)) if ind not in selected_inds]
-    candidates[i:] = table_of_candidates[np.random.choice(remaining_inds, max(0, n_pts - i), replace=False)]
+        candidates[next_ind] = table_of_candidates[ind]
+        next_ind += 1
+    if next_ind < n_pts:  # add points randomly among the ones that has not been picked yet
+        remaining_inds = [ind for ind in range(len(table_of_candidates)) if ind not in selected_inds]
+        candidates[next_ind:] = table_of_candidates[
+            np.random.choice(remaining_inds, size=len(candidates[next_ind:]), replace=False)]
     return deepcopy(candidates)
 
 
