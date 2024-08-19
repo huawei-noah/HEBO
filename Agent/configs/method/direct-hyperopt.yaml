@@ -10,7 +10,6 @@ agent:
     bo_steps: 5
     bo_batch_size: 1
     max_repetitions: 4
-    forced_repetitions: 4
     max_retries: 3
     use_error_instructions: ${task.use_error_instructions}
   prompt_builder:
