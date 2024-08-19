@@ -1,75 +1,30 @@
 {% include "system_prompt.jinja" %}
 
 [[ USER ]]
-This is the code provided by the user:
+### This is the code provided by the user:
 ```python
 {{ memory.retrieve({memory.mem_keys.CODE: 1.0}) }}
 ```
 
-This is the code summary:
+### This is the code summary:
 ```python
 {{ memory.retrieve({memory.mem_keys.CODE_SUMMARY: 1.0}) }}
 ```
 
-Now, you must provide a hyperparameter space on which a Bayesian Optimization tool will find the best parameters ONLY for the model(s) in the ABOVE code.
-{% if format_err_msg %}
-{{ format_err_msg }}
-{% else %}
-Provide this search space in the following JSON format:
-```json
-{
-    '<model1_name>': [
-        {'name': '<hyperparameter1_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},
-        {'name': '<hyperparameter2_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]}
-        etc.
-    ],
-    '<model2_name>': [
-        {'name': '<hyperparameter1_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},
-        {'name': '<hyperparameter2_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]}
-        etc.
-    ]
-    etc.
-}
-```
-{%  endif %}
+### Your Role
+In this task, we are trying to optimize a blackbox function with respect to some hyperparameters.
+The blackbox function is the score of the user-provided code and the hyperparameters are defined by you.
+Your role is to define a search space for the hyperparameters of the model(s) used in the user-provided code.
+This search space will then be used in a Bayesian Optimization algorithm to optimize the blackbox objective.
 
-Note that if the 'type' is 'int' or 'num', you should specify a lower and upper bound but no categories.
-Note that if the 'type' is 'cat' then you should only specify a list of categories and no upper or lower bounds.
-Note that if the 'type' is 'bool' there is no need to specify lower and upper bounds or categories.
-Note that 'auto' should not be added for the max_features parameter of RandomForestClassifier or RandomForestRegressor.
-
-For example if there are two models, a `RandomForestRegressor` and a `XGBClassifier`, an example of search space is:
-```json
-{
-    "RandomForestRegressor": [
-        {'name': 'max_depth', 'type': 'int', 'lb': 1, 'ub': 20},
-        {'name': 'min_samples_leaf', 'type': 'num', 'lb': 1e-4, 'ub': 0.5},
-        {'name': 'max_features', 'type': 'cat', 'categories': ['sqrt', 'log2']},
-        {'name': 'bootstrap', 'type': 'bool'},
-        {'name': 'min_impurity_decrease', 'type': 'pow', 'lb': 1e-4, 'ub': 1.0},
-    ],
-    "XGBClassifier": [
-        {'name': 'min_child_weight', 'type': 'cat', 'categories': [1, 5, 10]},
-        {'name': 'gamma', 'type': 'num', 'lb': 0.5 'ub': 5},
-        {'name': 'subsample', 'type': 'num', 'lb': 0.5, 'ub': 1},
-        {'name': 'colsample_bytree', 'type': 'num', 'lb': 0.6, 'ub': 1},
-        {'name': 'max_depth', 'type': 'int', 'lb': 2, 'ub': 5}
-}
-```
+{% include "suggest_search_space_instruction_example.jinja" %}
 
 {% if memory.retrieve({memory.mem_keys.BO_RAN: 1.0}) %}
-This is the search space you tried in a previous attempt:
-{{ memory.retrieve({memory.mem_keys.BO_SEARCH_SPACE: 1.0}) }}
-
-And this was the best parameter setting found after optimization:
-{{ memory.retrieve({memory.mem_keys.BO_BEST_CANDIDATE: 1.0}) }}
-
-along with its associated best score:
-{{ memory.retrieve({memory.mem_keys.BO_BEST_SCORE: 1.0}) }}
+{% include memory.retrieve({memory.mem_keys.REFLECTION_STRATEGY_PROMPT: 1.0}) %}
 {% endif %}
 
 {% if memory.retrieve({memory.mem_keys.BO_ERROR: 1.0}) != None %}
-This is the search space you tried in a previous attempt:
+This is the search space you tried in the previous attempt:
 {{ memory.retrieve({memory.mem_keys.BO_SEARCH_SPACE: 1.0}) }}
 
 And this was the error encountered when running the optimization loop:
@@ -78,4 +33,4 @@ And this was the error encountered when running the optimization loop:
 Explain why this error was encountered and how to solve it by changing the proposed search space.
 {% endif %}
 
-Now provide your best guess for the search space of the model in the user provided code, in the above format.
+Now provide your best guess for the next search space of the model(s) in the user provided code, in the above format.

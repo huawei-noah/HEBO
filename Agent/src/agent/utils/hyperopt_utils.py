@@ -4,6 +4,26 @@ from typing import Any, Dict, List, Tuple, Union
 
 import pandas as pd
 
+HYPEROPT_FORMAT_ERROR_MESSAGE = (
+    "Your response did no follow the required format\n"
+    "```json\n"
+    "{\n"
+    "\t{'<model1_name>': [\n"
+    "\t\t{'name': '<hyperparameter1_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},\n"
+    "\t\t{'name': '<hyperparameter2_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},\n"
+    " \t\tetc.\n"
+    "\t],\n"
+    "\t{'<model2_name>': [\n"
+    "\t\t{'name': '<hyperparameter1_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},\n"
+    "\t\t{'name': '<hyperparameter2_name>', 'type': '<type>', 'lb': <lower_bound>, 'ub': <upper_bound>, 'categories': [<categories>]},\n"
+    " \t\tetc.\n"
+    "\t],\n"
+    "\tetc.\n"
+    "}\n"
+    "```\n"
+    "Correct it now."
+)
+
 
 def strip_comments(code: str) -> str:
     # remove all single-line comments
@@ -141,17 +161,13 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
     """
     keyword_arguments = {}
     for model_name in space:
-        # keyword_arguments[model_name] = ", ".join([
-        #     f'{param_dict["name"]}={candidate[param_dict["name"]].values[0]}' for param_dict in space[model_name]
-        # ])
-
         keyword_arguments[model_name] = ", ".join([
-        f'{param_dict["name"].split("_", 1)[-1]}={candidate[param_dict["name"]]}'
-        for param_dict in space[model_name]
-        if model_name.lower() in param_dict["name"]
-    ])
+            f'{param_dict["name"]}={candidate[model_name.lower() + "_" + param_dict["name"]]}'
+            for param_dict in space[model_name]
+        ])
 
     blocks = convert_to_single_line_blocks(code)
+
     optimized_code = ""
     for line in blocks:
         for model_name in space:
@@ -163,7 +179,6 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
         optimized_code += line + "\n"
 
     return optimized_code
-
 
 
 def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
@@ -202,6 +217,23 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
 
     blackbox_code += "\treturn score"
     return blackbox_code
+
+
+def unwrap_code(wrapped_code_lines: list[str]) -> str:
+    """
+    Removes the function definition and return statement and de-indents all code.
+    Note: this takes in the blackbox function code as a list of lines (simpler), so read the code
+    in the following way before passing the lines to this function:
+    >>> with open('path/to/blackbox.py', 'r') as f:
+    >>>     bbox_lines = f.readlines()
+    >>> unwrap_code(wrapped_code_lines=bbox_lines)
+    """
+    # function_definition, body = wrapped_code.split(":\n", 1)
+    # body, return_statement = body.split("\nreturn", 1)
+    # return body.strip()
+    body_lines = wrapped_code_lines[1:-1]
+    unindented_lines = [l.split("\t")[1] for l in body_lines]
+    return "".join(unindented_lines)
 
 
 def format_f_inputs(

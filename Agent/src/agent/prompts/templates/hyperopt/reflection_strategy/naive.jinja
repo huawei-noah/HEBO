@@ -1,0 +1,25 @@
+### Search Space History
+Below is a history of the previous search spaces you suggested along with the best point found by running Bayesian Optimization on each search space and their corresponding blackbox value:
+=====================================================================
+                        BO HISTORY
+=====================================================================
+{{ formatted_bo_history }}
+=====================================================================
+=====================================================================
+
+From the above history, this is the best hyperparameter setting found, its corresponding search space and its blackbox value:
+- best candidate:
+```
+{{ memory.retrieve({memory.mem_keys.BO_BEST_CANDIDATE: 1.0}) }}
+```
+- best candidate blackbox value: {{ memory.retrieve({memory.mem_keys.BO_BEST_SCORE: 1.0}) }}
+- best candidate associated search space:
+```
+{{ memory.retrieve({memory.mem_keys.BO_BEST_SEARCH_SPACE: 1.0}) }}
+```
+
+Based on this information, you will need to create a new search space to try and optimize the blackbox value.
+The next search space that you suggest must lead to better score overall.
+Do not change the hyperparameters used in the previous attempts but simply change their domain of definition if necessary.
+For instance if you identify that a certain continuous hyperparameter needs to be defined on a different interval, change its lower and upper bound.
+The new search space should be relatively similar to the ones in history as to not completely deviate from explored space, but it should be different enough to make a difference in the overall result.

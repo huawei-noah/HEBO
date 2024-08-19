@@ -12,16 +12,21 @@ Try again by responding
 ```
 {% else %}
 In your previous attempt, your search space was:
+```json
 {{ memory.retrieve({memory.mem_keys.BO_SEARCH_SPACE: 1.0}) }}
+```
 
-During optimization you observed the following points:
+During optimization, you observed the following points:
+```
 {{ memory.retrieve({memory.mem_keys.BO_OBSERVATIONS: 1.0}) }}
+```
 
 The best parameter setting found after optimization is:
+```
 {{ memory.retrieve({memory.mem_keys.BO_BEST_CANDIDATE: 1.0}) }}
+```
 
-and its associated best score is:
-{{ memory.retrieve({memory.mem_keys.BO_BEST_SCORE: 1.0}) }}
+and its associated best score is: {{ memory.retrieve({memory.mem_keys.BO_BEST_SCORE: 1.0}) }}
 
 Now choose if you want to continue the optimization or stop here.
 Respond by following the format

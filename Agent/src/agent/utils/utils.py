@@ -16,6 +16,7 @@ from functools import partial
 from importlib.util import find_spec
 from typing import Callable, Optional, Any, Tuple
 
+import pandas as pd
 from omegaconf import DictConfig
 
 from agent.parsers.parser import ParsingError, UnsupportedExtensionError
@@ -99,7 +100,6 @@ def extract_json_with_bools(raw_response: str) -> dict[str, bool]:
 
 def extract_as_json(raw_response: str, matchname: str | None) -> str:
     """Catch the result of a response given in json style"""
-    json_elements = re.findall("```json([\s\S]*?)```", raw_response)
 
     def get_val_from_dict_str(candidate_) -> str:
         candidate_ = ast.literal_eval(candidate_)
@@ -108,6 +108,27 @@ def extract_as_json(raw_response: str, matchname: str | None) -> str:
         if isinstance(list(candidate_.values())[0], str):
             return list(candidate_.values())[0].strip()
         return list(candidate_.values())[0]
+
+    # check if there are nested JSON structures
+    peeled_raw_response = raw_response[raw_response.find("```json") + 7:raw_response.rfind("```")].strip()
+    if len(re.findall(pattern="```json([\s\S]*?)```", string=peeled_raw_response)) > 0:
+        # If there are multiple ```json delimiters, this could mean nested json structures
+        start_delim = "```json"
+        end_delim = "```"
+        pattern = (rf'({re.escape(start_delim)}((?:[^{re.escape(start_delim)}]|'
+                   rf'{re.escape(start_delim)}(?!{re.escape(end_delim)}))*)'
+                   rf'(?:{re.escape(end_delim)}(?!.*{re.escape(start_delim)}.*{re.escape(end_delim)})))')
+        match = re.search(pattern=pattern, string=raw_response, flags=re.DOTALL)
+        if match:
+            return get_val_from_dict_str(candidate_=match.group(1))
+        else:
+            raise ParsingError(
+                f"Nested JSON structures detected in:\n{raw_response}",
+                raw_response,
+                f"Your answer should not contain nested JSON structures. Use the desired format strictly."
+            )
+    else:
+        json_elements = re.findall(pattern="```json([\s\S]*?)```", string=raw_response)
 
     if len(json_elements) == 0:
         try:
@@ -160,7 +181,7 @@ def extract_paths_as_json(raw_response: str) -> str:
 
     if len(invalid_paths) > 0:
         if len(invalid_paths) > 1:
-            err_str = '\n\t- '.join([path for path in invalid_paths])
+            err_str = '\n\t- ' + '\n\t- '.join([path for path in invalid_paths])
         else:
             err_str = f'\n\t- {invalid_paths[0]}'
         raise FileNotFoundError(f"The following paths do not exist:" + err_str, raw_response)
@@ -205,12 +226,32 @@ def extract_detected_file_as_json(raw_response: str) -> str | None:
         return detected_file
 
 
+def extract_column_names_and_values_as_json(raw_response: str, path_to_df: str) -> dict[str, Any]:
+    df = pd.read_csv(path_to_df)
+    name_val_dict = extract_json(raw_response=raw_response)
+    for name, val in name_val_dict.items():
+        if name not in df.columns:
+            raise ParsingError(
+                f"Column name {name} not in target column names!",
+                raw_response,
+                f"Only use as keys of the returned JSON, the names in the list provided."
+            )
+        if val not in set(df[name]):
+            raise ParsingError(
+                f"Positive class name {val} not in the values of target column {name}!",
+                raw_response,
+                f"Only use as values of the return JSON, the class labels of the target column {name}."
+            )
+    return name_val_dict
+
+
 extract_action_as_json = partial(extract_as_json, matchname="action")
 extract_command_as_json = partial(extract_as_json, matchname="command")
 extract_summary_as_json = partial(extract_as_json, matchname="summary")
 extract_submission_as_json = partial(extract_as_json, matchname="submission")
 extract_metric_as_json = partial(extract_as_json, matchname="metric")
 extract_instruction_as_json = partial(extract_as_json, matchname="instruction")
+extract_hyperparams_as_json = partial(extract_as_json, matchname="hyperparams")
 
 
 def concat_files(
