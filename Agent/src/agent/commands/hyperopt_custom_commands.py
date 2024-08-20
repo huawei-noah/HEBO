@@ -21,6 +21,7 @@ class HyperOpt(SequentialFlow):
     def __init__(
             self,
             summarize_code_prompt_template: str,
+            k_folds_cv_prompt_template: str,
             loop_flow_prompt_template: str,
             error_instruct_prompt_template: str,
             search_space_prompt_template: str,
@@ -43,6 +44,11 @@ class HyperOpt(SequentialFlow):
             required_prompt_templates={"summarize_code_prompt_template": summarize_code_prompt_template},
             max_retries=max_retries
         )
+        k_folds_cv_cmd = KFoldsCV(
+            required_prompt_templates={"k_folds_cv_prompt_template": k_folds_cv_prompt_template},
+            max_retries=max_retries
+        )
+
         error_instruct_cmd = ErrorInstruct(
             required_prompt_templates={"error_instruct_template": error_instruct_prompt_template},
             max_retries=max_retries
@@ -76,7 +82,7 @@ class HyperOpt(SequentialFlow):
             memory_choice_tag_val=MemKey.CONTINUE_OR_TERMINATE_BO,
         )
         super().__init__(
-            sequence=[summarize_cmd, loop_flow, Act()],
+            sequence=[summarize_cmd,k_folds_cv_cmd, loop_flow, Act()],
             name='hyperopt pipeline',
             description=f"{loop_flow.description}, then Summarize step and finally Act."
         )
@@ -104,6 +110,44 @@ class SummarizeCode(HumanTakeoverCommand):
             human_takeover=self.check_trigger_human_takeover(),
         )
         agent.memory.store(content=summary, tags=self.output_keys[MemKey.CODE_SUMMARY.value])
+
+
+
+class KFoldsCV(HumanTakeoverCommand):
+    name: str = "kfolds_cv"
+    description: str = "run kfold cross validation"
+    required_prompt_templates: dict[str, str]
+    input_keys: dict[str, MemKey] = {
+        MemKey.CODE.value: MemKey.CODE,
+    }
+    output_keys: dict[str, MemKey] = {MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV}
+    max_retries: int = 5
+
+
+    def func(self, agent: LLMAgent, *args: Any, **kwargs: Any):
+        folds = safe_parsing_chat_completion(
+            agent=agent,
+            ask_template=self.required_prompt_templates["k_folds_cv_prompt_template"],
+            prompt_kwargs={k: agent.memory.retrieve(self.input_keys[k]) for k in self.input_keys},
+            parse_func=extract_json,
+            format_error_message=(
+                "Your response did no follow the required format\n"
+                "```json\n"
+                "{\n"
+                "\t'explain': <explain text>\n",
+                "\t'model': <ml model>\n",
+                "\t'X': <the feature data (X)>\n",
+                "\t'y': <the target labels>\n",
+                "\t'metric_func': <the evaluation metric function>\n",
+                "}\n"
+                "```\n"
+                "Correct it now."
+            ),
+            max_retries=self.max_retries,
+            human_takeover=self.check_trigger_human_takeover(),
+        )
+        agent.memory.store(content=folds, tags=self.output_keys[MemKey.K_FOLD_CV.value])
+
 
 
 class SuggestSearchSpace(HumanTakeoverCommand):
@@ -156,7 +200,9 @@ class RunHyperOpt(HumanTakeoverCommand):
     # required_prompt_templates: dict[str, str]
     input_keys: dict[str, MemKey] = {
         MemKey.CODE_SUMMARY.value: MemKey.CODE_SUMMARY,
-        MemKey.BO_SEARCH_SPACE.value: MemKey.BO_SEARCH_SPACE
+        MemKey.BO_SEARCH_SPACE.value: MemKey.BO_SEARCH_SPACE,
+        MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV
+
     }
     output_keys: dict[str, MemKey] = {
         MemKey.BO_OBSERVATIONS.value: MemKey.BO_OBSERVATIONS,
@@ -261,7 +307,7 @@ class RunHyperOpt(HumanTakeoverCommand):
 
         return optimizer, None
 
-    def create_blackbox(self, search_space: dict[str, dict[str, Any]]) -> None:
+    def create_blackbox(self, search_space: dict[str, dict[str, Any]], cv_args: dict[str,Any]) -> None:
         """
         Creates a blackbox function by wrapping the code in a function exposing the parameters of the search space.
         """
@@ -273,7 +319,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         # replace parameters in user code with names from search space and write a function called `blackbox`
         # exposing these parameters
         blackbox_code_path = os.path.join(self.workspace_path, 'code/blackbox.py')
-        blackbox_function_code = wrap_code(code=code, space=search_space)
+        blackbox_function_code = wrap_code(code=code, space=search_space, cv_args=cv_args)
         with open(blackbox_code_path, 'w') as f:
             f.write(blackbox_function_code)
 
@@ -321,7 +367,8 @@ class RunHyperOpt(HumanTakeoverCommand):
             os.path.join(self.workspace_path, 'results', f'search_space_{self.search_space_counter}'), exist_ok=True
         )
         search_space = agent.memory.retrieve(self.input_keys[MemKey.BO_SEARCH_SPACE.value])
-        self.create_blackbox(search_space=search_space)
+        cv_args=agent.memory.retrieve(self.input_keys[MemKey.K_FOLD_CV.value])
+        self.create_blackbox(search_space=search_space, cv_args=cv_args)
         reusable_observations = self.get_reusable_observations(search_space=search_space)
         optimizer, error_str = self.run_optimization(search_space=search_space, initial_points=reusable_observations)
 

@@ -67,6 +67,7 @@ class MemKey(str, ListableEnum):
     BO_HISTORY = "bo_history"
     ERROR_INSTRUCT = "error_instruct"
     REFLECTION_STRATEGY_PROMPT = "reflection_strategy_prompt"
+    K_FOLD_CV = "k_fold_cv"
 
 
 class MemoryEntry(BaseModel):

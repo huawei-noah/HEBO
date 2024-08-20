@@ -1,0 +1,53 @@
+{% include "system_prompt.jinja" %}
+
+[[ USER ]]
+This is the code provided by the user:
+```python
+{{ memory.retrieve({memory.mem_keys.CODE: 1.0}) }}
+```
+
+`k_folds_cv` function defined as:
+
+```python
+def k_folds_cv(model, X, y, metric_func=None):
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    scores = []
+
+    for fold_i, (train_index, valid_index) in enumerate(cv.split(X, y)):
+        X_train, y_train = X.iloc[train_index], y.iloc[train_index]
+        X_valid, y_valid = X.iloc[valid_index], y.iloc[valid_index]
+        
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_valid)
+        
+        score = metric_func(y_valid, y_pred)
+        scores.append(score)
+        
+        print(f"FOLD {fold_i} Done. Score : {score}")
+    
+    mean_score = np.mean(scores)
+    return mean_score
+````
+
+You are tasked with reading the provided machine learning code by the user, which includes both data preprocessing and model definition. Your goal is to analyze the code and determine the appropriate input arguments that should be passed to the function `k_folds_cv`.
+The function `k_folds_cv` should be successfully callled by user.
+
+Specifically, you'll need to:
+
+1. Review the Code: Carefully read through the code to understand how data is being preprocessed and how the model is being defined and trained.
+
+2. Identify Input Arguments: Based on your review, identify the key inputs that the `k_folds_cv` function requires. These should include the model, the feature data (X), the target labels (y), and the evaluation metric function. 
+
+Note: All the input args MUST come from user code. 
+
+
+Now provide the information in a JSON format
+```json
+{
+    "model": "<ml model object or instance in user code>",
+    "X": "<The final processed feature data in user code>",
+    "y": "<the target labels data name in user code>",
+    "metric_func": "<the evaluation metric function in user code>",
+    "metric_value_direction": "<choose between MAX and MIN, when MAX, the metric value higher means model performance better, otherwise MIN>" 
+}
+```

@@ -3,6 +3,7 @@ agent:
   pre_action_flow:
     _target_: agent.commands.hyperopt_custom_commands.HyperOpt
     summarize_code_prompt_template: 'summarize_code.jinja'
+    k_folds_cv_prompt_template: 'k_folds_cv.jinja'
     loop_flow_prompt_template: 'flow_loop_continue.jinja'
     error_instruct_prompt_template: "error_instruction.jinja"
     search_space_prompt_template: 'suggest_search_space.jinja'
