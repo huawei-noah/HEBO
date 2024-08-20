@@ -54,6 +54,7 @@ class MemKey(str, ListableEnum):
     TRAJECTORY = "_trajectory"  # Agent trajectory by timestep
 
     # Hyperopt keys
+    CONTINUE_OR_TERMINATE_BO = "continue_or_terminate_bo"
     CODE = "code"
     CODE_SUMMARY = "code_summary"
     BO_RAN = "bo_ran"
@@ -62,7 +63,10 @@ class MemKey(str, ListableEnum):
     BO_SEARCH_SPACE = "bo_search_space"
     BO_BEST_SCORE = "bo_best_score"
     BO_BEST_CANDIDATE = "bo_best_candidate"
+    BO_BEST_SEARCH_SPACE = "bo_best_search_space"
+    BO_HISTORY = "bo_history"
     ERROR_INSTRUCT = "error_instruct"
+    REFLECTION_STRATEGY_PROMPT = "reflection_strategy_prompt"
 
 
 class MemoryEntry(BaseModel):

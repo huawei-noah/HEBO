@@ -16,6 +16,7 @@ class HyperOpt(Task):
         self.step_num = 0
         self.max_steps = 1
         self.id = 'hyperopt'
+        self.reflection_strategy = kwargs.get('reflection_strategy', 'naive')
 
     def reset(self, next_subtask: str | None = None) -> Dict[str, str]:
         if next_subtask is not None:
@@ -33,14 +34,23 @@ class HyperOpt(Task):
     @property
     def workspace_data_path(self) -> str:
         return f"{self.workspace_path}/data/"
+    def get_reflection_strategy_prompt_file(self) -> str:
+        if self.reflection_strategy == 'naive':
+            return 'reflection_strategy/naive.jinja'
+        else:
+            raise ValueError(f'{self.reflection_strategy} is not supported')
 
     def _return_observation(self):
         with open(self.workspace_path + "/code/code.py", "r") as f:
             code = f.read()
-        return {MemKey.CODE: code}
+        return {
+            MemKey.CODE: code,
+            MemKey.REFLECTION_STRATEGY_PROMPT: self.get_reflection_strategy_prompt_file(),
+            MemKey.CONTINUE_OR_TERMINATE_BO: "Continue",
+        }
 
-    @staticmethod
-    def answer_parser(raw_response):
+    def answer_parser(self, raw_response: str) -> str:
+        """Return a parsed response."""
         return raw_response
 
     def is_complete(self):
