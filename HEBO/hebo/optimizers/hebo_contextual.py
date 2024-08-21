@@ -16,37 +16,34 @@ from .abstract_optimizer import AbstractOptimizer
 from .hebo import HEBO
 from hebo.acquisitions.acq import Acquisition, MACE
 
+
 class HEBO_VectorContextual(AbstractOptimizer):
-    support_parallel_opt  = True
+    support_parallel_opt = True
     support_combinatorial = True
-    support_contextual    = True
-    def __init__(self, 
-            space,
-            context_dict : dict, 
-            model_name   : str = 'gp',
-            rand_sample  : int = None
-            ):
-        self.hebo         = HEBO(space, model_name, rand_sample)
+    support_contextual = True
+
+    def __init__(self, space, context_dict: dict, model_name: str = "gp", rand_sample: int = None):
+        self.hebo = HEBO(space, model_name, rand_sample)
         self.context_dict = context_dict
-        self.context      = None
+        self.context = None
 
     @property
-    def context_vector(self) -> dict: 
+    def context_vector(self) -> dict:
         fix_input = self.context_dict[self.context]
         for k in fix_input.keys():
             assert k in self.hebo.space.para_names
         return fix_input
 
     def suggest(self, n):
-        return self.hebo.suggest(n, fix_input = self.context_vector)
+        return self.hebo.suggest(n, fix_input=self.context_vector)
 
-    def observe(self, X, y):
-        self.hebo.observe(X, y)
+    def observe_new_data(self, X, y):
+        self.hebo.observe_new_data(X, y)
 
     @property
     def best_x(self) -> pd.DataFrame:
-        raise NotImplementedError('Not supported for contextual BO')
+        raise NotImplementedError("Not supported for contextual BO")
 
     @property
     def best_y(self) -> pd.DataFrame:
-        raise NotImplementedError('Not supported for contextual BO')
+        raise NotImplementedError("Not supported for contextual BO")
