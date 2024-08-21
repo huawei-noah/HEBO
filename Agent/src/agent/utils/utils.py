@@ -14,6 +14,7 @@ from collections import Counter
 from enum import Enum
 from functools import partial
 from importlib.util import find_spec
+from pathlib import Path
 from typing import Callable, Optional, Any, Tuple
 
 import pandas as pd
@@ -25,6 +26,11 @@ from agent.utils import rich_utils
 
 log = pylogger.get_pylogger(__name__)
 SUPPORTED_FILE_EXTENSIONS = ['.txt', '.csv', '.tsv', '.json']
+
+
+def get_agent_root_dir() -> Path:
+    """ Read and return the root path where agent code is located """
+    return Path(__file__).parent.parent.parent.parent
 
 
 def break_word_split(break_word: str, raw_response: str):
