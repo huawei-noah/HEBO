@@ -18,6 +18,12 @@ class HyperOpt(Task):
         self.max_steps = 1
         self.id = 'hyperopt'
         self.reflection_strategy = kwargs.get('reflection_strategy', None)
+        self.seed = kwargs.get('seed', 0)
+        self.results_path = self.get_results_path(
+                workspace_path=self.workspace_path,
+                reflection_strategy=self.reflection_strategy,
+                seed=self.seed,
+            )
 
     def reset(self, next_subtask: str | None = None) -> Dict[str, str]:
         if next_subtask is not None:
@@ -27,7 +33,7 @@ class HyperOpt(Task):
         assert os.path.exists(self.workspace_data_path)
         assert os.path.exists(f"{self.workspace_path}/code")
         os.makedirs(f"{self.workspace_path}/results", exist_ok=True)
-        os.makedirs(self.get_results_path(self.workspace_path, self.reflection_strategy), exist_ok=True)
+        os.makedirs(self.results_path, exist_ok=True)
 
         # copy utils function from third_party/hyperopt to workspace/code
         k_folds_cv_str = inspect.getsource(k_folds_cv)
@@ -45,11 +51,13 @@ class HyperOpt(Task):
         return f"{self.workspace_path}/data/"
 
     @staticmethod
-    def get_results_path(workspace_path: str, reflection_strategy: str | None = None) -> str:
+    def get_results_path(workspace_path: str, reflection_strategy: str | None = None, seed: int = None) -> str:
         if reflection_strategy is None:
             results_path = os.path.join(workspace_path, "results", "no_reflection")
         else:
             results_path = os.path.join(workspace_path, 'results', reflection_strategy)
+        if seed is not None:
+            results_path = os.path.join(results_path, f"seed_{seed}")
         return results_path
 
     def get_reflection_strategy_prompt_file(self) -> str | None:
@@ -67,6 +75,7 @@ class HyperOpt(Task):
             MemKey.CODE: code,
             MemKey.REFLECTION_STRATEGY_PROMPT: self.get_reflection_strategy_prompt_file(),
             MemKey.CONTINUE_OR_TERMINATE_BO: "Continue",
+            MemKey.RESULTS_DIR: self.results_path,
         }
 
     def answer_parser(self, raw_response: str) -> str:

@@ -205,8 +205,8 @@ class RunHyperOpt(HumanTakeoverCommand):
     input_keys: dict[str, MemKey] = {
         MemKey.CODE_SUMMARY.value: MemKey.CODE_SUMMARY,
         MemKey.BO_SEARCH_SPACE.value: MemKey.BO_SEARCH_SPACE,
-        MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV
-
+        MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV,
+        MemKey.RESULTS_DIR.value: MemKey.RESULTS_DIR,
     }
     output_keys: dict[str, MemKey] = {
         MemKey.BO_OBSERVATIONS.value: MemKey.BO_OBSERVATIONS,
@@ -370,9 +370,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         return reused_obs.loc[:, reused_obs.columns != 'y'], reused_obs['y'].values
 
     def func(self, agent: LLMAgent, *args, **kwargs) -> None:
-        self.results_path = HyperOptTask.get_results_path(
-            workspace_path=self.workspace_path, reflection_strategy=self.reflection_strategy
-        )
+        self.results_path = agent.memory.retrieve(self.input_keys[MemKey.RESULTS_DIR.value])
         os.makedirs(
             os.path.join(self.results_path, f'search_space_{self.search_space_counter}'), exist_ok=True
         )

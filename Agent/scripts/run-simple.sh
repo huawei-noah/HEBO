@@ -8,7 +8,7 @@ LLM_HOST="llm_playground"
 SEEDS=1
 NUM_WORKERS=2
 REFLECTION=$1
-RETRY=$2
+RETRY="1"
 
 if [[ -z "$REFLECTION" ]]; then
   REFLECTION_STRATEGY=null
@@ -26,14 +26,14 @@ TASK_LIST=(
 TASKS_STRING=$(echo "${TASK_LIST[*]}")
 
 if [[ -z "$RETRY" ]]; then
-  $PYTHON_INTERPRETER third_party/hyperopt/run_hyperopt.py \
+  $PYTHON_INTERPRETER third_party/hyperopt/run_experiments_parallel.py \
     --llm-name $LLM_NAME \
     --llm-host $LLM_HOST \
     --seeds $SEEDS \
     --num-workers $NUM_WORKERS \
     --tasks $TASKS_STRING
 else
-    $PYTHON_INTERPRETER third_party/hyperopt/run_hyperopt.py \
+    $PYTHON_INTERPRETER third_party/hyperopt/run_experiments_parallel.py \
     --llm-name $LLM_NAME \
     --llm-host $LLM_HOST \
     --seeds $SEEDS \

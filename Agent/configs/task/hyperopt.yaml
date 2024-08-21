@@ -11,6 +11,7 @@ task:
   workspace_path: ./workspace/hyperopt
   use_error_instructions: true
   reflection_strategy: null
+  seed: 0
 
   name: hyperopt
   description:

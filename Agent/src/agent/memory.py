@@ -54,6 +54,7 @@ class MemKey(str, ListableEnum):
     TRAJECTORY = "_trajectory"  # Agent trajectory by timestep
 
     # Hyperopt keys
+    RESULTS_DIR = "_results_dir"
     CONTINUE_OR_TERMINATE_BO = "continue_or_terminate_bo"
     CODE = "code"
     CODE_SUMMARY = "code_summary"

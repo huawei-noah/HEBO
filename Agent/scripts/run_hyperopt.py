@@ -88,7 +88,8 @@ def run_one_task_and_one_seed(
                 f'method=direct-hyperopt '
                 f'llm@agent.llm={llm_host}/{llm_name} '
                 f'hydra.run.dir={log_dir} '
-                f'task.task_id={task_id}'
+                f'task.task_id={task_id} '
+                f'task.seed={seed}'
             )
             if reflection_strategy is not None:
                 command += f' task.reflection_strategy={reflection_strategy}'
