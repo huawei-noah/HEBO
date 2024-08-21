@@ -7,8 +7,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-train_data = pd.read_csv('workspace/hyperopt/higgs-boson/data/training.zip')
-test_data = pd.read_csv('workspace/hyperopt/higgs-boson/data/test.zip')
+train_data = pd.read_csv('workspace/hyperopt/higgs-boson-simple/data/training.zip')
+test_data = pd.read_csv('workspace/hyperopt/higgs-boson-simple/data/test.zip')
 
 
 # DELETED WEIGHT BEACAUSE IT WAS NOT IN THE TESTING SET SO I DON'T WANT TO TRAIN THE MODEL ON THE TRAINING SET WHICH HAS
