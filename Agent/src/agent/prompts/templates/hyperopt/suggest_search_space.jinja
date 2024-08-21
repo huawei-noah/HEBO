@@ -19,7 +19,7 @@ This search space will then be used in a Bayesian Optimization algorithm to opti
 
 {% include "suggest_search_space_instruction_example.jinja" %}
 
-{% if memory.retrieve({memory.mem_keys.BO_RAN: 1.0}) %}
+{% if memory.retrieve({memory.mem_keys.BO_RAN: 1.0}) and memory.retrieve({memory.mem_keys.REFLECTION_STRATEGY_PROMPT: 1.0}) != None %}
 {% include memory.retrieve({memory.mem_keys.REFLECTION_STRATEGY_PROMPT: 1.0}) %}
 {% endif %}
 
