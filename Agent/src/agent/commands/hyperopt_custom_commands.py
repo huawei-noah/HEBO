@@ -82,7 +82,7 @@ class HyperOpt(SequentialFlow):
             memory_choice_tag_val=MemKey.CONTINUE_OR_TERMINATE_BO,
         )
         super().__init__(
-            sequence=[summarize_cmd,k_folds_cv_cmd, loop_flow, Act()],
+            sequence=[summarize_cmd, k_folds_cv_cmd, loop_flow, Act()],
             name='hyperopt pipeline',
             description=f"{loop_flow.description}, then Summarize step and finally Act."
         )
@@ -103,14 +103,13 @@ class SummarizeCode(HumanTakeoverCommand):
             ask_template=self.required_prompt_templates["summarize_code_prompt_template"],
             prompt_kwargs={k: agent.memory.retrieve(self.input_keys[k]) for k in self.input_keys},
             parse_func=PARSE_FUNC_MAP[self.parse_func_id],
-            format_error_message='Your response did no follow the required format'
+            format_error_message='Your response did not follow the required format'
                                  '\n```json\n{\n\t"summary": "<summary>"\n}\n```\n'
                                  'Correct it now.',
             max_retries=self.max_retries,
             human_takeover=self.check_trigger_human_takeover(),
         )
         agent.memory.store(content=summary, tags=self.output_keys[MemKey.CODE_SUMMARY.value])
-
 
 
 class KFoldsCV(HumanTakeoverCommand):
@@ -124,7 +123,6 @@ class KFoldsCV(HumanTakeoverCommand):
     output_keys: dict[str, MemKey] = {MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV}
     max_retries: int = 5
 
-
     def func(self, agent: LLMAgent, *args: Any, **kwargs: Any):
         folds = safe_parsing_chat_completion(
             agent=agent,
@@ -132,14 +130,15 @@ class KFoldsCV(HumanTakeoverCommand):
             prompt_kwargs={k: agent.memory.retrieve(self.input_keys[k]) for k in self.input_keys},
             parse_func=extract_json,
             format_error_message=(
-                "Your response did no follow the required format\n"
+                "Your response did not follow the required format\n"
                 "```json\n"
                 "{\n"
-                "\t'model': <ml model object or instance in user code>\n",
-                "\t'X': <The final processed feature data in user code>\n",
-                "\t'y': <the target labels data name in user code>\n",
-                "\t'metric_func': <the evaluation metric function in user code>\n",
-                "\t'metric_value_direction': <choose between MAX and MIN, when MAX, the metric value higher means model performance better, otherwise MIN>\n",
+                "\t'model': <ml model object or instance in user code>\n"
+                "\t'X': <The final processed feature data in user code>\n"
+                "\t'y': <the target labels data name in user code>\n"
+                "\t'metric_func': <the evaluation metric function in user code>\n"
+                "\t'metric_value_direction': <choose between MAX and MIN, when MAX, "
+                "the metric value higher means model performance better, otherwise MIN>\n"
                 "}\n"
                 "```\n"
                 "Correct it now."
@@ -148,7 +147,6 @@ class KFoldsCV(HumanTakeoverCommand):
             human_takeover=self.check_trigger_human_takeover(),
         )
         agent.memory.store(content=folds, tags=self.output_keys[MemKey.K_FOLD_CV.value])
-
 
 
 class SuggestSearchSpace(HumanTakeoverCommand):
@@ -308,7 +306,7 @@ class RunHyperOpt(HumanTakeoverCommand):
 
         return optimizer, None
 
-    def create_blackbox(self, search_space: dict[str, dict[str, Any]], cv_args: dict[str,Any]) -> None:
+    def create_blackbox(self, search_space: dict[str, dict[str, Any]], cv_args: dict[str, Any]) -> None:
         """
         Creates a blackbox function by wrapping the code in a function exposing the parameters of the search space.
         """
@@ -353,7 +351,8 @@ class RunHyperOpt(HumanTakeoverCommand):
         design_space = self.get_hebo_design_space(search_space=search_space)
         reused_obs = pd.DataFrame()
         for i in range(self.search_space_counter):
-            traj_i = pd.read_csv(os.path.join(self.workspace_path, 'results', f'search_space_{i}', 'optimization_trajectory.csv'))
+            traj_i = pd.read_csv(
+                os.path.join(self.workspace_path, 'results', f'search_space_{i}', 'optimization_trajectory.csv'))
             X_i = traj_i.loc[:, traj_i.columns != 'y']
             for k, obs_k in X_i.iterrows():
                 if self.observation_in_search_space(observation=obs_k, design_space=design_space):
@@ -368,7 +367,7 @@ class RunHyperOpt(HumanTakeoverCommand):
             os.path.join(self.workspace_path, 'results', f'search_space_{self.search_space_counter}'), exist_ok=True
         )
         search_space = agent.memory.retrieve(self.input_keys[MemKey.BO_SEARCH_SPACE.value])
-        cv_args=agent.memory.retrieve(self.input_keys[MemKey.K_FOLD_CV.value])
+        cv_args = copy.deepcopy(agent.memory.retrieve(self.input_keys[MemKey.K_FOLD_CV.value]))
         self.create_blackbox(search_space=search_space, cv_args=cv_args)
         reusable_observations = self.get_reusable_observations(search_space=search_space)
         optimizer, error_str = self.run_optimization(search_space=search_space, initial_points=reusable_observations)
@@ -473,7 +472,7 @@ class ErrorInstruct(HumanTakeoverCommand):
                 agent=agent,
                 ask_template=self.required_prompt_templates['error_instruct_template'],
                 parse_func=PARSE_FUNC_MAP[self.parse_func_id],
-                format_error_message='Your response did no follow the required format'
+                format_error_message='Your response did not follow the required format'
                                      '\n```json\n{\n\t"instruction": "<instruction>"\n}\n```. Correct it now.',
                 max_retries=self.max_retries,
                 human_takeover=self.check_trigger_human_takeover()
