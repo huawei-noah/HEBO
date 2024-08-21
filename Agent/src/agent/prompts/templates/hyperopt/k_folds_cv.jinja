@@ -14,36 +14,65 @@ This is the code provided by the user:
 `k_folds_cv` function defined as:
 
 ```python
-def k_folds_cv(model, X, y, metric_func=None):
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import StratifiedKFold
+
+
+def k_folds_cv(model, X: pd.DataFrame, y: pd.DataFrame, metric_func):
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     scores = []
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X)
+    if isinstance(y, np.ndarray):
+        y = pd.DataFrame(y)
 
     for fold_i, (train_index, valid_index) in enumerate(cv.split(X, y)):
         X_train, y_train = X.iloc[train_index], y.iloc[train_index]
         X_valid, y_valid = X.iloc[valid_index], y.iloc[valid_index]
-        
+
         model.fit(X_train, y_train)
         y_pred = model.predict(X_valid)
-        
+
         score = metric_func(y_valid, y_pred)
         scores.append(score)
-        
+
         print(f"FOLD {fold_i} Done. Score : {score}")
-    
+
     mean_score = np.mean(scores)
     return mean_score
 ````
 
-You are tasked with reading the provided machine learning code by the user, which includes both data preprocessing and model definition. Your goal is to analyze the code and determine the appropriate input arguments that should be passed to the function `k_folds_cv`.
-The function `k_folds_cv` should be successfully callled by user.
+You are tasked with reading the provided machine learning code by the user, which includes both data preprocessing and model definition.
+Your goal is to analyze the code and determine the appropriate input arguments that should be passed to the function `k_folds_cv`.
+The function `k_folds_cv` should be successfully called by user.
 
 Specifically, you'll need to:
 
 1. Review the Code: Carefully read through the code to understand how data is being preprocessed and how the model is being defined and trained.
 
-2. Identify Input Arguments: Based on your review, identify the key inputs that the `k_folds_cv` function requires. These should include the model, the feature data (X), the target labels (y), and the evaluation metric function. 
+2. Identify Input Arguments: Based on your review, identify the key inputs that the `k_folds_cv` function requires. These should include the model, the feature data (X), the target labels (y), and the evaluation metric function.
 
-Note: All the input args MUST come from user code. 
+Note 1:
+All the input args MUST come from user code, except the `metric_value_direction` which you should choose to be either "MAX" or "MIN" depending on the context.
+
+Note 2:
+In particular for the `model`, you should reuse only variables already defined from the user code.
+For example, if the user code defines a model such as
+```python
+tree_regressor_model = DecisionTreeRegressor(...)
+```
+you should write in your JSON output, the variable name in which the model is stored, i.e. `tree_regressor_model` and not call the class constructor directly.
+
+Note 3:
+The `metric_func` should also be a function defined in the user code.
+Importantly, it must be a function that takes as arguments the predicted targets and the true targets and returns a single number.
+For example, if the context is a classification competition, then we could have in the user code
+```python
+from sklearn.metrics import accuracy_score, classification_report
+```
+The `metric_func` would then be: "metric_func": "accuracy_score" in the JSON output.
 
 
 Now provide the information in a JSON format
@@ -53,6 +82,6 @@ Now provide the information in a JSON format
     "X": "<The final processed feature data in user code>",
     "y": "<the target labels data name in user code>",
     "metric_func": "<the evaluation metric function in user code>",
-    "metric_value_direction": "<choose between MAX and MIN, when MAX, the metric value higher means model performance better, otherwise MIN>" 
+    "metric_value_direction": "<choose between MAX and MIN, when MAX, the metric value higher means model performance better, otherwise MIN>"
 }
 ```

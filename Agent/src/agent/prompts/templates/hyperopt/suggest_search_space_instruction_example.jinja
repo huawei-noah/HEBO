@@ -44,3 +44,5 @@ For example if there are two models, a `RandomForestRegressor` and a `XGBClassif
         {'name': 'max_depth', 'type': 'int', 'lb': 2, 'ub': 5}
 }
 ```
+
+Finally, IF AND ONLY IF you detect that a specific model in the user code is defined but not used in the final prediction, you are allowed to skip providing a search space for it, as it doesn't contribute to the final score.
