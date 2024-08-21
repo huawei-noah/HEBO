@@ -181,7 +181,7 @@ def assign_hyperopt(code: str, candidate: pd.DataFrame, space: Dict[str, Dict[st
     return optimized_code
 
 
-def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
+def wrap_code(code: str, space: Dict[str, Dict[str, Any]], cv_args: Dict[str, Any]) -> str:
     """Modify a code to add hyperparameters.
 
     Args:
@@ -214,6 +214,14 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]]) -> str:
                 end_ind = find_matching_parenthesis(line=line, start_ind=ind + len(pattern) - 1, parenthesis_type="(")
                 line = line[:ind] + pattern + keyword_arguments[model_name] + line[end_ind:]
         blackbox_code += "\t" + line + "\n"
+
+
+    metric_value_direction=cv_args.pop('metric_value_direction')
+    k_folds_cv_line="\tfrom utils import k_folds_cv\n"
+    k_folds_cv_line+="\tscore = k_folds_cv(" + ', '.join([k+"="+str(v) for k,v in cv_args.items()]) + ")\n"
+    blackbox_code += k_folds_cv_line
+    if metric_value_direction=="MAX":
+        blackbox_code += "\tscore = 1.0 - score\n"
 
     blackbox_code += "\treturn score"
     return blackbox_code
