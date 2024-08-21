@@ -1,9 +1,10 @@
+import inspect
 import os
 from typing import Dict, List
 
-from agent.tasks.tasks import Task
-
 from agent.memory import MemKey
+from agent.tasks.tasks import Task
+from agent.utils.hyperopt_utils import k_folds_cv
 
 
 class HyperOpt(Task):
@@ -27,6 +28,13 @@ class HyperOpt(Task):
         assert os.path.exists(f"{self.workspace_path}/code")
         os.makedirs(f"{self.workspace_path}/results", exist_ok=True)
 
+        # copy utils function from third_party/hyperopt to workspace/code
+        k_folds_cv_str = inspect.getsource(k_folds_cv)
+        imports_str = "import numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold\n\n"
+        k_folds_cv_str = imports_str + k_folds_cv_str
+        with open(f"{self.workspace_path}/code/utils.py", "w") as f:
+            f.write(k_folds_cv_str)
+
         self.done = False
         self.step_num = 0
         return self._return_observation()
@@ -34,6 +42,7 @@ class HyperOpt(Task):
     @property
     def workspace_data_path(self) -> str:
         return f"{self.workspace_path}/data/"
+
     def get_reflection_strategy_prompt_file(self) -> str:
         if self.reflection_strategy == 'naive':
             return 'reflection_strategy/naive.jinja'

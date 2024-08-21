@@ -2,10 +2,12 @@ import ast
 import re
 from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
 import pandas as pd
+from sklearn.model_selection import StratifiedKFold
 
 HYPEROPT_FORMAT_ERROR_MESSAGE = (
-    "Your response did no follow the required format\n"
+    "Your response did not follow the required format\n"
     "```json\n"
     "{\n"
     "\t{'<model1_name>': [\n"
@@ -215,12 +217,11 @@ def wrap_code(code: str, space: Dict[str, Dict[str, Any]], cv_args: Dict[str, An
                 line = line[:ind] + pattern + keyword_arguments[model_name] + line[end_ind:]
         blackbox_code += "\t" + line + "\n"
 
-
-    metric_value_direction=cv_args.pop('metric_value_direction')
-    k_folds_cv_line="\tfrom utils import k_folds_cv\n"
-    k_folds_cv_line+="\tscore = k_folds_cv(" + ', '.join([k+"="+str(v) for k,v in cv_args.items()]) + ")\n"
+    metric_value_direction = cv_args.pop('metric_value_direction')
+    k_folds_cv_line = "\tfrom utils import k_folds_cv\n"
+    k_folds_cv_line += "\tscore = k_folds_cv(" + ', '.join([k + "=" + str(v) for k, v in cv_args.items()]) + ")\n"
     blackbox_code += k_folds_cv_line
-    if metric_value_direction=="MAX":
+    if metric_value_direction == "MAX":
         blackbox_code += "\tscore = 1.0 - score\n"
 
     blackbox_code += "\treturn score"
@@ -257,3 +258,28 @@ def format_f_inputs(
             new_input[function][param_name] = param_space_with_model[function][param_name][ind]
         formatted_inputs.append(new_input)
     return formatted_inputs
+
+
+def k_folds_cv(model, X: pd.DataFrame, y: pd.DataFrame, metric_func):
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    scores = []
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X)
+    if isinstance(y, np.ndarray):
+        y = pd.DataFrame(y)
+
+    for fold_i, (train_index, valid_index) in enumerate(cv.split(X, y)):
+        X_train, y_train = X.iloc[train_index], y.iloc[train_index]
+        X_valid, y_valid = X.iloc[valid_index], y.iloc[valid_index]
+
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_valid)
+
+        score = metric_func(y_valid, y_pred)
+        scores.append(score)
+
+        print(f"FOLD {fold_i} Done. Score : {score}")
+
+    mean_score = np.mean(scores)
+    return mean_score
