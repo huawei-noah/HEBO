@@ -8,9 +8,10 @@ agent:
     error_instruct_prompt_template: "error_instruction.jinja"
     search_space_prompt_template: 'suggest_search_space.jinja'
     workspace_path: ${task.workspace_path}/${task.task_id}
-    bo_steps: 5
+    reflection_strategy: ${task.reflection_strategy}
+    bo_steps: 25
     bo_batch_size: 1
-    max_repetitions: 4
+    max_repetitions: 4  # only if reflection strategy is not null
     max_retries: 3
     use_error_instructions: ${task.use_error_instructions}
   prompt_builder:

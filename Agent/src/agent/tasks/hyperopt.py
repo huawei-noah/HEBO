@@ -17,7 +17,7 @@ class HyperOpt(Task):
         self.step_num = 0
         self.max_steps = 1
         self.id = 'hyperopt'
-        self.reflection_strategy = kwargs.get('reflection_strategy', 'naive')
+        self.reflection_strategy = kwargs.get('reflection_strategy', None)
 
     def reset(self, next_subtask: str | None = None) -> Dict[str, str]:
         if next_subtask is not None:
@@ -27,6 +27,7 @@ class HyperOpt(Task):
         assert os.path.exists(self.workspace_data_path)
         assert os.path.exists(f"{self.workspace_path}/code")
         os.makedirs(f"{self.workspace_path}/results", exist_ok=True)
+        os.makedirs(self.get_results_path(self.workspace_path, self.reflection_strategy), exist_ok=True)
 
         # copy utils function from third_party/hyperopt to workspace/code
         k_folds_cv_str = inspect.getsource(k_folds_cv)
@@ -43,7 +44,17 @@ class HyperOpt(Task):
     def workspace_data_path(self) -> str:
         return f"{self.workspace_path}/data/"
 
-    def get_reflection_strategy_prompt_file(self) -> str:
+    @staticmethod
+    def get_results_path(workspace_path: str, reflection_strategy: str | None = None) -> str:
+        if reflection_strategy is None:
+            results_path = os.path.join(workspace_path, "results", "no_reflection")
+        else:
+            results_path = os.path.join(workspace_path, 'results', reflection_strategy)
+        return results_path
+
+    def get_reflection_strategy_prompt_file(self) -> str | None:
+        if self.reflection_strategy is None:
+            return None
         if self.reflection_strategy == 'naive':
             return 'reflection_strategy/naive.jinja'
         else:

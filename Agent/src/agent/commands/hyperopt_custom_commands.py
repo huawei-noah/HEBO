@@ -15,6 +15,7 @@ from agent.memory import MemKey
 from agent.utils.hyperopt_utils import HYPEROPT_FORMAT_ERROR_MESSAGE
 from agent.utils.hyperopt_utils import assign_hyperopt, wrap_code, unwrap_code
 from agent.utils.utils import get_path_to_python, extract_json
+from agent.tasks.hyperopt import HyperOpt as HyperOptTask
 
 
 class HyperOpt(SequentialFlow):
@@ -26,9 +27,10 @@ class HyperOpt(SequentialFlow):
             error_instruct_prompt_template: str,
             search_space_prompt_template: str,
             workspace_path: str,
+            reflection_strategy: str | None,
             bo_steps: int,
             bo_batch_size: int = 1,
-            max_repetitions: int = -1,
+            max_repetitions: int = 1,
             max_retries: int = 5,
             use_error_instructions: bool = False,
     ):
@@ -59,6 +61,7 @@ class HyperOpt(SequentialFlow):
         )
         hyperopt_cmd = RunHyperOpt(
             workspace_path=workspace_path,
+            reflection_strategy=reflection_strategy,
             bo_steps=bo_steps,
             bo_batch_size=bo_batch_size,
             search_space_limit=max_repetitions,
@@ -71,6 +74,8 @@ class HyperOpt(SequentialFlow):
             name="suggest_search_space_and_run_hyperopt",
             description="suggest search space and run hyperopt",
         )
+        if reflection_strategy is None:
+            max_repetitions = 1
         loop_flow = LoopFlow(
             loop_body=inner_sequential_flow,
             max_repetitions=max_repetitions,
@@ -217,6 +222,8 @@ class RunHyperOpt(HumanTakeoverCommand):
     bo_steps: int
     bo_batch_size: int
     search_space_limit: int
+    results_path: str | None = None
+    reflection_strategy: str | None = None
     search_space_counter: int = 0
 
     @staticmethod
@@ -352,7 +359,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         reused_obs = pd.DataFrame()
         for i in range(self.search_space_counter):
             traj_i = pd.read_csv(
-                os.path.join(self.workspace_path, 'results', f'search_space_{i}', 'optimization_trajectory.csv'))
+                os.path.join(self.results_path, f'search_space_{i}', 'optimization_trajectory.csv'))
             X_i = traj_i.loc[:, traj_i.columns != 'y']
             for k, obs_k in X_i.iterrows():
                 if self.observation_in_search_space(observation=obs_k, design_space=design_space):
@@ -363,8 +370,11 @@ class RunHyperOpt(HumanTakeoverCommand):
         return reused_obs.loc[:, reused_obs.columns != 'y'], reused_obs['y'].values
 
     def func(self, agent: LLMAgent, *args, **kwargs) -> None:
+        self.results_path = HyperOptTask.get_results_path(
+            workspace_path=self.workspace_path, reflection_strategy=self.reflection_strategy
+        )
         os.makedirs(
-            os.path.join(self.workspace_path, 'results', f'search_space_{self.search_space_counter}'), exist_ok=True
+            os.path.join(self.results_path, f'search_space_{self.search_space_counter}'), exist_ok=True
         )
         search_space = agent.memory.retrieve(self.input_keys[MemKey.BO_SEARCH_SPACE.value])
         cv_args = copy.deepcopy(agent.memory.retrieve(self.input_keys[MemKey.K_FOLD_CV.value]))
@@ -377,30 +387,16 @@ class RunHyperOpt(HumanTakeoverCommand):
             top5_indices = np.argsort(optimizer.y.flatten())[:5]
             top5_configs = optimizer.X.iloc[top5_indices]
             for i, row in top5_configs.iterrows():
-                # user_code_path = os.path.join(self.workspace_path, 'code/code.py')
                 blackbox_code_path = os.path.join(self.workspace_path, 'code/blackbox.py')
-                # with open(user_code_path) as f:
-                #     code = "".join(f.readlines())
                 with open(blackbox_code_path, 'r') as f:
                     blackbox_code_lines = f.readlines()
                 code = unwrap_code(blackbox_code_lines)
                 code = assign_hyperopt(code=code, candidate=row, space=search_space)
-                # code += f'import subprocess'
-                # code += f'\ncommand = ["kaggle", "competitions", "submit", taskname, "-f", "best_submission.csv", "-m", "best_submission_{i}"]'
-                # code += '\nsubprocess.run(command)'
                 updated_code_path = os.path.join(
-                    self.workspace_path,
-                    'results',
-                    f'search_space_{self.search_space_counter}',
-                    f'optimized_code_{i}.py'
+                    self.results_path, f'search_space_{self.search_space_counter}', f'optimized_code_{i}.py'
                 )
                 with open(updated_code_path, "w") as f:
                     f.write(code)
-
-            # optimized_code = assign_hyperopt(code=code, candidate=optimizer.best_x, space=search_space)
-            # updated_code_path = os.path.join(self.workspace_path, 'results', timestamp, 'optimized_code.py')
-            # with open(updated_code_path, "w") as f:
-            #     f.write(optimized_code)
 
         if len(optimizer.X) > 0:
             observations = optimizer.X
@@ -421,7 +417,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         trajectory = optimizer.X
         trajectory['y'] = optimizer.y
         trajectory.to_csv(os.path.join(
-            self.workspace_path, 'results', f'search_space_{self.search_space_counter}', 'optimization_trajectory.csv'
+            self.results_path, f'search_space_{self.search_space_counter}', 'optimization_trajectory.csv'
         ), index=False)
 
         # save overall best candidate and its corresponding score and search space (across all search spaces seen)

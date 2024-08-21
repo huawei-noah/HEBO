@@ -10,7 +10,7 @@ task:
   task_id: ???
   workspace_path: ./workspace/hyperopt
   use_error_instructions: true
-  reflection_strategy: naive
+  reflection_strategy: null
 
   name: hyperopt
   description:
