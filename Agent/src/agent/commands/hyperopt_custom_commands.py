@@ -119,6 +119,7 @@ class KFoldsCV(HumanTakeoverCommand):
     required_prompt_templates: dict[str, str]
     input_keys: dict[str, MemKey] = {
         MemKey.CODE.value: MemKey.CODE,
+        MemKey.CODE_SUMMARY.value: MemKey.CODE_SUMMARY
     }
     output_keys: dict[str, MemKey] = {MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV}
     max_retries: int = 5
@@ -134,11 +135,11 @@ class KFoldsCV(HumanTakeoverCommand):
                 "Your response did no follow the required format\n"
                 "```json\n"
                 "{\n"
-                "\t'explain': <explain text>\n",
-                "\t'model': <ml model>\n",
-                "\t'X': <the feature data (X)>\n",
-                "\t'y': <the target labels>\n",
-                "\t'metric_func': <the evaluation metric function>\n",
+                "\t'model': <ml model object or instance in user code>\n",
+                "\t'X': <The final processed feature data in user code>\n",
+                "\t'y': <the target labels data name in user code>\n",
+                "\t'metric_func': <the evaluation metric function in user code>\n",
+                "\t'metric_value_direction': <choose between MAX and MIN, when MAX, the metric value higher means model performance better, otherwise MIN>\n",
                 "}\n"
                 "```\n"
                 "Correct it now."
