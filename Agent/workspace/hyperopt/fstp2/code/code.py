@@ -29,6 +29,7 @@
 # ### Import Necessary Libraries and Data Sets.
 
 from subprocess import check_output
+
 print(check_output(["ls", "../input"]).decode("utf8"))
 
 # Import the necessary packages
@@ -36,7 +37,8 @@ import numpy as np
 import pandas as pd
 
 import warnings
-warnings.simplefilter(action ="ignore")
+
+warnings.simplefilter(action="ignore")
 
 from collections import Counter
 
@@ -45,7 +47,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import learning_curve
 from sklearn.model_selection import ShuffleSplit
-
 
 # Algorithms
 from sklearn.model_selection import train_test_split
@@ -68,19 +69,15 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import mean_squared_error
 
-
 # FILE_PATH = "../data/"
-FILE_PATH= "./workspace/hyperopt/fstp2/data/"
+FILE_PATH = "./workspace/hyperopt/fstp2/data/"
 
 submission_path = "best_submission.csv"
 RANDOM_SEED = 73
 
-
-
-#Load data and save response as target
-train = pd.read_csv(FILE_PATH+'train.csv', index_col= 'Id')
-test = pd.read_csv(FILE_PATH+'test.csv', index_col='Id')
-
+# Load data and save response as target
+train = pd.read_csv(FILE_PATH + "train.csv", index_col="Id")
+test = pd.read_csv(FILE_PATH + "test.csv", index_col="Id")
 
 # * Combine train and test sets
 
@@ -88,9 +85,9 @@ ntrain = train.shape[0]
 ntest = test.shape[0]
 y_train = train["Cover_Type"].to_frame()
 
-#Combine train and test sets
+# Combine train and test sets
 concat_data = pd.concat((train, test), sort=False).reset_index(drop=True)
-#Drop the target "Cover_Type" and Id columns
+# Drop the target "Cover_Type" and Id columns
 concat_data.drop(["Cover_Type"], axis=1, inplace=True)
 concat_data.drop(["Id"], axis=1, inplace=True)
 # print("Total size is :",concat_data.shape)
@@ -111,8 +108,7 @@ concat_data.drop(["Id"], axis=1, inplace=True)
 null_columns = concat_data.columns[concat_data.isnull().any()]
 concat_data[null_columns].isnull().sum()
 
-
-# *There are no missing values in this dataset. Let's go define numerical and categorical features.*
+# *There are no missing values in this dataset. Let"s go define numerical and categorical features.*
 
 numeric_features = concat_data.select_dtypes(include=[np.number])
 categoricals = concat_data.select_dtypes(exclude=[np.number])
@@ -123,11 +119,9 @@ categoricals = concat_data.select_dtypes(exclude=[np.number])
 
 concat_data.columns
 
-
 # we split the combined dataset to the original train and test sets
-TrainData = concat_data[:ntrain] 
+TrainData = concat_data[:ntrain]
 TestData = concat_data[ntrain:]
-
 
 # TrainData.shape, TestData.shape
 
@@ -140,27 +134,23 @@ TestData = concat_data[ntrain:]
 
 target = train[["Cover_Type"]]
 
-
 # print("We make sure that both train and target sets have the same row number:")
 # print(f"Train: {TrainData.shape[0]} rows")
 # print(f"Target: {target.shape[0]} rows")
 
 
 # Remove any duplicated column names
-concat_data = concat_data.loc[:,~concat_data.columns.duplicated()]
-
+concat_data = concat_data.loc[:, ~concat_data.columns.duplicated()]
 
 x = TrainData
 y = np.array(target)
 
-
 from sklearn.model_selection import train_test_split
-# Split the data set into train and test sets 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 42)
 
+# Split the data set into train and test sets 
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
 x_train.shape, x_test.shape, y_train.shape, y_test.shape
-
 
 # > Scince we have outliers for scaling data using the mean and variance of the data is likely to not work very well. In this case, we can use robust_scale and RobustScaler as drop-in replacements instead.
 
@@ -170,9 +160,8 @@ scaler = RobustScaler()
 x_train = scaler.fit_transform(x_train)
 # transform "x_test"
 x_test = scaler.transform(x_test)
-#Transform the test set
-X_test= scaler.transform(TestData)
-
+# Transform the test set
+X_test = scaler.transform(TestData)
 
 # # Building Machine Learning Models
 # 1. Logistic Regression
@@ -180,15 +169,13 @@ X_test= scaler.transform(TestData)
 # Baseline model of Logistic Regression with default parameters:
 
 # Test with new parameter for KNN model
-knn = KNeighborsClassifier(leaf_size=1, n_neighbors=1 , p=1)
+knn = KNeighborsClassifier(leaf_size=1, n_neighbors=1, p=1)
 knn_mod = knn.fit(x_train, y_train)
-
 
 # 5. Random Forest
 
 random_forest = RandomForestClassifier()
 random_forest_mod = random_forest.fit(x_train, y_train)
-
 
 vote = VotingClassifier([("Random Forest", random_forest_mod), ("KNN Classifier", knn_mod)])
 # vote_mod = vote.fit(x_train, y_train.ravel())
@@ -205,4 +192,3 @@ vote = VotingClassifier([("Random Forest", random_forest_mod), ("KNN Classifier"
 # Final_Submission_ForestCoverType = pd.DataFrame({
 #         "Id": test["Id"],
 #         "Cover_Type": vote_mod.predict(X_test)})
-
