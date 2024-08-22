@@ -90,10 +90,11 @@ class HyperOpt(Task):
     def get_reflection_strategy_prompt_file(self) -> str | None:
         if self.reflection_strategy is None:
             return None
-        if self.reflection_strategy == 'naive':
+        reflection_strategy_file = f'reflection_strategy/{self.reflection_strategy}.jinja'
+        if (get_agent_root_dir() / 'src/agent/prompts/templates/hyperopt' / reflection_strategy_file).exists():
             return 'reflection_strategy/naive.jinja'
         else:
-            raise ValueError(f'{self.reflection_strategy} is not supported')
+            raise ValueError(f'{self.reflection_strategy} has no corresponding jinja template')
 
     def _return_observation(self):
         with open(self.workspace_path + "/code/code.py", "r") as f:
