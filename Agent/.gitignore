@@ -175,3 +175,8 @@ faiss_index/index.faiss
 test.ipynb
 /playground/
 external/
+
+
+#ignore data and results
+/workspace/hyperopt/**/data/
+/workspace/hyperopt/**/results/
