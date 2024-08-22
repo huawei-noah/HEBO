@@ -5,41 +5,42 @@ set -e
 PYTHON_INTERPRETER="python3"
 LLM_NAME="qwen2-72b"
 LLM_HOST="llm_playground"
-SEEDS=1
-NUM_WORKERS=2
-REFLECTION=$1
-RETRY="1"
+SEEDS=10
+NUM_WORKERS=10
 
-if [[ -z "$REFLECTION" ]]; then
-  REFLECTION_STRATEGY=null
-else
-  REFLECTION_STRATEGY="$REFLECTION"
-fi
+# Check for command line arguments
+REFLECTION_STRATEGY=${1:-}  # Default to empty if not provided
+RETRY=${2:-}                # Default to empty if not provided
 
 # RUN ON ALL TASKS
 TASK_LIST=(
-  "higgs-boson-simple"
-  "mercedes-benz-greener-manufacturing-simple"
+#  "higgs-boson"
+#  "abalone"
+  "bank-churn"
 )
 
-#TASKS_STRING=$(IFS=,; echo "${TASK_LIST[*]}")
 TASKS_STRING=$(echo "${TASK_LIST[*]}")
 
-if [[ -z "$RETRY" ]]; then
-  $PYTHON_INTERPRETER third_party/hyperopt/run_experiments_parallel.py \
-    --llm-name $LLM_NAME \
-    --llm-host $LLM_HOST \
-    --seeds $SEEDS \
-    --num-workers $NUM_WORKERS \
-    --reflection-strategy $REFLECTION_STRATEGY \
-    --tasks $TASKS_STRING
-else
-    $PYTHON_INTERPRETER third_party/hyperopt/run_experiments_parallel.py \
-    --llm-name $LLM_NAME \
-    --llm-host $LLM_HOST \
-    --seeds $SEEDS \
-    --num-workers $NUM_WORKERS \
-    --reflection-strategy $REFLECTION_STRATEGY \
-    --tasks $TASKS_STRING \
-    --retry-empty-seeds
+# Build the command
+COMMAND="$PYTHON_INTERPRETER scripts/run_experiments_parallel.py \
+--llm-name $LLM_NAME \
+--llm-host $LLM_HOST \
+--seeds $SEEDS \
+--num-workers $NUM_WORKERS"
+
+# Add reflection strategy if provided
+if [ -n "$REFLECTION_STRATEGY" ]; then
+  COMMAND+=" --reflection-strategy $REFLECTION_STRATEGY"
 fi
+
+# Add retry if provided
+if [ -n "$RETRY" ]; then
+  COMMAND+=" --retry-empty-seeds"
+fi
+
+# Add tasks
+COMMAND+=" --tasks $TASKS_STRING"
+
+# Execute the command
+echo $COMMAND
+eval $COMMAND
