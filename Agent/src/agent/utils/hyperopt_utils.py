@@ -1,7 +1,9 @@
 import ast
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -283,3 +285,78 @@ def k_folds_cv(model, X: pd.DataFrame, y: pd.DataFrame, metric_func):
 
     mean_score = np.mean(scores)
     return mean_score
+
+
+def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Path) -> None:
+    """
+    From the experiment dir, for each seed find all search spaces and gather them into,
+    one overall trajectory.
+
+    reflection_experiment_dir: path to the workspace/competition-name/reflection-strategy
+    """
+    # if "no_reflection" == experiment_dir.name:
+    overall_results = pd.DataFrame()
+    trajectories = []
+    for seed in reflection_experiment_dir.iterdir():
+        if seed.is_file():
+            continue
+        for search_space in sorted(list(seed.iterdir())):
+            if search_space.name == "logs":
+                continue
+            if search_space.is_file():
+                continue
+            if (search_space / 'optimization_trajectory.csv').exists():
+                traj = pd.read_csv(search_space / 'optimization_trajectory.csv')
+                trajectories.append(traj)
+        overall_results = overall_results._append(trajectories)
+        overall_results.to_csv(seed / "full_optimization_trajectory.csv")
+        print(f"created {seed / 'full_optimization_trajectory.csv'}", flush=True)
+
+
+def create_experiment_report(experiment_dir: Path) -> None:
+    """
+    From the experiment dir, create an overall trajectory per seed, and gather all seeds into
+    one SCORE csv file to be used in a plot
+
+    experiment_dir: path to the workspace/competition-name
+    """
+    if 'results' not in experiment_dir.name:
+        experiment_dir = experiment_dir / 'results'
+
+    report = pd.DataFrame([])
+    for reflection_strategy in experiment_dir.iterdir():
+        if reflection_strategy.is_file():
+            continue
+        overall_results = pd.DataFrame([])
+        create_experiment_full_optimization_trajectory(reflection_experiment_dir=reflection_strategy)
+        for seed in reflection_strategy.iterdir():
+            if seed.is_file():
+                continue
+            traj = pd.read_csv(seed / 'full_optimization_trajectory.csv')
+            traj = traj.reset_index(drop=True)
+            overall_results[seed.name] = traj['y']
+        overall_results.to_csv(reflection_strategy / 'full_optimization_trajectories.csv')
+
+
+def plot_results(experiment_dir: Path) -> None:
+    """
+    :param experiment_dir: path to the workspace/competition-name
+    """
+    create_experiment_report(experiment_dir=experiment_dir)
+
+    for reflection_strategy in experiment_dir.iterdir():
+        if reflection_strategy.is_dir():
+            results = pd.read_csv(reflection_strategy / 'full_optimization_trajectories.csv', index_col=0)
+            results['mean'] = results.mean(axis=1)
+            results['std'] = results.std(axis=1)
+            plt.plot(results['mean'], label=reflection_strategy.name)
+            plt.fill_between(
+                np.arange(len(results['mean'])),
+                results['mean'] + results['std'],
+                results['mean'] - results['std'],
+                alpha=0.2
+            )
+    plt.legend()
+    plt.title(experiment_dir.parent.name)
+    plt.savefig(experiment_dir / 'full_optimization_trajectories.png')
+    plt.close()
