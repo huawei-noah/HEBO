@@ -15,7 +15,6 @@ from agent.memory import MemKey
 from agent.utils.hyperopt_utils import HYPEROPT_FORMAT_ERROR_MESSAGE
 from agent.utils.hyperopt_utils import assign_hyperopt, wrap_code, unwrap_code
 from agent.utils.utils import get_path_to_python, extract_json
-from agent.tasks.hyperopt import HyperOpt as HyperOptTask
 
 
 class HyperOpt(SequentialFlow):
@@ -26,11 +25,11 @@ class HyperOpt(SequentialFlow):
             loop_flow_prompt_template: str,
             error_instruct_prompt_template: str,
             search_space_prompt_template: str,
-            workspace_path: str,
             reflection_strategy: str | None,
             bo_steps: int,
             bo_batch_size: int = 1,
-            max_repetitions: int = 1,
+            bo_search_spaces: int = 1,
+            max_repetitions: int = -1,
             max_retries: int = 5,
             use_error_instructions: bool = False,
     ):
@@ -42,6 +41,17 @@ class HyperOpt(SequentialFlow):
                      - SuggestSearchSpace
                      - RunHyperopt
         """
+        if reflection_strategy is None:
+            bo_search_spaces = 1
+        if reflection_strategy is not None:
+            bo_steps = bo_steps // bo_search_spaces
+        print(
+            f"Doing {bo_search_spaces * bo_steps} BO steps: "
+            f"{bo_search_spaces} search spaces with {bo_steps} steps each "
+            f"(note max_repetitions={max_repetitions})",
+            flush=True
+        )
+
         summarize_cmd = SummarizeCode(
             required_prompt_templates={"summarize_code_prompt_template": summarize_code_prompt_template},
             max_retries=max_retries
@@ -60,11 +70,10 @@ class HyperOpt(SequentialFlow):
             max_retries=max_retries
         )
         hyperopt_cmd = RunHyperOpt(
-            workspace_path=workspace_path,
             reflection_strategy=reflection_strategy,
             bo_steps=bo_steps,
             bo_batch_size=bo_batch_size,
-            search_space_limit=max_repetitions,
+            search_space_limit=bo_search_spaces,
         )
         inner_cmd_seq = [suggest_cmd, hyperopt_cmd]
         if use_error_instructions:
@@ -74,8 +83,6 @@ class HyperOpt(SequentialFlow):
             name="suggest_search_space_and_run_hyperopt",
             description="suggest search space and run hyperopt",
         )
-        if reflection_strategy is None:
-            max_repetitions = 1
         loop_flow = LoopFlow(
             loop_body=inner_sequential_flow,
             max_repetitions=max_repetitions,
@@ -207,6 +214,7 @@ class RunHyperOpt(HumanTakeoverCommand):
         MemKey.BO_SEARCH_SPACE.value: MemKey.BO_SEARCH_SPACE,
         MemKey.K_FOLD_CV.value: MemKey.K_FOLD_CV,
         MemKey.RESULTS_DIR.value: MemKey.RESULTS_DIR,
+        MemKey.CODE_DIR.value: MemKey.CODE_DIR,
     }
     output_keys: dict[str, MemKey] = {
         MemKey.BO_OBSERVATIONS.value: MemKey.BO_OBSERVATIONS,
@@ -218,11 +226,11 @@ class RunHyperOpt(HumanTakeoverCommand):
         MemKey.BO_RAN.value: MemKey.BO_RAN,
         MemKey.CONTINUE_OR_TERMINATE_BO.value: MemKey.CONTINUE_OR_TERMINATE_BO,
     }
-    workspace_path: str
     bo_steps: int
     bo_batch_size: int
     search_space_limit: int
     results_path: str | None = None
+    code_dir: str | None = None
     reflection_strategy: str | None = None
     search_space_counter: int = 0
 
@@ -242,7 +250,7 @@ class RunHyperOpt(HumanTakeoverCommand):
 
     def evaluate_candidate(self, params: pd.DataFrame) -> Tuple[Union[float, None], str]:
         # write code that calls the blackbox with the candidate parameters
-        candidate_code_path = os.path.join(self.workspace_path, 'code/candidate_code.py')
+        candidate_code_path = os.path.join(self.code_dir, 'candidate_code.py')
         candidate_code = "from blackbox import blackbox\n"
         params_str_list = dict()
         for p in params:
@@ -257,8 +265,8 @@ class RunHyperOpt(HumanTakeoverCommand):
             f.write(candidate_code)
 
         # run new code and write results in file
-        outfile = os.path.join(os.path.join(self.workspace_path, 'code', "bo_output.txt"))
-        errfile = os.path.join(os.path.join(self.workspace_path, 'code', "bo_error.txt"))
+        outfile = os.path.join(os.path.join(self.code_dir, "bo_output.txt"))
+        errfile = os.path.join(os.path.join(self.code_dir, "bo_error.txt"))
         python_path = get_path_to_python('./third_party/hyperopt/path_to_python.txt')
         cmd = f"{python_path} {candidate_code_path} 2> {errfile} > {outfile}"
         os.system(cmd)
@@ -318,13 +326,13 @@ class RunHyperOpt(HumanTakeoverCommand):
         Creates a blackbox function by wrapping the code in a function exposing the parameters of the search space.
         """
         # read user code
-        user_code_path = os.path.join(self.workspace_path, 'code/code.py')
+        user_code_path = os.path.join(self.code_dir, 'code.py')
         with open(user_code_path) as f:
             code = f.read()
 
         # replace parameters in user code with names from search space and write a function called `blackbox`
         # exposing these parameters
-        blackbox_code_path = os.path.join(self.workspace_path, 'code/blackbox.py')
+        blackbox_code_path = os.path.join(self.code_dir, 'blackbox.py')
         blackbox_function_code = wrap_code(code=code, space=search_space, cv_args=cv_args)
         with open(blackbox_code_path, 'w') as f:
             f.write(blackbox_function_code)
@@ -371,6 +379,7 @@ class RunHyperOpt(HumanTakeoverCommand):
 
     def func(self, agent: LLMAgent, *args, **kwargs) -> None:
         self.results_path = agent.memory.retrieve(self.input_keys[MemKey.RESULTS_DIR.value])
+        self.code_dir = agent.memory.retrieve(self.input_keys[MemKey.CODE_DIR.value])
         os.makedirs(
             os.path.join(self.results_path, f'search_space_{self.search_space_counter}'), exist_ok=True
         )
@@ -385,7 +394,7 @@ class RunHyperOpt(HumanTakeoverCommand):
             top5_indices = np.argsort(optimizer.y.flatten())[:5]
             top5_configs = optimizer.X.iloc[top5_indices]
             for i, row in top5_configs.iterrows():
-                blackbox_code_path = os.path.join(self.workspace_path, 'code/blackbox.py')
+                blackbox_code_path = os.path.join(self.code_dir, 'blackbox.py')
                 with open(blackbox_code_path, 'r') as f:
                     blackbox_code_lines = f.readlines()
                 code = unwrap_code(blackbox_code_lines)
@@ -396,46 +405,48 @@ class RunHyperOpt(HumanTakeoverCommand):
                 with open(updated_code_path, "w") as f:
                     f.write(code)
 
-        if len(optimizer.X) > 0:
-            observations = optimizer.X
+        if len(optimizer.X) > 0 and error_str is None:
+            n_init = len(reusable_observations[0]) if reusable_observations is not None else 0
+            observations = optimizer.X.iloc[n_init:]
             best_x = optimizer.best_x
             best_y = optimizer.best_y
             bo_ran = True
+
+            # save optimization trajectory to workspace
+            trajectory = optimizer.X.iloc[n_init:]
+            trajectory['y'] = optimizer.y[n_init:]
+            trajectory.to_csv(os.path.join(
+                self.results_path, f'search_space_{self.search_space_counter}', 'optimization_trajectory.csv'
+            ), index=False)
+
+            # save overall best candidate and its corresponding score and search space (across all search spaces seen)
+            best_score = agent.memory.retrieve(MemKey.BO_BEST_SCORE)
+            if best_score is None or best_y < best_score:
+                print("New overall best score found!", flush=True)
+                agent.memory.store(best_y, MemKey.BO_BEST_SCORE)
+                agent.memory.store(best_x, MemKey.BO_BEST_CANDIDATE)
+                agent.memory.store(search_space, MemKey.BO_BEST_SEARCH_SPACE)
+
+            # append to history, current search space, current best candidate and current best value
+            bo_history = agent.memory.retrieve(MemKey.BO_HISTORY)
+            if bo_history is None:
+                bo_history = {}
+            bo_history[f'search_space_{self.search_space_counter}'] = {
+                'best_x': best_x, 'best_y': best_y, 'search_space': search_space
+            }
+            agent.memory.store(bo_history, MemKey.BO_HISTORY)
+
+            self.search_space_counter += 1
+
         else:
+            breakpoint()
             observations = None
-            best_x = None
-            best_y = None
             bo_ran = False
 
         agent.memory.store(observations, MemKey.BO_OBSERVATIONS)
         agent.memory.store(error_str, MemKey.BO_ERROR)
         agent.memory.store(bo_ran, MemKey.BO_RAN)
 
-        # save optimization trajectory to workspace
-        trajectory = optimizer.X
-        trajectory['y'] = optimizer.y
-        trajectory.to_csv(os.path.join(
-            self.results_path, f'search_space_{self.search_space_counter}', 'optimization_trajectory.csv'
-        ), index=False)
-
-        # save overall best candidate and its corresponding score and search space (across all search spaces seen)
-        best_score = agent.memory.retrieve(MemKey.BO_BEST_SCORE)
-        if best_score is None or best_y <= best_score:
-            print("New overall best score found!", flush=True)
-            agent.memory.store(best_y, MemKey.BO_BEST_SCORE)
-            agent.memory.store(best_x, MemKey.BO_BEST_CANDIDATE)
-            agent.memory.store(search_space, MemKey.BO_BEST_SEARCH_SPACE)
-
-        # append to history, current search space, current best candidate and current best value
-        bo_history = agent.memory.retrieve(MemKey.BO_HISTORY)
-        if bo_history is None:
-            bo_history = {}
-        bo_history[f'search_space_{self.search_space_counter}'] = {
-            'best_x': best_x, 'best_y': best_y, 'search_space': search_space
-        }
-        agent.memory.store(bo_history, MemKey.BO_HISTORY)
-
-        self.search_space_counter += 1
         if self.search_space_counter >= self.search_space_limit:
             agent.memory.store("Terminate", MemKey.CONTINUE_OR_TERMINATE_BO)
 

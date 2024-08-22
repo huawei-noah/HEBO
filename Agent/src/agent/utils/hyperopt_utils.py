@@ -294,22 +294,17 @@ def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Pa
 
     reflection_experiment_dir: path to the workspace/competition-name/reflection-strategy
     """
-    # if "no_reflection" == experiment_dir.name:
-    overall_results = pd.DataFrame()
-    trajectories = []
     for seed in reflection_experiment_dir.iterdir():
         if seed.is_file():
             continue
+        overall_results = pd.DataFrame([])
+        trajectories = []
         for search_space in sorted(list(seed.iterdir())):
-            if search_space.name == "logs":
-                continue
-            if search_space.is_file():
-                continue
-            if (search_space / 'optimization_trajectory.csv').exists():
+            if 'search_space' in search_space.name and (search_space / 'optimization_trajectory.csv').exists():
                 traj = pd.read_csv(search_space / 'optimization_trajectory.csv')
                 trajectories.append(traj)
         overall_results = overall_results._append(trajectories)
-        overall_results.to_csv(seed / "full_optimization_trajectory.csv")
+        overall_results.to_csv(seed / "full_optimization_trajectory.csv", index=False)
         print(f"created {seed / 'full_optimization_trajectory.csv'}", flush=True)
 
 
@@ -320,11 +315,7 @@ def create_experiment_report(experiment_dir: Path) -> None:
 
     experiment_dir: path to the workspace/competition-name
     """
-    if 'results' not in experiment_dir.name:
-        experiment_dir = experiment_dir / 'results'
-
-    report = pd.DataFrame([])
-    for reflection_strategy in experiment_dir.iterdir():
+    for reflection_strategy in (experiment_dir / 'results').iterdir():
         if reflection_strategy.is_file():
             continue
         overall_results = pd.DataFrame([])
@@ -332,9 +323,13 @@ def create_experiment_report(experiment_dir: Path) -> None:
         for seed in reflection_strategy.iterdir():
             if seed.is_file():
                 continue
-            traj = pd.read_csv(seed / 'full_optimization_trajectory.csv')
-            traj = traj.reset_index(drop=True)
-            overall_results[seed.name] = traj['y']
+            if (seed / 'full_optimization_trajectory.csv').exists():
+                try:
+                    traj = pd.read_csv(seed / 'full_optimization_trajectory.csv')
+                    traj = traj.reset_index(drop=True)
+                    overall_results[seed.name] = traj['y'].cummin()  # regret
+                except pd.errors.EmptyDataError:
+                    print(f"No columns to parse in {seed}/full_optimization_trajectory.csv")
         overall_results.to_csv(reflection_strategy / 'full_optimization_trajectories.csv')
 
 
@@ -344,9 +339,10 @@ def plot_results(experiment_dir: Path) -> None:
     """
     create_experiment_report(experiment_dir=experiment_dir)
 
-    for reflection_strategy in experiment_dir.iterdir():
+    for reflection_strategy in (experiment_dir / 'results').iterdir():
         if reflection_strategy.is_dir():
             results = pd.read_csv(reflection_strategy / 'full_optimization_trajectories.csv', index_col=0)
+            results = results.ffill()  # fill NaN with last values in each column
             results['mean'] = results.mean(axis=1)
             results['std'] = results.std(axis=1)
             plt.plot(results['mean'], label=reflection_strategy.name)
@@ -358,5 +354,18 @@ def plot_results(experiment_dir: Path) -> None:
             )
     plt.legend()
     plt.title(experiment_dir.parent.name)
-    plt.savefig(experiment_dir / 'full_optimization_trajectories.png')
+    plt.xlabel('BO step')
+    plt.ylabel('Score')
+    plt.savefig(experiment_dir / 'results.png')
     plt.close()
+
+
+if __name__ == '__main__':
+    from pathlib import Path
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # experiment_dir = Path('/nfs/aiml/alexandre/Projects/llm-hebo/workspace/hyperopt/higgs-boson')
+    experiment_dir = Path('/nfs/aiml/alexandre/Projects/llm-hebo/workspace/hyperopt/bank-churn')
+    plot_results(experiment_dir)

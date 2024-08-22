@@ -7,12 +7,12 @@ agent:
     loop_flow_prompt_template: 'flow_loop_continue.jinja'
     error_instruct_prompt_template: "error_instruction.jinja"
     search_space_prompt_template: 'suggest_search_space.jinja'
-    workspace_path: ${task.workspace_path}/${task.task_id}
     reflection_strategy: ${task.reflection_strategy}
-    bo_steps: 25
+    bo_steps: 20  # total number of BO steps (divisible by max_repetitions)
     bo_batch_size: 1
-    max_repetitions: 4  # only if reflection strategy is not null
-    max_retries: 3
+    bo_search_spaces: 4 # only if reflection strategy is not null
+#    max_repetitions: 4
+#    max_retries: 5
     use_error_instructions: ${task.use_error_instructions}
   prompt_builder:
     template_paths: [ "hyperopt/" ]
