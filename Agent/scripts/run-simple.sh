@@ -31,6 +31,7 @@ if [[ -z "$RETRY" ]]; then
     --llm-host $LLM_HOST \
     --seeds $SEEDS \
     --num-workers $NUM_WORKERS \
+    --reflection-strategy $REFLECTION_STRATEGY \
     --tasks $TASKS_STRING
 else
     $PYTHON_INTERPRETER third_party/hyperopt/run_experiments_parallel.py \
@@ -38,6 +39,7 @@ else
     --llm-host $LLM_HOST \
     --seeds $SEEDS \
     --num-workers $NUM_WORKERS \
+    --reflection-strategy $REFLECTION_STRATEGY \
     --tasks $TASKS_STRING \
     --retry-empty-seeds
 fi
