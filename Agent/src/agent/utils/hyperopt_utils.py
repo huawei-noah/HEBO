@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 
 HYPEROPT_FORMAT_ERROR_MESSAGE = (
     "Your response did not follow the required format\n"
@@ -260,29 +259,6 @@ def format_f_inputs(
             new_input[function][param_name] = param_space_with_model[function][param_name][ind]
         formatted_inputs.append(new_input)
     return formatted_inputs
-
-
-def k_folds_cv(model, X: pd.DataFrame, y: pd.DataFrame, metric_func):
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    scores = []
-
-    if isinstance(X, np.ndarray):
-        X = pd.DataFrame(X)
-    if isinstance(y, np.ndarray):
-        y = pd.DataFrame(y)
-
-    for fold_i, (train_index, valid_index) in enumerate(cv.split(X, y)):
-        X_train, y_train = X.iloc[train_index], y.iloc[train_index]
-        X_valid, y_valid = X.iloc[valid_index], y.iloc[valid_index]
-
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_valid)
-
-        score = metric_func(y_valid, y_pred)
-        scores.append(score)
-
-    mean_score = np.mean(scores)
-    return mean_score
 
 
 def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Path) -> None:

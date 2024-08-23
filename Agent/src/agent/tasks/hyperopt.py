@@ -7,7 +7,7 @@ from agent.utils.utils import get_agent_root_dir
 
 from agent.memory import MemKey
 from agent.tasks.tasks import Task
-from agent.utils.hyperopt_utils import k_folds_cv
+from agent.tasks.hyperopt_assets.kfold import k_folds_cv
 
 
 class HyperOpt(Task):
@@ -63,9 +63,8 @@ class HyperOpt(Task):
         # ----------------------------------------------------
 
         # copy utils function from third_party/hyperopt to workspace/code
-        k_folds_cv_str = inspect.getsource(k_folds_cv)
-        imports_str = "import numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold\n\n"
-        k_folds_cv_str = imports_str + k_folds_cv_str
+        with open(get_agent_root_dir() / "src/agent/tasks/hyperopt_assets/kfold.py", "r") as f:
+            k_folds_cv_str = f.read()
         with open(f"{self.code_dir}/utils.py", "w") as f:
             f.write(k_folds_cv_str)
 
