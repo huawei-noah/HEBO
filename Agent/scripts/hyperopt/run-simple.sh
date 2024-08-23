@@ -6,7 +6,7 @@ PYTHON_INTERPRETER="python3"
 LLM_NAME="qwen2-72b"
 LLM_HOST="llm_playground"
 SEEDS=10
-NUM_WORKERS=10
+NUM_WORKERS=2
 
 # Check for command line arguments
 REFLECTION_STRATEGY=${1:-}  # Default to empty if not provided
@@ -14,15 +14,24 @@ RETRY=${2:-}                # Default to empty if not provided
 
 # RUN ON ALL TASKS
 TASK_LIST=(
-#  "higgs-boson"
-#  "abalone"
+  "abalone"
   "bank-churn"
+  "bsd"
+  "fstp"
+  "higgs-boson"
+  "mercedes"
+  "obesity-risk"
+  "rcaf"
+  "rrp"
+  "scrabble"
+  "sf-crime"
+  "srhm"
 )
 
 TASKS_STRING=$(echo "${TASK_LIST[*]}")
 
 # Build the command
-COMMAND="$PYTHON_INTERPRETER scripts/run_experiments_parallel.py \
+COMMAND="$PYTHON_INTERPRETER scripts/hyperopt/run_experiments_parallel.py \
 --llm-name $LLM_NAME \
 --llm-host $LLM_HOST \
 --seeds $SEEDS \
@@ -42,5 +51,4 @@ fi
 COMMAND+=" --tasks $TASKS_STRING"
 
 # Execute the command
-echo $COMMAND
 eval $COMMAND

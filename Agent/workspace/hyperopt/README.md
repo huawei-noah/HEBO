@@ -60,7 +60,7 @@ This script assumes all workspaces are ready to be run. To launch it, there is a
 as follows from the `Agent` root directory:
 
 ```shell
-bash -x scripts/run-simple.sh 
+bash -x scripts/hyperopt/run-simple.sh 
 ```
 
 ## Add a Reflection Strategy
@@ -70,7 +70,7 @@ prompt `src/agent/prompts/templates/hyperopt/reflection_strategy/new_reflection.
 configuration `configs/method/direct-hyperot.yaml`. Finally, run the shell script as
 
 ```shell
-bash -x scripts/run-simple.sh new_reflection
+bash -x scripts/hyperopt/run-simple.sh new_reflection
 ```
 
 #### Note

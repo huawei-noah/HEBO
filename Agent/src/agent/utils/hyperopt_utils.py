@@ -337,6 +337,10 @@ def plot_results(experiment_dir: Path) -> None:
     """
     :param experiment_dir: path to the workspace/competition-name
     """
+
+    if not (experiment_dir / 'results').exists():
+        return
+
     create_experiment_report(experiment_dir=experiment_dir)
 
     for reflection_strategy in (experiment_dir / 'results').iterdir():
@@ -356,16 +360,6 @@ def plot_results(experiment_dir: Path) -> None:
     plt.title(experiment_dir.parent.name)
     plt.xlabel('BO step')
     plt.ylabel('Score')
+    plt.yscale('log')
     plt.savefig(experiment_dir / 'results.png')
     plt.close()
-
-
-if __name__ == '__main__':
-    from pathlib import Path
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    # experiment_dir = Path('/nfs/aiml/alexandre/Projects/llm-hebo/workspace/hyperopt/higgs-boson')
-    experiment_dir = Path('/nfs/aiml/alexandre/Projects/llm-hebo/workspace/hyperopt/bank-churn')
-    plot_results(experiment_dir)
