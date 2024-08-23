@@ -281,8 +281,6 @@ def k_folds_cv(model, X: pd.DataFrame, y: pd.DataFrame, metric_func):
         score = metric_func(y_valid, y_pred)
         scores.append(score)
 
-        print(f"FOLD {fold_i} Done. Score : {score}")
-
     mean_score = np.mean(scores)
     return mean_score
 
@@ -305,7 +303,7 @@ def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Pa
                 trajectories.append(traj)
         overall_results = overall_results._append(trajectories)
         overall_results.to_csv(seed / "full_optimization_trajectory.csv", index=False)
-        print(f"created {seed / 'full_optimization_trajectory.csv'}", flush=True)
+        # print(f"created {seed / 'full_optimization_trajectory.csv'}", flush=True)
 
 
 def create_experiment_report(experiment_dir: Path) -> None:
@@ -329,7 +327,8 @@ def create_experiment_report(experiment_dir: Path) -> None:
                     traj = traj.reset_index(drop=True)
                     overall_results[seed.name] = traj['y'].cummin()  # regret
                 except pd.errors.EmptyDataError:
-                    print(f"No columns to parse in {seed}/full_optimization_trajectory.csv")
+                    # print(f"No columns to parse in {seed}/full_optimization_trajectory.csv")
+                    pass
         overall_results.to_csv(reflection_strategy / 'full_optimization_trajectories.csv')
 
 
@@ -357,9 +356,10 @@ def plot_results(experiment_dir: Path) -> None:
                 alpha=0.2
             )
     plt.legend()
-    plt.title(experiment_dir.parent.name)
+    plt.title(experiment_dir.name)
     plt.xlabel('BO step')
     plt.ylabel('Score')
     plt.yscale('log')
-    plt.savefig(experiment_dir / 'results.png')
+    plt.savefig(experiment_dir.parent / 'result_plots' / f'{experiment_dir.name}.png')
     plt.close()
+    print(f"Created plot {experiment_dir.parent}/result_plots/{experiment_dir.name}.png")

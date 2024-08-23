@@ -17,6 +17,6 @@ if __name__ == '__main__':
         "sf-crime",
         "srhm",
     ]
-    for task_id in task_id_list:
+    for task_id in sorted(task_id_list):
         experiment_dir = root_dir / 'workspace/hyperopt' / task_id
         plot_results(experiment_dir)
