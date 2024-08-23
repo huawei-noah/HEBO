@@ -255,7 +255,10 @@ class RunHyperOpt(HumanTakeoverCommand):
         params_str_list = dict()
         for p in params:
             if params[p].dtype == 'object':
-                params_str_list[p] = f'\"{str(params[p].values[0])}\"'
+                if params[p].values[0] in [None, True, False]:
+                    params_str_list[p] = params[p].values[0]
+                else:
+                    params_str_list[p] = f'\"{str(params[p].values[0])}\"'
             else:
                 params_str_list[p] = str(params[p].values[0])
         params_str = ", ".join([f'{k}={v}' for k, v in params_str_list.items()])
@@ -439,7 +442,6 @@ class RunHyperOpt(HumanTakeoverCommand):
             self.search_space_counter += 1
 
         else:
-            breakpoint()
             observations = None
             bo_ran = False
 
