@@ -45,9 +45,14 @@ class HyperOpt(SequentialFlow):
             bo_search_spaces = 1
         if reflection_strategy is not None:
             bo_steps = bo_steps // bo_search_spaces
+            # TODO improve that - problem is that whether or not there is an error in the BO,
+            #  we still increment the counter in the LoopFlow, so we cannot reliably count which iterations
+            #  count as search space successfully searched and which ones count as error-retries...
+            #  For now we have this fix of increasing the number of max repetitions but > -1
+            max_repetitions = max_repetitions * bo_search_spaces
         print(
             f"Doing {bo_search_spaces * bo_steps} BO steps: "
-            f"{bo_search_spaces} search spaces with {bo_steps} steps each "
+            f"{bo_search_spaces} search space(s) with {bo_steps} steps each "
             f"(note max_repetitions={max_repetitions})",
             flush=True
         )

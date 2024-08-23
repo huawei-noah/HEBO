@@ -10,9 +10,9 @@ agent:
     reflection_strategy: ${task.reflection_strategy}
     bo_steps: 20  # total number of BO steps (divisible by max_repetitions)
     bo_batch_size: 1
-    bo_search_spaces: 4 # only if reflection strategy is not null
-#    max_repetitions: 4
-#    max_retries: 5
+    bo_search_spaces: 5  # only if reflection strategy is not null
+    max_repetitions: 3  # number of retries if there is an error in the suggestion or BO
+    max_retries: 5  # number of times to retry for structured output
     use_error_instructions: ${task.use_error_instructions}
   prompt_builder:
     template_paths: [ "hyperopt/" ]
