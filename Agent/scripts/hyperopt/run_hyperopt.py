@@ -99,6 +99,8 @@ def run_one_task_and_one_seed(
             with open(command_log, 'w') as f:
                 f.write(command)
 
+            print(f"Running task {task_id} (seed {seed})...", flush=True)
+
             r = sp.Popen([command], stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
             out, err = r.communicate()
             out, err = out.decode(), err.decode()

@@ -31,7 +31,7 @@ TASK_LIST=(
 TASKS_STRING=$(echo "${TASK_LIST[*]}")
 
 # Build the command
-COMMAND="$PYTHON_INTERPRETER scripts/hyperopt/run_experiments_parallel.py \
+COMMAND="$PYTHON_INTERPRETER scripts/hyperopt/run_hyperopt.py \
 --llm-name $LLM_NAME \
 --llm-host $LLM_HOST \
 --seeds $SEEDS \
