@@ -1,6 +1,8 @@
 import ast
+import os
 import re
 from pathlib import Path
+from timeit import default_timer as timer
 from typing import Any, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -26,6 +28,17 @@ HYPEROPT_FORMAT_ERROR_MESSAGE = (
     "```\n"
     "Correct it now."
 )
+
+
+def timer_func(func):
+    def wrapper(*args, **kwargs):
+        start = timer()
+        result = func(*args, **kwargs)
+        end = timer()
+        print(f'{func.__name__} executed in {end - start:.6f} seconds')
+        return result
+
+    return wrapper
 
 
 def strip_comments(code: str) -> str:
@@ -261,6 +274,7 @@ def format_f_inputs(
     return formatted_inputs
 
 
+# @timer_func
 def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Path) -> None:
     """
     From the experiment dir, for each seed find all search spaces and gather them into,
@@ -273,15 +287,18 @@ def create_experiment_full_optimization_trajectory(reflection_experiment_dir: Pa
             continue
         overall_results = pd.DataFrame([])
         trajectories = []
-        for search_space in sorted(list(seed.iterdir())):
-            if 'search_space' in search_space.name and (search_space / 'optimization_trajectory.csv').exists():
-                traj = pd.read_csv(search_space / 'optimization_trajectory.csv')
-                trajectories.append(traj)
+        with os.scandir(seed) as search_space_it:
+            for search_space in search_space_it:
+                if ('search_space' in search_space.name and
+                        os.path.exists(os.path.join(search_space, 'optimization_trajectory.csv'))):
+                    traj = pd.read_csv(os.path.join(search_space, 'optimization_trajectory.csv'))
+                    trajectories.append(traj)
         overall_results = overall_results._append(trajectories)
-        overall_results.to_csv(seed / "full_optimization_trajectory.csv", index=False)
+        overall_results.to_csv(os.path.join(seed, "full_optimization_trajectory.csv"), index=False)
         # print(f"created {seed / 'full_optimization_trajectory.csv'}", flush=True)
 
 
+# @timer_func
 def create_experiment_report(experiment_dir: Path) -> None:
     """
     From the experiment dir, create an overall trajectory per seed, and gather all seeds into
@@ -297,40 +314,49 @@ def create_experiment_report(experiment_dir: Path) -> None:
         for seed in reflection_strategy.iterdir():
             if seed.is_file():
                 continue
-            if (seed / 'full_optimization_trajectory.csv').exists():
+            if os.path.exists(os.path.join(seed, 'full_optimization_trajectory.csv')):
                 try:
-                    traj = pd.read_csv(seed / 'full_optimization_trajectory.csv')
+                    traj = pd.read_csv(os.path.join(seed, 'full_optimization_trajectory.csv'))
                     traj = traj.reset_index(drop=True)
                     overall_results[seed.name] = traj['y'].cummin()  # regret
                 except pd.errors.EmptyDataError:
                     # print(f"No columns to parse in {seed}/full_optimization_trajectory.csv")
                     pass
-        overall_results.to_csv(reflection_strategy / 'full_optimization_trajectories.csv')
+        overall_results.to_csv(os.path.join(reflection_strategy, 'full_optimization_trajectories.csv'))
 
 
-def plot_results(experiment_dir: Path) -> None:
+def plot_results(experiment_dir: Path, plot_details: dict[str, Any]) -> None:
     """
     :param experiment_dir: path to the workspace/competition-name
     """
 
-    if not (experiment_dir / 'results').exists():
+    if not os.path.exists(experiment_dir / 'results'):
         return
 
     create_experiment_report(experiment_dir=experiment_dir)
 
     for reflection_strategy in (experiment_dir / 'results').iterdir():
         if reflection_strategy.is_dir():
-            results = pd.read_csv(reflection_strategy / 'full_optimization_trajectories.csv', index_col=0)
+            results = pd.read_csv(
+                os.path.join(reflection_strategy, 'full_optimization_trajectories.csv'), index_col=0
+            )
             results = results.ffill()  # fill NaN with last values in each column
             results['mean'] = results.mean(axis=1)
             results['std'] = results.std(axis=1)
-            plt.plot(results['mean'], label=reflection_strategy.name)
+
+            plt.plot(
+                results['mean'],
+                label=reflection_strategy.name,
+                **plot_details[reflection_strategy.name]
+            )
             plt.fill_between(
                 np.arange(len(results['mean'])),
                 results['mean'] + results['std'],
                 results['mean'] - results['std'],
-                alpha=0.2
+                alpha=0.2,
+                color=plot_details[reflection_strategy.name]["color"]
             )
+
     plt.legend()
     plt.title(experiment_dir.name)
     plt.xlabel('BO step')
