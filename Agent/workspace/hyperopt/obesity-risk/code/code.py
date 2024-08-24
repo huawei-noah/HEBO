@@ -83,18 +83,15 @@ pd.set_option("display.max_columns", 600)
 # Set Seaborn style
 sns.set(style="whitegrid")
 
-# train_data = pd.read_csv("./workspace/hyperopt/obesity-risk/data/train.csv")
-train_data = pd.read_csv("../data/train.csv")
+FILE_PATH = "../data/"
+train_data = pd.read_csv(FILE_PATH + "train.csv")
 train_data.name = "Train Dataset"
 
-# test_data = pd.read_csv("./workspace/hyperopt/obesity-risk/data/test.csv")
-test_data = pd.read_csv("../data/test.csv")
+test_data = pd.read_csv(FILE_PATH + "test.csv")
 
-# sample_submission = pd.read_csv("./workspace/hyperopt/obesity-risk/data/sample_submission.csv")
-sample_submission = pd.read_csv("../data/sample_submission.csv")
+sample_submission = pd.read_csv(FILE_PATH + "sample_submission.csv")
 
-# original_data = pd.read_csv("./workspace/hyperopt/obesity-risk/data/ObesityDataSet.csv")
-original_data = pd.read_csv("../data/ObesityDataSet.csv")
+original_data = pd.read_csv(FILE_PATH + "ObesityDataSet.csv")
 original_data.name = "Original Dataset"
 
 # print("# Train Data INFO\n")

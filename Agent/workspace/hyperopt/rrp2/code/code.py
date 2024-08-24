@@ -18,7 +18,6 @@ from sklearn.model_selection import KFold
 
 # FILE_PATH="../data/"
 FILE_PATH = "./workspace/hyperopt/rrp/data/"
-TARGET = "NObeyesdad"
 submission_path = "best_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73

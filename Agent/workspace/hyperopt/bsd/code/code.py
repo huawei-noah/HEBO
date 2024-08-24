@@ -8,12 +8,13 @@
 from audioop import rms
 import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
+from sklearn.metrics import mean_squared_log_error
 
 # Input data files are available in the read-only "../input/" directory
 # For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
 
 
-# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All"
 # You can also write temporary files to /kaggle/temp/, but they won"t be saved outside of the current session
 
 
@@ -73,14 +74,14 @@ cols
 # sklearn.preprocessing.__all__
 
 
-# from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 # for col in cols:
 #     mms = MinMaxScaler()
 #     X_train[col] = mms.fit_transform(X_train[[col]])
 #     test[col] = mms.transform(test[[col]])
 
 
-# from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 # for col in cols:
 #     ss = StandardScaler()
 #     X_train[col] = ss.fit_transform(X_train[[col]])
@@ -90,7 +91,7 @@ cols
 # X_train
 
 
-# from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 # ss = StandardScaler()
 # X_train[cols] = ss.fit_transform(X_train[cols])
 # X_train[cols] = ss.transform(X_train[cols])
@@ -115,7 +116,7 @@ rfr = RandomForestRegressor(random_state=RANDOM_SEED)
 # # dir(xgboost)
 
 
-# # from xgboost import XGBRegressor
+from xgboost import XGBRegressor
 # # xgbr = XGBRegressor(random_state=2024)
 # # model = xgbr.fit(X_tr, y_tr)
 # # pred = model.predict(X_val)
@@ -125,7 +126,7 @@ rfr = RandomForestRegressor(random_state=RANDOM_SEED)
 # # lightgbm.__all__
 
 
-# # from lightgbm import LGBMRegressor
+from lightgbm import LGBMRegressor
 # # lgbmr = LGBMRegressor(random_state=2024)
 # # model = lgbmr.fit(X_tr, y_tr)
 # # pred = model.predict(X_val)
@@ -142,7 +143,6 @@ rfr = RandomForestRegressor(random_state=RANDOM_SEED)
 # # help (sklearn.metrics.mean_squared_log_error)
 
 
-# from sklearn.metrics import mean_squared_log_error
 # rmsle = mean_squared_log_error(y_val, pred, squared=False)
 
 

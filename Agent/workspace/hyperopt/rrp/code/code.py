@@ -7,13 +7,13 @@
 
 import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
+from sklearn.metrics import mean_squared_error
 
 # Input data files are available in the read-only "../input/" directory
 # For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
 
 # FILE_PATH="../data/"
 FILE_PATH = "./workspace/hyperopt/rrp/data/"
-TARGET = "NObeyesdad"
 submission_path = "best_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73
@@ -173,5 +173,3 @@ rf = RandomForestRegressor(n_estimators=100)
 # print(f"~~予測結果の内容~~\n{sub}")
 # sub.to_csv(submission_path, index=False) # 変換したファイルを保存
 
-# score=1.0 - rf.score(X_val, y_val)
-# print(score)
