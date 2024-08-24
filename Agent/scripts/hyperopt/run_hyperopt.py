@@ -4,6 +4,8 @@ import shutil
 import subprocess as sp
 from pathlib import Path
 
+from tqdm import tqdm
+
 from agent.tasks.hyperopt import HyperOpt
 from agent.utils.utils import get_agent_root_dir
 
@@ -117,7 +119,7 @@ def run_one_task_and_one_seed(
             if (len(err) > 0 and 'Error' in str(err)) or (len(out) > 0 and 'Error' in str(out)):
                 print(f"{task_id} (seed {seed}) - There was an error, please check `output.txt` and `error.txt`.")
             else:
-                print(f"{task_id} (seed {seed}) was setup successfully!", flush=True)
+                print(f"{task_id} (seed {seed}) was optimized successfully!", flush=True)
 
         except (Exception, SystemExit) as e:
             print(f"{task_id} (seed {seed}) failed with the following error:\n{e}", flush=True)
@@ -148,5 +150,9 @@ if __name__ == '__main__':
                     args.reflection_strategy,
                 )
             )
-    with mp.Pool(processes=args.num_workers) as p:
-        p.starmap(run_one_task_and_one_seed, arglist)
+    if args.num_workers > 1:
+        with mp.Pool(processes=args.num_workers) as p:
+            p.starmap(run_one_task_and_one_seed, arglist)
+    else:
+        for args in tqdm(arglist, total=len(arglist)):
+            run_one_task_and_one_seed(*args)
