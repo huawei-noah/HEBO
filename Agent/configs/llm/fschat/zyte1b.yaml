@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: zyte-1B
+context_length: 1950

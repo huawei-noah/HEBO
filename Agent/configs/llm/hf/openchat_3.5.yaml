@@ -1,0 +1,5 @@
+defaults:
+  - hf
+
+model_id: openchat/openchat-3.5-0106
+context_length: 8192

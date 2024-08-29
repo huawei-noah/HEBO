@@ -1,0 +1,28 @@
+# @package _global_
+defaults:
+  - _self_
+  - extras: default
+  - paths: default
+  - hydra: default
+  - logger: default
+  - agent: default
+  - task: ???
+  - method: ???
+  - sweep: null
+
+  # this is how to override things default groups (can also be done in command line):
+  # - override llm@agent.llm: ???
+  # - override agent/memory@agent.memory: default
+max_episodes: null  # set to `null` to run on the whole dataset
+max_env_steps: null  # set to `null` to run an episode until the environment is done
+max_thinking_steps: null  # set to `null` to run until agent is ready
+starting_episode: null  # set to `null` to start from the beginning
+
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    default_kwargs: ???
+    template_paths: ???
+project_name: agent
+experiment_name: ${hydra:job.override_dirname}
+tags: [dev]

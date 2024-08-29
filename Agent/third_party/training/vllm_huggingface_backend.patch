@@ -1,0 +1,2370 @@
+diff --git a/vllm/__init__.py b/vllm/__init__.py
+index 6768261..662f4fb 100644
+--- a/vllm/__init__.py
++++ b/vllm/__init__.py
+@@ -5,6 +5,7 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
+ from vllm.engine.llm_engine import LLMEngine
+ from vllm.engine.ray_utils import initialize_cluster
+ from vllm.entrypoints.llm import LLM
++from vllm.entrypoints.llm_hf import LLM_HF
+ from vllm.outputs import CompletionOutput, RequestOutput
+ from vllm.sampling_params import SamplingParams
+ 
+@@ -12,6 +13,7 @@ __version__ = "0.2.1.post1"
+ 
+ __all__ = [
+     "LLM",
++    "LLM_HF",
+     "SamplingParams",
+     "RequestOutput",
+     "CompletionOutput",
+diff --git a/vllm/engine/llm_engine_hf.py b/vllm/engine/llm_engine_hf.py
+new file mode 100644
+index 0000000..baf4e58
+--- /dev/null
++++ b/vllm/engine/llm_engine_hf.py
+@@ -0,0 +1,185 @@
++from typing import TYPE_CHECKING, List, Optional, Tuple
++
++from vllm import LLMEngine
++from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
++                         SchedulerConfig, _get_and_verify_max_len, _get_and_verify_dtype)
++from vllm.core.scheduler import Scheduler
++from vllm.engine.arg_utils import EngineArgs
++from vllm.engine.ray_utils import initialize_cluster
++from vllm.logger import init_logger
++from vllm.transformers_utils.tokenizer import get_tokenizer
++from vllm.utils import Counter
++
++if TYPE_CHECKING:
++    from ray.util.placement_group import PlacementGroup
++
++logger = init_logger(__name__)
++
++_LOGGING_INTERVAL_SEC = 5
++
++
++class ModelConfigHF(ModelConfig):
++
++    def __init__(self, hf_model, seed) -> None:
++        self.hf_config = hf_model.config
++        # breakpoint()
++        # self.model = model
++        # self.tokenizer = tokenizer
++        # self.tokenizer_mode = tokenizer_mode
++        # self.trust_remote_code = trust_remote_code
++        # self.download_dir = download_dir
++        # self.load_format = load_format
++        self.seed = seed
++        # self.revision = revision
++        # self.tokenizer_revision = tokenizer_revision
++        self.quantization = None
++        #
++        # self.hf_config = get_config(model, trust_remote_code, revision)
++        self.dtype = hf_model.config.torch_dtype
++        self.max_model_len = _get_and_verify_max_len(self.hf_config, hf_model.config.max_length)
++        # self._verify_load_format()
++        # self._verify_tokenizer_mode()
++        # self._verify_quantization()
++
++
++class LLMEngineHF(LLMEngine):
++    """An LLM engine that receives requests and generates texts.
++
++    This is the main class for the vLLM engine. It receives requests
++    from clients and generates texts from the LLM. It includes a tokenizer, a
++    language model (possibly distributed across multiple GPUs), and GPU memory
++    space allocated for intermediate states (aka KV cache). This class utilizes
++    iteration-level scheduling and efficient memory management to maximize the
++    serving throughput.
++
++    The `LLM` class wraps this class for offline batched inference and the
++    `AsyncLLMEngine` class wraps this class for online serving.
++
++    NOTE: The config arguments are derived from the `EngineArgs` class. For the
++    comprehensive list of arguments, see `EngineArgs`.
++
++    Args:
++        model_config: The configuration related to the LLM model.
++        cache_config: The configuration related to the KV cache memory
++            management.
++        parallel_config: The configuration related to distributed execution.
++        scheduler_config: The configuration related to the request scheduler.
++        distributed_init_method: The initialization method for distributed
++            execution. See `torch.distributed.init_process_group` for details.
++        placement_group: Ray placement group for distributed execution.
++            Required for distributed execution.
++        log_stats: Whether to log statistics.
++    """
++
++    def __init__(
++            self,
++            model_config: ModelConfig,
++            cache_config: CacheConfig,
++            parallel_config: ParallelConfig,
++            scheduler_config: SchedulerConfig,
++            distributed_init_method: str,
++            placement_group: Optional["PlacementGroup"],
++            log_stats: bool,
++            hf_model=None,
++            tokenizer=None,
++    ) -> None:
++        logger.info(
++            "Initializing an LLM engine with config: "
++            # f"tokenizer={model_config.tokenizer!r}, "
++            # f"tokenizer_mode={model_config.tokenizer_mode}, "
++            # f"revision={model_config.revision}, "
++            # f"tokenizer_revision={model_config.tokenizer_revision}, "
++            f"dtype={model_config.dtype}, "
++            f"max_seq_len={model_config.max_model_len}, "
++            # f"load_format={model_config.load_format}, "
++            f"tensor_parallel_size={parallel_config.tensor_parallel_size}, "
++            f"quantization={model_config.quantization}, "
++            f"seed={model_config.seed})")
++        # TODO(woosuk): Print more configs in debug mode.
++
++        self.model_config = model_config
++        self.cache_config = cache_config
++        assert self.cache_config.sliding_window == getattr(
++            self.model_config.hf_config, "sliding_window", None)
++        self.parallel_config = parallel_config
++        self.scheduler_config = scheduler_config
++        self.log_stats = log_stats
++        self._verify_args()
++
++        # self.tokenizer = get_tokenizer(
++        #     model_config.tokenizer,
++        #     tokenizer_mode=model_config.tokenizer_mode,
++        #     trust_remote_code=model_config.trust_remote_code,
++        #     tokenizer_revision=model_config.tokenizer_revision,
++        #     revision=model_config.revision)
++        self.tokenizer = tokenizer
++        self.seq_counter = Counter()
++
++        # Create the parallel GPU workers.
++        self._init_workers(distributed_init_method, hf_model=hf_model)
++
++        # Profile the memory usage and initialize the cache.
++        self._init_cache()
++
++        # Create the scheduler.
++        self.scheduler = Scheduler(scheduler_config, cache_config)
++
++        # Logging.
++        self.last_logging_time = 0.0
++        # List of (timestamp, num_tokens)
++        self.num_prompt_tokens: List[Tuple[float, int]] = []
++        # List of (timestamp, num_tokens)
++        self.num_generation_tokens: List[Tuple[float, int]] = []
++
++    def _init_workers(self, distributed_init_method: str, hf_model=None):
++        # Lazy import the Worker to avoid importing torch.cuda/xformers
++        # before CUDA_VISIBLE_DEVICES is set in the Worker
++        from vllm.worker.worker_hf import WorkerHF  # pylint: disable=import-outside-toplevel
++
++        assert self.parallel_config.world_size == 1, (
++            "Ray is required if parallel_config.world_size > 1.")
++
++        self.workers: List[WorkerHF] = []
++        worker = WorkerHF(
++            self.model_config,
++            self.parallel_config,
++            self.scheduler_config,
++            0,
++            distributed_init_method
++        )
++        self.workers.append(worker)
++        self._run_workers(
++            "init_model",
++            hf_model=hf_model,
++            get_all_outputs=True,
++        )
++
++    @classmethod
++    def from_engine_args(cls, engine_args: EngineArgs, hf_model, tokenizer) -> "LLMEngine":
++        """Creates an LLM engine from the engine arguments."""
++        # Create the engine configs.
++        # engine_configs = engine_args.create_engine_configs()
++        model_config = ModelConfigHF(hf_model, engine_args.seed)
++        cache_config = CacheConfig(
++            engine_args.block_size, engine_args.gpu_memory_utilization, engine_args.swap_space,
++            getattr(model_config.hf_config, 'sliding_window', None))
++        parallel_config = ParallelConfig(engine_args.pipeline_parallel_size,
++                                         engine_args.tensor_parallel_size,
++                                         engine_args.worker_use_ray)
++        scheduler_config = SchedulerConfig(engine_args.max_num_batched_tokens,
++                                           engine_args.max_num_seqs,
++                                           model_config.max_model_len)
++        engine_configs = (model_config, cache_config, parallel_config, scheduler_config)
++
++        parallel_config = engine_configs[2]
++        # Initialize the cluster.
++        distributed_init_method, placement_group = initialize_cluster(
++            parallel_config)
++        # Create the LLM engine.
++        engine = cls(*engine_configs,
++                     distributed_init_method,
++                     placement_group,
++                     log_stats=not engine_args.disable_log_stats,
++                     hf_model=hf_model,
++                     tokenizer=tokenizer)
++        return engine
+diff --git a/vllm/entrypoints/llm_hf.py b/vllm/entrypoints/llm_hf.py
+new file mode 100644
+index 0000000..aa8718f
+--- /dev/null
++++ b/vllm/entrypoints/llm_hf.py
+@@ -0,0 +1,91 @@
++from typing import Optional
++
++from vllm import LLM
++from vllm.engine.arg_utils import EngineArgs
++from vllm.engine.llm_engine_hf import LLMEngineHF
++from vllm.utils import Counter
++
++
++class LLM_HF(LLM):
++    """An LLM for generating texts from given prompts and sampling parameters.
++
++    This class includes a tokenizer, a language model (possibly distributed
++    across multiple GPUs), and GPU memory space allocated for intermediate
++    states (aka KV cache). Given a batch of prompts and sampling parameters,
++    this class generates texts from the model, using an intelligent batching
++    mechanism and efficient memory management.
++
++    NOTE: This class is intended to be used for offline inference. For online
++    serving, use the `AsyncLLMEngine` class instead.
++    NOTE: For the comprehensive list of arguments, see `EngineArgs`.
++
++    Args:
++        model: The name or path of a HuggingFace Transformers model.
++        tokenizer: The name or path of a HuggingFace Transformers tokenizer.
++        tokenizer_mode: The tokenizer mode. "auto" will use the fast tokenizer
++            if available, and "slow" will always use the slow tokenizer.
++        trust_remote_code: Trust remote code (e.g., from HuggingFace) when
++            downloading the model and tokenizer.
++        tensor_parallel_size: The number of GPUs to use for distributed
++            execution with tensor parallelism.
++        dtype: The data type for the model weights and activations. Currently,
++            we support `float32`, `float16`, and `bfloat16`. If `auto`, we use
++            the `torch_dtype` attribute specified in the model config file.
++            However, if the `torch_dtype` in the config is `float32`, we will
++            use `float16` instead.
++        quantization: The method used to quantize the model weights. Currently,
++            we support "awq". If None, we assume the model weights are not
++            quantized and use `dtype` to determine the data type of the weights.
++        revision: The specific model version to use. It can be a branch name,
++            a tag name, or a commit id.
++        tokenizer_revision: The specific tokenizer version to use. It can be a
++            branch name, a tag name, or a commit id.
++        seed: The seed to initialize the random number generator for sampling.
++        gpu_memory_utilization: The ratio (between 0 and 1) of GPU memory to
++            reserve for the model weights, activations, and KV cache. Higher
++            values will increase the KV cache size and thus improve the model's
++            throughput. However, if the value is too high, it may cause out-of-
++            memory (OOM) errors.
++        swap_space: The size (GiB) of CPU memory per GPU to use as swap space.
++            This can be used for temporarily storing the states of the requests
++            when their `best_of` sampling parameters are larger than 1. If all
++            requests will have `best_of=1`, you can safely set this to 0.
++            Otherwise, too small values may cause out-of-memory (OOM) errors.
++    """
++
++    def __init__(
++            self,
++            tokenizer_mode: str = "auto",
++            trust_remote_code: bool = False,
++            tensor_parallel_size: int = 1,
++            dtype: str = "auto",
++            quantization: Optional[str] = None,
++            revision: Optional[str] = None,
++            tokenizer_revision: Optional[str] = None,
++            seed: int = 0,
++            gpu_memory_utilization: float = 0.9,
++            swap_space: int = 4,
++            hf_model=None,
++            tokenizer=None,
++            **kwargs,
++    ) -> None:
++        if "disable_log_stats" not in kwargs:
++            kwargs["disable_log_stats"] = True
++        engine_args = EngineArgs(
++            model=None,
++            tokenizer=None,
++            tokenizer_mode=tokenizer_mode,
++            trust_remote_code=trust_remote_code,
++            tensor_parallel_size=tensor_parallel_size,
++            dtype=dtype,
++            quantization=quantization,
++            revision=revision,
++            tokenizer_revision=tokenizer_revision,
++            seed=seed,
++            gpu_memory_utilization=gpu_memory_utilization,
++            swap_space=swap_space,
++            **kwargs,
++        )
++
++        self.llm_engine = LLMEngineHF.from_engine_args(engine_args, hf_model=hf_model, tokenizer=tokenizer)
++        self.request_counter = Counter()
+diff --git a/vllm/model_executor/layers/sampler_hf.py b/vllm/model_executor/layers/sampler_hf.py
+new file mode 100644
+index 0000000..95ec474
+--- /dev/null
++++ b/vllm/model_executor/layers/sampler_hf.py
+@@ -0,0 +1,590 @@
++"""A layer that samples the next tokens from the model's outputs."""
++from typing import Dict, List, Optional, Tuple
++
++import torch
++import torch.nn as nn
++
++from vllm.model_executor.input_metadata import InputMetadata
++from vllm.model_executor.parallel_utils.communication_op import (
++    tensor_model_parallel_all_gather)
++from vllm.sampling_params import SamplingParams, SamplingType
++from vllm.sequence import (PromptLogprobs, SampleLogprobs, SamplerOutput,
++                           SequenceData, SequenceGroupOutputs, SequenceOutputs)
++
++_SAMPLING_EPS = 1e-5
++
++
++class Sampler(nn.Module):
++    """Samples the next tokens from the model's outputs.
++
++    This layer does the following:
++    1. Discard the hidden states that are not used for sampling (i.e., all
++        tokens except the final one in each prompt).
++    2. Compute the logits for the next tokens.
++    3. Apply presence and frequency penalties.
++    4. Apply temperature scaling.
++    5. Apply top-p and top-k truncation.
++    6. Sample the next tokens.
++    Here, each sequence group within the batch can have different sampling
++    parameters (e.g., sampling method, temperature, top-p, top-k, etc.).
++    """
++
++    def __init__(self, vocab_size: int) -> None:
++        super().__init__()
++        self.vocab_size = vocab_size
++
++    def forward(
++        self,
++        embedding: torch.Tensor,
++        hidden_states: torch.Tensor,
++        input_metadata: InputMetadata,
++        embedding_bias: Optional[torch.Tensor] = None,
++    ) -> SamplerOutput:
++        # Get the hidden states that we use for sampling.
++        hidden_states = _prune_hidden_states(hidden_states, input_metadata)
++
++        # Get the logits for the next tokens.
++        logits = _get_logits(hidden_states, embedding, embedding_bias,
++                             self.vocab_size)
++
++        # Apply presence and frequency penalties.
++        output_tokens = _get_output_tokens(input_metadata)
++        assert len(output_tokens) == logits.shape[0]
++        presence_penalties, frequency_penalties = _get_penalties(
++            input_metadata)
++        assert len(presence_penalties) == logits.shape[0]
++        assert len(frequency_penalties) == logits.shape[0]
++        logits = _apply_penalties(logits, output_tokens, presence_penalties,
++                                  frequency_penalties)
++
++        # Apply temperature scaling.
++        temperatures = _get_temperatures(input_metadata)
++        assert len(temperatures) == logits.shape[0]
++        if any(t != 1.0 for t in temperatures):
++            t = torch.tensor(temperatures,
++                             dtype=logits.dtype,
++                             device=logits.device)
++            # Use in-place division to avoid creating a new tensor.
++            logits.div_(t.unsqueeze(dim=1))
++
++        # Apply top-p and top-k truncation.
++        top_ps, top_ks = _get_top_p_top_k(input_metadata, self.vocab_size)
++        assert len(top_ps) == len(top_ks) == logits.shape[0]
++        do_top_p = any(p < 1.0 - _SAMPLING_EPS for p in top_ps)
++        do_top_k = any(k != self.vocab_size for k in top_ks)
++        if do_top_p or do_top_k:
++            logits = _apply_top_p_top_k(logits, top_ps, top_ks)
++
++        # We use float32 for probabilities and log probabilities.
++        # Compute the probabilities.
++        probs = torch.softmax(logits, dim=-1, dtype=torch.float)
++        # Compute the log probabilities.
++        # Use log_softmax to ensure numerical stability.
++        logprobs = torch.log_softmax(logits, dim=-1, dtype=torch.float)
++
++        # Sample the next tokens.
++        sample_results = _sample(probs, logprobs, input_metadata)
++        # Get the logprobs query results.
++        prompt_logprobs, sample_logprobs = _get_logprobs(
++            logprobs, input_metadata, sample_results)
++        return _build_sampler_output(sample_results, input_metadata,
++                                     prompt_logprobs, sample_logprobs)
++
++
++def _get_logits(hidden_states: torch.Tensor, embedding: torch.Tensor,
++                embedding_bias: Optional[torch.Tensor],
++                vocab_size: int) -> torch.Tensor:
++    # Get the logits for the next tokens.
++    logits = torch.matmul(hidden_states, embedding.t())
++    if embedding_bias is not None:
++        logits += embedding_bias
++    # logits = tensor_model_parallel_all_gather(logits)
++    # Remove paddings in vocab (if any).
++    logits = logits[:, :vocab_size]
++    return logits
++
++
++def _prune_hidden_states(
++    hidden_states: torch.Tensor,
++    input_metadata: InputMetadata,
++) -> torch.Tensor:
++    selected_token_indices: List[int] = []
++    start_idx = 0
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        if i < input_metadata.num_prompts:
++            assert len(seq_ids) == 1, "Prompt input should have only one seq."
++            prompt_len = input_metadata.prompt_lens[i]
++            if sampling_params.prompt_logprobs is not None:
++                selected_token_indices.extend(
++                    range(start_idx, start_idx + prompt_len - 1))
++            selected_token_indices.append(start_idx + prompt_len - 1)
++            start_idx += prompt_len
++        else:
++            num_seqs = len(seq_ids)
++            selected_token_indices.extend(
++                range(start_idx, start_idx + num_seqs))
++            start_idx += num_seqs
++
++    selected_token_indices = torch.tensor(selected_token_indices,
++                                          dtype=torch.long,
++                                          device=hidden_states.device)
++    return hidden_states.index_select(0, selected_token_indices)
++
++
++def _get_penalties(
++        input_metadata: InputMetadata) -> Tuple[List[float], List[float]]:
++    # Collect the presence and frequency penalties.
++    presence_penalties: List[float] = []
++    frequency_penalties: List[float] = []
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        p = sampling_params.presence_penalty
++        f = sampling_params.frequency_penalty
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            # NOTE: We do not apply presence and frequency penalties for the
++            # prompt token positions where we don't sample new tokens.
++            prompt_len = input_metadata.prompt_lens[i]
++            presence_penalties += [0] * (prompt_len - 1)
++            frequency_penalties += [0] * (prompt_len - 1)
++        presence_penalties += [p] * len(seq_ids)
++        frequency_penalties += [f] * len(seq_ids)
++    return presence_penalties, frequency_penalties
++
++
++def _get_output_tokens(input_metadata: InputMetadata) -> List[List[int]]:
++    output_tokens: List[List[int]] = []
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            # NOTE: prompt token positions do not need output tokens to
++            # compute penalties.
++            prompt_len = input_metadata.prompt_lens[i]
++            output_tokens.extend([] for _ in range(prompt_len - 1))
++        for seq_id in seq_ids:
++            seq_data = input_metadata.seq_data[seq_id]
++            output_tokens.append(seq_data.output_token_ids)
++    return output_tokens
++
++
++def _apply_penalties(
++    logits: torch.Tensor,
++    output_tokens: List[List[int]],
++    presence_penalties: List[float],
++    frequency_penalties: List[float],
++) -> torch.Tensor:
++    num_seqs, vocab_size = logits.shape
++    for i in range(num_seqs):
++        if not output_tokens[i]:
++            continue
++        p = presence_penalties[i]
++        f = frequency_penalties[i]
++        if abs(p) < _SAMPLING_EPS and abs(f) < _SAMPLING_EPS:
++            continue
++        break
++    else:
++        # Return early if all sequences have zero penalties.
++        return logits
++
++    max_output_len = max(len(tokens) for tokens in output_tokens)
++    padded_output_tokens = [
++        tokens + [vocab_size] * (max_output_len - len(tokens))
++        for tokens in output_tokens
++    ]
++    output_tokens_tensor = torch.tensor(padded_output_tokens,
++                                        dtype=torch.long,
++                                        device=logits.device)
++
++    # Compute the bin counts for the output tokens.
++    # vocab_size + 1 for padding.
++    bin_counts = torch.zeros((num_seqs, vocab_size + 1),
++                             dtype=torch.long,
++                             device=logits.device)
++    bin_counts.scatter_add_(1, output_tokens_tensor,
++                            torch.ones_like(output_tokens_tensor))
++    bin_counts = bin_counts[:, :vocab_size]  # Remove the padding bin.
++
++    frequency_penalties = torch.tensor(frequency_penalties,
++                                       dtype=logits.dtype,
++                                       device=logits.device)
++    presence_penalties = torch.tensor(presence_penalties,
++                                      dtype=logits.dtype,
++                                      device=logits.device)
++
++    # We follow the definition in OpenAI API.
++    # Refer to https://platform.openai.com/docs/api-reference/parameter-details
++    logits -= frequency_penalties.unsqueeze(dim=1) * bin_counts
++    logits -= presence_penalties.unsqueeze(dim=1) * (bin_counts > 0)
++    return logits
++
++
++def _get_temperatures(input_metadata: InputMetadata) -> List[float]:
++    # Collect the temperatures for the logits.
++    temperatures: List[float] = []
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        temperature = sampling_params.temperature
++        if temperature < _SAMPLING_EPS:
++            # NOTE: Zero temperature means deterministic sampling
++            # (i.e., greedy sampling or beam search).
++            # Set the temperature to 1 to avoid division by zero.
++            temperature = 1.0
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            prompt_len = input_metadata.prompt_lens[i]
++            temperatures += [temperature] * (prompt_len - 1)
++        temperatures += [temperature] * len(seq_ids)
++    return temperatures
++
++
++def _get_top_p_top_k(
++    input_metadata: InputMetadata,
++    vocab_size: int,
++) -> Tuple[List[float], List[int]]:
++    top_ps: List[float] = []
++    top_ks: List[int] = []
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        top_p = sampling_params.top_p
++        # k should not be greater than the vocab size.
++        top_k = min(sampling_params.top_k, vocab_size)
++        # k=-1 means no truncation.
++        top_k = vocab_size if top_k == -1 else top_k
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            prompt_len = input_metadata.prompt_lens[i]
++            top_ps += [top_p] * (prompt_len - 1)
++            top_ks += [top_k] * (prompt_len - 1)
++        top_ps += [top_p] * len(seq_ids)
++        top_ks += [top_k] * len(seq_ids)
++    return top_ps, top_ks
++
++
++def _apply_top_p_top_k(
++    logits: torch.Tensor,
++    top_ps: List[float],
++    top_ks: List[int],
++) -> torch.Tensor:
++    p = torch.tensor(top_ps, dtype=logits.dtype, device=logits.device)
++    k = torch.tensor(top_ks, dtype=torch.int, device=logits.device)
++    logits_sort, logits_idx = logits.sort(dim=-1, descending=True)
++
++    # Apply top-p.
++    probs_sort = logits_sort.softmax(dim=-1)
++    probs_sum = probs_sort.cumsum(dim=-1)
++    top_p_mask = (probs_sum - probs_sort) > p.unsqueeze(dim=1)
++    logits_sort[top_p_mask] = -float("inf")
++
++    # Apply top-k.
++    # Create a mask for the top-k elements.
++    top_k_mask = torch.arange(logits_idx.shape[-1], device=logits_idx.device)
++    top_k_mask = top_k_mask.expand(logits_idx.shape[0], -1)
++    top_k_mask = top_k_mask >= k.unsqueeze(dim=1)
++    logits_sort[top_k_mask] = -float("inf")
++
++    # Re-sort the probabilities.
++    logits = torch.gather(logits_sort,
++                          dim=-1,
++                          index=torch.argsort(logits_idx, dim=-1))
++    return logits
++
++
++def _greedy_sample(
++    selected_seq_groups: List[Tuple[List[int], SamplingParams]],
++    logprobs: torch.Tensor,
++) -> List[Tuple[List[int], List[int]]]:
++    samples = torch.argmax(logprobs, dim=-1).cpu()
++    sample_idx = 0
++    results = []
++    for seq_group in selected_seq_groups:
++        seq_ids, _ = seq_group
++        num_parent_seqs = len(seq_ids)
++        assert num_parent_seqs == 1, (
++            "Greedy sampling should have only one seq.")
++        parent_ids = list(range(num_parent_seqs))
++        next_token_ids = [samples[sample_idx].item()]
++        results.append((next_token_ids, parent_ids))
++        sample_idx += num_parent_seqs
++    assert sample_idx == logprobs.size(0)
++    return results
++
++
++def _random_sample(
++    selected_seq_groups: List[Tuple[List[int], SamplingParams]],
++    is_prompts: List[bool],
++    probs: torch.Tensor,
++) -> List[Tuple[List[int], List[int]]]:
++    # Find the maximum best_of value of the prompt phase requests.
++    max_best_of = 1
++    for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
++        if is_prompt:
++            seq_ids, sampling_params = seq_group
++            max_best_of = max(max_best_of, sampling_params.best_of)
++    random_samples = torch.multinomial(probs,
++                                       num_samples=max_best_of,
++                                       replacement=True).cpu()
++    sample_idx = 0
++    results = []
++    for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
++        seq_ids, sampling_params = seq_group
++        num_parent_seqs = len(seq_ids)
++        if is_prompt:
++            # Prompt phase.
++            assert num_parent_seqs == 1, (
++                "Prompt input should have only one seq.")
++            parent_ids = [0] * sampling_params.best_of
++            next_token_ids = random_samples[
++                sample_idx, :sampling_params.best_of].tolist()
++        else:
++            # Generation phase.
++            parent_ids = list(range(num_parent_seqs))
++            next_token_ids = random_samples[sample_idx:sample_idx +
++                                            num_parent_seqs, 0].tolist()
++        results.append((next_token_ids, parent_ids))
++        sample_idx += num_parent_seqs
++    assert sample_idx == probs.size(0)
++    return results
++
++
++def _beam_search_sample(
++    selected_seq_groups: List[Tuple[List[int], SamplingParams]],
++    is_prompts: List[bool],
++    seq_data: Dict[int, SequenceData],
++    logprobs: torch.Tensor,
++) -> List[Tuple[List[int], List[int]]]:
++    # We sample 2 * beam_width candidates to make sure that with high
++    # probability we can get `beam_width` candidates in addition to
++    # the finished sequences for the next iteration. See
++    # https://github.com/tensorflow/tensor2tensor/blob/bafdc1b67730430d38d6ab802cbd51f9d053ba2e/tensor2tensor/utils/beam_search.py#L557-L563
++    # for details. See also HF reference:
++    # https://github.com/huggingface/transformers/blob/a4dd53d88e4852f023332d284ff07a01afcd5681/src/transformers/generation/utils.py#L3063-L3065
++    #
++    # NOTE: Beam search is not vectorized, so its speed can be slower than
++    # other sampling methods.
++    sample_idx = 0
++    results = []
++    for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
++        seq_ids, sampling_params = seq_group
++        num_parent_seqs = len(seq_ids)
++        beam_width = sampling_params.best_of
++        seq_group_logprobs = logprobs[sample_idx:sample_idx + num_parent_seqs]
++        if is_prompt:
++            # Prompt phase.
++            assert num_parent_seqs == 1, (
++                "Prompt input should have only one seq.")
++            parent_ids = [0] * (2 * beam_width)
++            _, next_token_ids = torch.topk(seq_group_logprobs[0],
++                                           2 * beam_width)
++            next_token_ids = next_token_ids.tolist()
++        else:
++            # Generation phase.
++            cumulative_logprobs = [
++                seq_data[seq_id].cumulative_logprob for seq_id in seq_ids
++            ]
++            cumulative_logprobs = torch.tensor(
++                cumulative_logprobs,
++                dtype=torch.float,
++                device=seq_group_logprobs.device)
++            seq_group_logprobs = (seq_group_logprobs +
++                                  cumulative_logprobs.unsqueeze(dim=1))
++            _, topk_ids = torch.topk(seq_group_logprobs.flatten(),
++                                     2 * beam_width)
++            topk_ids = topk_ids.tolist()
++            vocab_size = seq_group_logprobs.size(-1)
++            parent_ids = [i // vocab_size for i in topk_ids]
++            next_token_ids = [i % vocab_size for i in topk_ids]
++        results.append((next_token_ids, parent_ids))
++        sample_idx += num_parent_seqs
++    assert sample_idx == logprobs.size(0)
++    return results
++
++
++def _sample(
++    probs: torch.Tensor,
++    logprobs: torch.Tensor,
++    input_metadata: InputMetadata,
++) -> List[Tuple[List[int], List[int]]]:
++    categorized_seq_group_ids = {t: [] for t in SamplingType}
++    categorized_sample_indices = {t: [] for t in SamplingType}
++    start_idx = 0
++    for i, seq_group in enumerate(input_metadata.seq_groups):
++        seq_ids, sampling_params = seq_group
++        sampling_type = sampling_params.sampling_type
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            # NOTE: prompt token positions do not need sample, skip
++            prompt_len = input_metadata.prompt_lens[i]
++            start_idx += prompt_len - 1
++        categorized_seq_group_ids[sampling_type].append(i)
++        num_seqs = len(seq_ids)
++        categorized_sample_indices[sampling_type].extend(
++            range(start_idx, start_idx + num_seqs))
++        start_idx += num_seqs
++
++    sample_results_dict: Dict[int, Tuple[List[int], List[int]]] = {}
++    for sampling_type in SamplingType:
++        seq_group_ids = categorized_seq_group_ids[sampling_type]
++        seq_groups = [input_metadata.seq_groups[i] for i in seq_group_ids]
++        is_prompts = [i < input_metadata.num_prompts for i in seq_group_ids]
++        sample_indices = categorized_sample_indices[sampling_type]
++        num_tokens = len(sample_indices)
++        if num_tokens == 0:
++            continue
++        if sampling_type == SamplingType.GREEDY:
++            category_logprobs = logprobs[sample_indices]
++            sample_results = _greedy_sample(seq_groups, category_logprobs)
++        elif sampling_type == SamplingType.RANDOM:
++            category_probs = probs[sample_indices]
++            sample_results = _random_sample(seq_groups, is_prompts,
++                                            category_probs)
++        elif sampling_type == SamplingType.BEAM:
++            category_logprobs = logprobs[sample_indices]
++            sample_results = _beam_search_sample(seq_groups, is_prompts,
++                                                 input_metadata.seq_data,
++                                                 category_logprobs)
++        else:
++            raise ValueError(f"Unsupported sampling type: {sampling_type}")
++        sample_results_dict.update(zip(seq_group_ids, sample_results))
++
++    sample_results = [
++        sample_results_dict[i] for i in range(len(input_metadata.seq_groups))
++    ]
++    return sample_results
++
++
++def _get_logprobs(
++    logprobs: torch.Tensor,
++    input_metadata: InputMetadata,
++    sample_results: List[Tuple[List[int], List[int]]],
++) -> Tuple[List[Optional[List[Optional[Dict[int, float]]]]], List[List[Dict[
++        int, float]]]]:
++    # Prepare query indices
++    batched_logprobs_query_seq_indices: List[int] = []
++    batched_logprobs_query_token_indices: List[int] = []
++    largest_num_logprobs = 0
++    sample_idx = 0
++    for i, (seq_group, sample_result) in enumerate(
++            zip(input_metadata.seq_groups, sample_results)):
++        seq_ids, sampling_params = seq_group
++        next_token_ids, parent_ids = sample_result
++        num_parent_seqs = len(seq_ids)
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            largest_num_logprobs = max(largest_num_logprobs,
++                                       sampling_params.prompt_logprobs)
++            prompt_len = input_metadata.prompt_lens[i]
++            prompt_tokens = input_metadata.seq_data[
++                seq_ids[0]].prompt_token_ids
++            batched_logprobs_query_seq_indices.extend(
++                sample_idx + j for j in range(prompt_len - 1))
++            batched_logprobs_query_token_indices.extend(
++                token_id for token_id in prompt_tokens[1:])
++            sample_idx += prompt_len - 1
++        batched_logprobs_query_seq_indices.extend(
++            [sample_idx + parent_id for parent_id in parent_ids])
++        batched_logprobs_query_token_indices.extend(next_token_ids)
++        if sampling_params.logprobs is not None:
++            largest_num_logprobs = max(largest_num_logprobs,
++                                       sampling_params.logprobs)
++        sample_idx += num_parent_seqs
++    assert sample_idx == logprobs.size(0)
++
++    # Batched query for logprobs of selected token
++    batched_logprobs_query_result = logprobs[[
++        batched_logprobs_query_seq_indices,
++        batched_logprobs_query_token_indices
++    ]].cpu()
++
++    # Batched query for logprobs of topk tokens
++    if largest_num_logprobs > 0:
++        top_logprobs, top_token_ids = torch.topk(logprobs,
++                                                 largest_num_logprobs,
++                                                 dim=-1)
++        top_logprobs = top_logprobs.cpu()
++        top_token_ids = top_token_ids.cpu()
++    else:
++        top_logprobs, top_token_ids = None, None
++
++    # Gather results
++    result_prompt_logprobs: List[Optional[PromptLogprobs]] = []
++    result_sample_logprobs: List[SampleLogprobs] = []
++    sample_idx = 0
++    query_result_idx = 0
++    for i, (seq_group, sample_result) in enumerate(
++            zip(input_metadata.seq_groups, sample_results)):
++        seq_ids, sampling_params = seq_group
++        next_token_ids, parent_ids = sample_result
++
++        # Prompt logprobs
++        if (i < input_metadata.num_prompts
++                and sampling_params.prompt_logprobs is not None):
++            num_logprobs = sampling_params.prompt_logprobs
++            prompt_len = input_metadata.prompt_lens[i]
++            prompt_tokens = input_metadata.seq_data[
++                seq_ids[0]].prompt_token_ids
++            group_prompt_logprobs: PromptLogprobs = [None]
++            for token_id in prompt_tokens[1:]:
++                prompt_logprobs_dict = {
++                    token_id:
++                    batched_logprobs_query_result[query_result_idx].item()
++                }
++                if num_logprobs > 0:
++                    prompt_logprobs_dict.update(
++                        zip(top_token_ids[sample_idx, :num_logprobs].tolist(),
++                            top_logprobs[sample_idx, :num_logprobs].tolist()))
++                group_prompt_logprobs.append(prompt_logprobs_dict)
++                sample_idx += 1
++                query_result_idx += 1
++            result_prompt_logprobs.append(group_prompt_logprobs)
++        else:
++            result_prompt_logprobs.append(None)
++
++        # Sample logprobs
++        num_logprobs = sampling_params.logprobs
++        if num_logprobs is None:
++            num_logprobs = 0
++        group_sample_logprobs: SampleLogprobs = []
++        for next_token_id, parent_id in zip(next_token_ids, parent_ids):
++            sample_logprobs_dict = {
++                next_token_id:
++                batched_logprobs_query_result[query_result_idx].item()
++            }
++            query_result_idx += 1
++            if num_logprobs > 0:
++                sample_logprobs_dict.update(
++                    zip(
++                        top_token_ids[sample_idx +
++                                      parent_id, :num_logprobs].tolist(),
++                        top_logprobs[sample_idx +
++                                     parent_id, :num_logprobs].tolist()))
++            group_sample_logprobs.append(sample_logprobs_dict)
++        result_sample_logprobs.append(group_sample_logprobs)
++        sample_idx += len(seq_ids)
++
++    return result_prompt_logprobs, result_sample_logprobs
++
++
++def _build_sampler_output(
++    sample_results: List[Tuple[List[int], List[int]]],
++    input_metadata: InputMetadata,
++    prompt_logprobs: List[Optional[PromptLogprobs]],
++    sample_logprobs: List[SampleLogprobs],
++) -> SamplerOutput:
++    sampler_output = []
++    for (seq_group, sample_result, group_prompt_logprobs,
++         group_sample_logprobs) in zip(input_metadata.seq_groups,
++                                       sample_results, prompt_logprobs,
++                                       sample_logprobs):
++        seq_ids, _ = seq_group
++        next_token_ids, parent_ids = sample_result
++        seq_outputs = []
++        for parent_id, next_token_id, logprobs in zip(parent_ids,
++                                                      next_token_ids,
++                                                      group_sample_logprobs):
++            seq_outputs.append(
++                SequenceOutputs(seq_ids[parent_id], next_token_id, logprobs))
++        sampler_output.append(
++            SequenceGroupOutputs(seq_outputs, group_prompt_logprobs))
++    return sampler_output
+diff --git a/vllm/model_executor/models/llama_hf.py b/vllm/model_executor/models/llama_hf.py
+new file mode 100644
+index 0000000..61d9c22
+--- /dev/null
++++ b/vllm/model_executor/models/llama_hf.py
+@@ -0,0 +1,502 @@
++# coding=utf-8
++# Adapted from
++# https://github.com/huggingface/transformers/blob/v4.28.0/src/transformers/models/llama/modeling_llama.py
++# Copyright 2023 The vLLM team.
++# Copyright 2022 EleutherAI and the HuggingFace Inc. team. All rights reserved.
++#
++# This code is based on EleutherAI's GPT-NeoX library and the GPT-NeoX
++# and OPT implementations in this library. It has been modified from its
++# original forms to accommodate minor architectural differences compared
++# to GPT-NeoX and OPT used by the Meta AI team that trained the model.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++"""Inference-only LLaMA model compatible with HuggingFace weights.
++
++The input of the model is flattened to a 1D tensor of tokens. The model uses
++InputMetadata to extract the original 2D shape of the input.
++"""
++from typing import Any, Dict, List, Optional, Tuple
++
++import torch
++from torch import nn
++from transformers import LlamaConfig
++
++from vllm.model_executor.input_metadata import InputMetadata
++from vllm.model_executor.layers.activation import SiluAndMul
++from vllm.model_executor.layers.layernorm import RMSNorm
++from vllm.model_executor.layers.attention import PagedAttentionWithRoPE
++from vllm.model_executor.layers.sampler import Sampler
++from vllm.model_executor.parallel_utils.parallel_state import get_tensor_model_parallel_world_size, \
++    get_tensor_model_parallel_rank
++from vllm.model_executor.parallel_utils.layers import VocabParallelEmbedding
++from vllm.model_executor.quantization_utils import QuantizationConfig
++from vllm.model_executor.weight_utils import load_padded_tensor_parallel_vocab, hf_model_weights_iterator
++from vllm.sequence import SamplerOutput
++from vllm.model_executor.layers.quantized_linear.awq import (
++    AWQColumnParallelLinear, AWQRowParallelLinear)
++from vllm.model_executor.parallel_utils.layers import (ColumnParallelLinear,
++                                                       RowParallelLinear)
++
++from vllm.model_executor.weight_utils import load_tensor_parallel_weights
++
++_QUANTIZED_LINEAR_REGISTRY = {
++    "awq": (AWQColumnParallelLinear, AWQRowParallelLinear),
++}
++
++KVCache = Tuple[torch.Tensor, torch.Tensor]
++
++
++class ColumnParallelLinearHF(ColumnParallelLinear):
++    def create_weights(self, dtype: torch.dtype) -> None:
++        pass
++
++    @property
++    def weight(self):
++        if hasattr(self, 'hf_pointer') and not hasattr(self, '_weight'):
++            (hf_model, gate_proj, layer_index) = self.hf_pointer
++            if gate_proj:
++                self._weight = torch.cat((hf_model.model.layers[layer_index].mlp.gate_proj.weight,
++                                        hf_model.model.layers[layer_index].mlp.up_proj.weight), 0)
++            else:
++                self._weight = torch.cat((hf_model.model.layers[layer_index].self_attn.q_proj.weight,
++                                        hf_model.model.layers[layer_index].self_attn.k_proj.weight,
++                                        hf_model.model.layers[layer_index].self_attn.v_proj.weight), 0)
++        return self._weight
++
++    # @property
++    # def weight(self):
++    #     if hasattr(self, 'hf_pointer'):
++    #         (hf_model, gate_proj, layer_index) = self.hf_pointer
++    #         if gate_proj:
++    #             return torch.cat((hf_model.model.layers[layer_index].mlp.gate_proj.weight,
++    #                                     hf_model.model.layers[layer_index].mlp.up_proj.weight), 0)
++    #         else:
++    #             return torch.cat((hf_model.model.layers[layer_index].self_attn.q_proj.weight,
++    #                                     hf_model.model.layers[layer_index].self_attn.k_proj.weight,
++    #                                     hf_model.model.layers[layer_index].self_attn.v_proj.weight), 0)
++    #     return self._weight
++
++
++class RowParallelLinearHF(RowParallelLinear):
++    def create_weights(self, dtype: torch.dtype) -> None:
++        pass
++
++    @property
++    def weight(self):
++        return self._weight
++
++
++class ParallelLinear:
++
++    @classmethod
++    def column(cls, *args, **kwargs) -> ColumnParallelLinearHF:
++        quant_config = kwargs.get("quant_config", None)
++        if quant_config is None:
++            return ColumnParallelLinearHF(*args, **kwargs)
++
++        name = quant_config.get_name()
++        if name not in _QUANTIZED_LINEAR_REGISTRY:
++            raise ValueError(f"No quantized linear is found for {name}")
++
++        quant_linear_cls = _QUANTIZED_LINEAR_REGISTRY[name][0]
++        return quant_linear_cls(*args, **kwargs)
++
++    @classmethod
++    def row(cls, *args, **kwargs) -> RowParallelLinearHF:
++        quant_config = kwargs.get("quant_config", None)
++        if quant_config is None:
++            return RowParallelLinearHF(*args, **kwargs)
++
++        name = quant_config.get_name()
++        if name not in _QUANTIZED_LINEAR_REGISTRY:
++            raise ValueError(f"No quantized linear is found for {name}")
++
++        quant_linear_cls = _QUANTIZED_LINEAR_REGISTRY[name][1]
++        return quant_linear_cls(*args, **kwargs)
++
++
++class LlamaMLP(nn.Module):
++
++    def __init__(
++        self,
++        hidden_size: int,
++        intermediate_size: int,
++        hidden_act: str,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.gate_up_proj = ParallelLinear.column(hidden_size,
++                                                  2 * intermediate_size,
++                                                  bias=False,
++                                                  gather_output=False,
++                                                  quant_config=quant_config)
++        self.down_proj = ParallelLinear.row(intermediate_size,
++                                            hidden_size,
++                                            bias=False,
++                                            input_is_parallel=True,
++                                            quant_config=quant_config)
++        if hidden_act != "silu":
++            raise ValueError(f"Unsupported activation: {hidden_act}. "
++                             "Only silu is supported for now.")
++        self.act_fn = SiluAndMul()
++
++    def forward(self, x):
++        gate_up, _ = self.gate_up_proj(x)
++        x = self.act_fn(gate_up)
++        x, _ = self.down_proj(x)
++        return x
++
++
++class LlamaAttention(nn.Module):
++
++    def __init__(
++        self,
++        hidden_size: int,
++        num_heads: int,
++        num_kv_heads: int,
++        rope_theta: float = 10000,
++        rope_scaling: Optional[Dict[str, Any]] = None,
++        max_position_embeddings: int = 8192,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.hidden_size = hidden_size
++        tp_size = get_tensor_model_parallel_world_size()
++        self.total_num_heads = num_heads
++        assert self.total_num_heads % tp_size == 0
++        self.num_heads = self.total_num_heads // tp_size
++        self.total_num_kv_heads = num_kv_heads
++        if self.total_num_kv_heads >= tp_size:
++            # Number of KV heads is greater than TP size, so we partition
++            # the KV heads across multiple tensor parallel GPUs.
++            assert self.total_num_kv_heads % tp_size == 0
++        else:
++            # Number of KV heads is less than TP size, so we replicate
++            # the KV heads across multiple tensor parallel GPUs.
++            assert tp_size % self.total_num_kv_heads == 0
++        self.num_kv_heads = max(1, self.total_num_kv_heads // tp_size)
++        num_kv_heads_replicas = max(1, tp_size // self.total_num_kv_heads)
++        self.head_dim = hidden_size // self.total_num_heads
++        self.q_size = self.num_heads * self.head_dim
++        self.kv_size = self.num_kv_heads * self.head_dim
++        self.scaling = self.head_dim**-0.5
++        self.rope_theta = rope_theta
++        self.max_position_embeddings = max_position_embeddings
++
++        self.qkv_proj = ParallelLinear.column(
++            hidden_size,
++            (self.total_num_heads +
++             2 * self.total_num_kv_heads * num_kv_heads_replicas) *
++            self.head_dim,
++            bias=False,
++            gather_output=False,
++            quant_config=quant_config,
++        )
++        self.o_proj = ParallelLinear.row(
++            self.total_num_heads * self.head_dim,
++            hidden_size,
++            bias=False,
++            input_is_parallel=True,
++            quant_config=quant_config,
++        )
++        self.attn = PagedAttentionWithRoPE(
++            self.num_heads,
++            self.head_dim,
++            self.scaling,
++            base=self.rope_theta,
++            max_position=self.max_position_embeddings,
++            rotary_dim=self.head_dim,
++            num_kv_heads=self.num_kv_heads,
++            rope_scaling=rope_scaling)
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: KVCache,
++        input_metadata: InputMetadata,
++        cache_event: Optional[torch.cuda.Event],
++    ) -> torch.Tensor:
++        qkv, _ = self.qkv_proj(hidden_states)
++        q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
++        k_cache, v_cache = kv_cache
++        attn_output = self.attn(positions, q, k, v, k_cache, v_cache,
++                                input_metadata, cache_event)
++        output, _ = self.o_proj(attn_output)
++        return output
++
++
++class LlamaDecoderLayer(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.hidden_size = config.hidden_size
++        # Requires transformers > 4.32.0
++        rope_theta = getattr(config, "rope_theta", 10000)
++        rope_scaling = getattr(config, "rope_scaling", None)
++        max_position_embeddings = getattr(config, "max_position_embeddings",
++                                          8192)
++        self.self_attn = LlamaAttention(
++            hidden_size=self.hidden_size,
++            num_heads=config.num_attention_heads,
++            num_kv_heads=config.num_key_value_heads,
++            rope_theta=rope_theta,
++            rope_scaling=rope_scaling,
++            max_position_embeddings=max_position_embeddings,
++            quant_config=quant_config,
++        )
++        self.mlp = LlamaMLP(
++            hidden_size=self.hidden_size,
++            intermediate_size=config.intermediate_size,
++            hidden_act=config.hidden_act,
++            quant_config=quant_config,
++        )
++        self.input_layernorm = RMSNorm(config.hidden_size,
++                                       eps=config.rms_norm_eps)
++        self.post_attention_layernorm = RMSNorm(config.hidden_size,
++                                                eps=config.rms_norm_eps)
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: KVCache,
++        input_metadata: InputMetadata,
++        cache_event: Optional[torch.cuda.Event],
++    ) -> torch.Tensor:
++        # Self Attention
++        residual = hidden_states
++        hidden_states = self.input_layernorm(hidden_states)
++        hidden_states = self.self_attn(
++            positions=positions,
++            hidden_states=hidden_states,
++            kv_cache=kv_cache,
++            input_metadata=input_metadata,
++            cache_event=cache_event,
++        )
++        hidden_states = residual + hidden_states
++
++        # Fully Connected
++        residual = hidden_states
++        hidden_states = self.post_attention_layernorm(hidden_states)
++        hidden_states = self.mlp(hidden_states)
++        hidden_states = residual + hidden_states
++        return hidden_states
++
++
++class LlamaModel(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.config = config
++        self.padding_idx = config.pad_token_id
++        self.vocab_size = config.vocab_size
++
++        vocab_size = ((config.vocab_size + 63) // 64) * 64
++        self.embed_tokens = VocabParallelEmbedding(
++            vocab_size,
++            config.hidden_size,
++        )
++        self.layers = nn.ModuleList([
++            LlamaDecoderLayer(config, quant_config)
++            for _ in range(config.num_hidden_layers)
++        ])
++        self.norm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
++
++    def forward(
++        self,
++        input_ids: torch.Tensor,
++        positions: torch.Tensor,
++        kv_caches: List[KVCache],
++        input_metadata: InputMetadata,
++        cache_events: Optional[List[torch.cuda.Event]],
++    ) -> torch.Tensor:
++        hidden_states = self.embed_tokens(input_ids)
++        for i in range(len(self.layers)):
++            if cache_events is None:
++                cache_event = None
++            else:
++                cache_event = cache_events[i]
++            layer = self.layers[i]
++            hidden_states = layer(
++                positions,
++                hidden_states,
++                kv_caches[i],
++                input_metadata,
++                cache_event,
++            )
++        hidden_states = self.norm(hidden_states)
++        return hidden_states
++
++
++class LlamaForCausalLM_HF(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.config = config
++        self.quant_config = quant_config
++        self.model = LlamaModel(config, quant_config)
++        vocab_size = ((config.vocab_size + 63) // 64) * 64
++        # NOTE: The LM head is not quantized.
++        self.lm_head = ParallelLinear.column(config.hidden_size,
++                                             vocab_size,
++                                             bias=False,
++                                             gather_output=False,
++                                             quant_config=None)
++        self.sampler = Sampler(config.vocab_size)
++
++    def forward(
++        self,
++        input_ids: torch.Tensor,
++        positions: torch.Tensor,
++        kv_caches: List[KVCache],
++        input_metadata: InputMetadata,
++        cache_events: Optional[List[torch.cuda.Event]],
++    ) -> SamplerOutput:
++        hidden_states = self.model(input_ids, positions, kv_caches,
++                                   input_metadata, cache_events)
++        next_tokens = self.sampler(self.lm_head.weight, hidden_states,
++                                   input_metadata)
++        return next_tokens
++
++    _column_parallel_layers = []
++    _row_parallel_layers = ["o_proj", "down_proj"]
++
++    def load_weights(self,
++                     model_name_or_path: str,
++                     cache_dir: Optional[str] = None,
++                     load_format: str = "auto",
++                     revision: Optional[str] = None):
++        if self.quant_config is None:
++            col_weight_suffixes = ["weight"]
++            row_weight_suffixes = ["weight"]
++        else:
++            col_weight_suffixes = (
++                self.quant_config.get_col_parallel_tensor_names())
++            row_weight_suffixes = (
++                self.quant_config.get_row_parallel_tensor_names())
++
++        column_parallel_weights: List[str] = []
++        for layer in self._column_parallel_layers:
++            for suffix in col_weight_suffixes:
++                column_parallel_weights.append(f"{layer}.{suffix}")
++        row_parallel_weights: List[str] = []
++        for layer in self._row_parallel_layers:
++            for suffix in row_weight_suffixes:
++                row_parallel_weights.append(f"{layer}.{suffix}")
++
++        tp_size = get_tensor_model_parallel_world_size()
++        tp_rank = get_tensor_model_parallel_rank()
++        q_proj_shard_size = (self.config.hidden_size // tp_size)
++        num_kv_heads_replicas = max(1,
++                                    tp_size // self.config.num_key_value_heads)
++        num_kv_heads_per_gpu = max(1,
++                                   self.config.num_key_value_heads // tp_size)
++        kv_proj_shard_size = (self.config.hidden_size //
++                              self.config.num_attention_heads *
++                              num_kv_heads_per_gpu)
++        attention_weight_specs = [
++            # (weight_name, shard_size, offset)
++            ("q_proj", q_proj_shard_size, 0),
++            ("k_proj", kv_proj_shard_size, q_proj_shard_size),
++            ("v_proj", kv_proj_shard_size,
++             q_proj_shard_size + kv_proj_shard_size),
++        ]
++        state_dict = self.state_dict()
++
++        for name, loaded_weight in hf_model_weights_iterator(
++                model_name_or_path, cache_dir, load_format, revision):
++            if "rotary_emb.inv_freq" in name:
++                continue
++
++
++            is_attention_weight = False
++            for weight_name, shard_size, offset in attention_weight_specs:
++                if weight_name not in name:
++                    continue
++                param = state_dict[name.replace(weight_name, "qkv_proj")]
++
++                if weight_name in ["k_proj", "v_proj"]:
++                    shard_id = tp_rank // num_kv_heads_replicas
++                else:
++                    shard_id = tp_rank
++                loaded_weight = loaded_weight[shard_size *
++                                              shard_id:shard_size *
++                                                       (shard_id + 1)]
++                param_slice = param.data[offset:offset + shard_size]
++                assert param_slice.shape == loaded_weight.shape
++
++                param_slice.copy_(loaded_weight)
++                is_attention_weight = True
++                break
++            if is_attention_weight:
++                continue
++
++            is_gate_up_weight = False
++            for stride_id, weight_name in enumerate(["gate_proj", "up_proj"]):
++                if weight_name not in name:
++                    continue
++                param = state_dict[name.replace(weight_name, "gate_up_proj")]
++
++                shard_size = param.shape[0] // 2
++                loaded_weight = loaded_weight[shard_size * tp_rank:shard_size *
++                                                                   (tp_rank + 1)]
++                param_slice = param.data[shard_size * stride_id:shard_size *
++                                                                (stride_id + 1)]
++                assert param_slice.shape == loaded_weight.shape
++                param_slice.copy_(loaded_weight)
++                is_gate_up_weight = True
++                break
++            if is_gate_up_weight:
++                continue
++
++            param = state_dict[name]
++
++            if "embed_tokens" in name or "lm_head" in name:
++                load_padded_tensor_parallel_vocab(param, loaded_weight,
++                                                  tp_rank)
++                continue
++
++            load_tensor_parallel_weights(param, loaded_weight, name,
++                                         column_parallel_weights,
++                                         row_parallel_weights, tp_rank)
++
++    def load_weights_from_model(self, hf_model):
++        self.model.embed_tokens.weight = hf_model.model.embed_tokens.weight
++        self.model.norm.weight = hf_model.model.norm.weight
++        self.lm_head._weight = hf_model.lm_head.weight
++
++        for i, l in enumerate(self.model.layers):
++            hf_layer = hf_model.model.layers[i]
++
++            l.self_attn.qkv_proj.hf_pointer = (hf_model, False, i)
++            l.self_attn.o_proj._weight = hf_layer.self_attn.o_proj.weight
++
++            l.mlp.gate_up_proj.hf_pointer = (hf_model, True, i)
++            l.mlp.down_proj._weight = hf_layer.mlp.down_proj.weight
++
++            l.input_layernorm.weight = hf_layer.input_layernorm.weight
++            l.post_attention_layernorm.weight = hf_layer.post_attention_layernorm.weight
++
+diff --git a/vllm/model_executor/models/llama_hf_mopti.py b/vllm/model_executor/models/llama_hf_mopti.py
+new file mode 100644
+index 0000000..1d5e5c5
+--- /dev/null
++++ b/vllm/model_executor/models/llama_hf_mopti.py
+@@ -0,0 +1,510 @@
++# coding=utf-8
++# Adapted from
++# https://github.com/huggingface/transformers/blob/v4.28.0/src/transformers/models/llama/modeling_llama.py
++# Copyright 2023 The vLLM team.
++# Copyright 2022 EleutherAI and the HuggingFace Inc. team. All rights reserved.
++#
++# This code is based on EleutherAI's GPT-NeoX library and the GPT-NeoX
++# and OPT implementations in this library. It has been modified from its
++# original forms to accommodate minor architectural differences compared
++# to GPT-NeoX and OPT used by the Meta AI team that trained the model.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++"""Inference-only LLaMA model compatible with HuggingFace weights.
++
++The input of the model is flattened to a 1D tensor of tokens. The model uses
++InputMetadata to extract the original 2D shape of the input.
++"""
++from functools import cached_property
++from typing import Any, Dict, List, Optional, Tuple
++
++import torch
++from torch import nn
++import torch.nn.functional as F
++from transformers import LlamaConfig
++
++from vllm.model_executor.input_metadata import InputMetadata
++from vllm.model_executor.layers.activation import SiluAndMul
++from vllm.model_executor.layers.layernorm import RMSNorm
++from vllm.model_executor.layers.attention import PagedAttentionWithRoPE
++from vllm.model_executor.layers.sampler_hf import Sampler
++from vllm.model_executor.parallel_utils.communication_op import tensor_model_parallel_all_gather
++from vllm.model_executor.parallel_utils.parallel_state import get_tensor_model_parallel_world_size, \
++    get_tensor_model_parallel_rank
++from vllm.model_executor.parallel_utils.layers_hf import VocabParallelEmbedding
++from vllm.model_executor.quantization_utils import QuantizationConfig
++from vllm.model_executor.weight_utils import load_padded_tensor_parallel_vocab, convert_pyslice_to_tensor, \
++    hf_model_weights_iterator
++from vllm.sequence import SamplerOutput
++from vllm.model_executor.layers.quantized_linear.awq import (
++    AWQColumnParallelLinear, AWQRowParallelLinear)
++from vllm.model_executor.parallel_utils.layers_hf import (ColumnParallelLinear,
++                                                       RowParallelLinear)
++
++from vllm.model_executor.weight_utils import load_tensor_parallel_weights
++
++_QUANTIZED_LINEAR_REGISTRY = {
++    "awq": (AWQColumnParallelLinear, AWQRowParallelLinear),
++}
++
++KVCache = Tuple[torch.Tensor, torch.Tensor]
++
++
++class ColumnParallelLinearHF(ColumnParallelLinear):
++    def create_weights(self, dtype: torch.dtype) -> None:
++        pass
++
++    def split_forward_qkv(self, x):
++        # Matrix multiply.
++        q = F.linear(x, self._weight_q, None)
++        k = F.linear(x, self._weight_k, None)
++        v = F.linear(x, self._weight_v, None)
++
++        return q, k, v
++
++    def split_forward_gu(self, x):
++        g = F.linear(x, self._weight_g, None)
++        u = F.linear(x, self._weight_u, None)
++        return torch.cat((g, u), -1)
++
++    @property
++    def weight(self):
++        return self._weight
++
++
++class RowParallelLinearHF(RowParallelLinear):
++    def create_weights(self, dtype: torch.dtype) -> None:
++        pass
++
++    @property
++    def weight(self):
++        return self._weight
++
++
++class ParallelLinear:
++
++    @classmethod
++    def column(cls, *args, **kwargs) -> ColumnParallelLinearHF:
++        quant_config = kwargs.get("quant_config", None)
++        if quant_config is None:
++            return ColumnParallelLinearHF(*args, **kwargs)
++
++        name = quant_config.get_name()
++        if name not in _QUANTIZED_LINEAR_REGISTRY:
++            raise ValueError(f"No quantized linear is found for {name}")
++
++        quant_linear_cls = _QUANTIZED_LINEAR_REGISTRY[name][0]
++        return quant_linear_cls(*args, **kwargs)
++
++    @classmethod
++    def row(cls, *args, **kwargs) -> RowParallelLinearHF:
++        quant_config = kwargs.get("quant_config", None)
++        if quant_config is None:
++            return RowParallelLinearHF(*args, **kwargs)
++
++        name = quant_config.get_name()
++        if name not in _QUANTIZED_LINEAR_REGISTRY:
++            raise ValueError(f"No quantized linear is found for {name}")
++
++        quant_linear_cls = _QUANTIZED_LINEAR_REGISTRY[name][1]
++        return quant_linear_cls(*args, **kwargs)
++
++
++class LlamaMLP(nn.Module):
++
++    def __init__(
++        self,
++        hidden_size: int,
++        intermediate_size: int,
++        hidden_act: str,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.gate_up_proj = ParallelLinear.column(hidden_size,
++                                                  2 * intermediate_size,
++                                                  bias=False,
++                                                  gather_output=False,
++                                                  quant_config=quant_config)
++        self.down_proj = ParallelLinear.row(intermediate_size,
++                                            hidden_size,
++                                            bias=False,
++                                            input_is_parallel=True,
++                                            quant_config=quant_config)
++        if hidden_act != "silu":
++            raise ValueError(f"Unsupported activation: {hidden_act}. "
++                             "Only silu is supported for now.")
++        self.act_fn = SiluAndMul()
++
++    def forward(self, x):
++        # CASE 1: orig code
++        # gate_up, _ = self.gate_up_proj(x)
++        # CASE 2:
++        gate_up = self.gate_up_proj.split_forward_gu(x)
++
++        x = self.act_fn(gate_up)
++        x, _ = self.down_proj(x)
++        return x
++
++
++class LlamaAttention(nn.Module):
++
++    def __init__(
++        self,
++        hidden_size: int,
++        num_heads: int,
++        num_kv_heads: int,
++        rope_theta: float = 10000,
++        rope_scaling: Optional[Dict[str, Any]] = None,
++        max_position_embeddings: int = 8192,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.hidden_size = hidden_size
++        # tp_size = get_tensor_model_parallel_world_size()
++        tp_size = 1
++        self.total_num_heads = num_heads
++        assert self.total_num_heads % tp_size == 0
++        self.num_heads = self.total_num_heads // tp_size
++        self.total_num_kv_heads = num_kv_heads
++        if self.total_num_kv_heads >= tp_size:
++            # Number of KV heads is greater than TP size, so we partition
++            # the KV heads across multiple tensor parallel GPUs.
++            assert self.total_num_kv_heads % tp_size == 0
++        else:
++            # Number of KV heads is less than TP size, so we replicate
++            # the KV heads across multiple tensor parallel GPUs.
++            assert tp_size % self.total_num_kv_heads == 0
++        self.num_kv_heads = max(1, self.total_num_kv_heads // tp_size)
++        num_kv_heads_replicas = max(1, tp_size // self.total_num_kv_heads)
++        self.head_dim = hidden_size // self.total_num_heads
++        self.q_size = self.num_heads * self.head_dim
++        self.kv_size = self.num_kv_heads * self.head_dim
++        self.scaling = self.head_dim**-0.5
++        self.rope_theta = rope_theta
++        self.max_position_embeddings = max_position_embeddings
++
++        self.qkv_proj = ParallelLinear.column(
++            hidden_size,
++            (self.total_num_heads +
++             2 * self.total_num_kv_heads * num_kv_heads_replicas) *
++            self.head_dim,
++            bias=False,
++            gather_output=False,
++            quant_config=quant_config,
++        )
++        self.o_proj = ParallelLinear.row(
++            self.total_num_heads * self.head_dim,
++            hidden_size,
++            bias=False,
++            input_is_parallel=True,
++            quant_config=quant_config,
++        )
++        self.attn = PagedAttentionWithRoPE(
++            self.num_heads,
++            self.head_dim,
++            self.scaling,
++            base=self.rope_theta,
++            max_position=self.max_position_embeddings,
++            rotary_dim=self.head_dim,
++            num_kv_heads=self.num_kv_heads,
++            rope_scaling=rope_scaling)
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: KVCache,
++        input_metadata: InputMetadata,
++        cache_event: Optional[torch.cuda.Event],
++    ) -> torch.Tensor:
++        # CASE 1: orig code
++        # qkv, _ = self.qkv_proj(hidden_states)
++        # q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
++
++        # CASE 2: split linear to avoid copying weight in memory twice from HF model
++        q, k, v = self.qkv_proj.split_forward_qkv(hidden_states)
++        # END CASE
++
++        k_cache, v_cache = kv_cache
++        attn_output = self.attn(positions, q, k, v, k_cache, v_cache,
++                                input_metadata, cache_event)
++        output, _ = self.o_proj(attn_output)
++        return output
++
++
++class LlamaDecoderLayer(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.hidden_size = config.hidden_size
++        # Requires transformers > 4.32.0
++        rope_theta = getattr(config, "rope_theta", 10000)
++        rope_scaling = getattr(config, "rope_scaling", None)
++        max_position_embeddings = getattr(config, "max_position_embeddings",
++                                          8192)
++        self.self_attn = LlamaAttention(
++            hidden_size=self.hidden_size,
++            num_heads=config.num_attention_heads,
++            num_kv_heads=config.num_key_value_heads,
++            rope_theta=rope_theta,
++            rope_scaling=rope_scaling,
++            max_position_embeddings=max_position_embeddings,
++            quant_config=quant_config,
++        )
++        self.mlp = LlamaMLP(
++            hidden_size=self.hidden_size,
++            intermediate_size=config.intermediate_size,
++            hidden_act=config.hidden_act,
++            quant_config=quant_config,
++        )
++        self.input_layernorm = RMSNorm(config.hidden_size,
++                                       eps=config.rms_norm_eps)
++        self.post_attention_layernorm = RMSNorm(config.hidden_size,
++                                                eps=config.rms_norm_eps)
++
++    def forward(
++        self,
++        positions: torch.Tensor,
++        hidden_states: torch.Tensor,
++        kv_cache: KVCache,
++        input_metadata: InputMetadata,
++        cache_event: Optional[torch.cuda.Event],
++    ) -> torch.Tensor:
++        # Self Attention
++        residual = hidden_states
++        hidden_states = self.input_layernorm(hidden_states)
++        hidden_states = self.self_attn(
++            positions=positions,
++            hidden_states=hidden_states,
++            kv_cache=kv_cache,
++            input_metadata=input_metadata,
++            cache_event=cache_event,
++        )
++        hidden_states = residual + hidden_states
++
++        # Fully Connected
++        residual = hidden_states
++        hidden_states = self.post_attention_layernorm(hidden_states)
++        hidden_states = self.mlp(hidden_states)
++        hidden_states = residual + hidden_states
++        return hidden_states
++
++
++class LlamaModel(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.config = config
++        self.padding_idx = config.pad_token_id
++        self.vocab_size = config.vocab_size
++
++        vocab_size = ((config.vocab_size + 63) // 64) * 64
++        self.embed_tokens = VocabParallelEmbedding(
++            vocab_size,
++            config.hidden_size,
++        )
++        self.layers = nn.ModuleList([
++            LlamaDecoderLayer(config, quant_config)
++            for _ in range(config.num_hidden_layers)
++        ])
++        self.norm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
++
++    def forward(
++        self,
++        input_ids: torch.Tensor,
++        positions: torch.Tensor,
++        kv_caches: List[KVCache],
++        input_metadata: InputMetadata,
++        cache_events: Optional[List[torch.cuda.Event]],
++    ) -> torch.Tensor:
++        hidden_states = self.embed_tokens(input_ids)
++        for i in range(len(self.layers)):
++            if cache_events is None:
++                cache_event = None
++            else:
++                cache_event = cache_events[i]
++            layer = self.layers[i]
++            hidden_states = layer(
++                positions,
++                hidden_states,
++                kv_caches[i],
++                input_metadata,
++                cache_event,
++            )
++        hidden_states = self.norm(hidden_states)
++        return hidden_states
++
++
++class LlamaForCausalLM_HF(nn.Module):
++
++    def __init__(
++        self,
++        config: LlamaConfig,
++        quant_config: Optional[QuantizationConfig] = None,
++    ) -> None:
++        super().__init__()
++        self.config = config
++        self.quant_config = quant_config
++        self.model = LlamaModel(config, quant_config)
++        vocab_size = ((config.vocab_size + 63) // 64) * 64
++        # NOTE: The LM head is not quantized.
++        self.lm_head = ParallelLinear.column(config.hidden_size,
++                                             vocab_size,
++                                             bias=False,
++                                             gather_output=False,
++                                             quant_config=None)
++        self.sampler = Sampler(config.vocab_size)
++
++    def forward(
++        self,
++        input_ids: torch.Tensor,
++        positions: torch.Tensor,
++        kv_caches: List[KVCache],
++        input_metadata: InputMetadata,
++        cache_events: Optional[List[torch.cuda.Event]],
++    ) -> SamplerOutput:
++        hidden_states = self.model(input_ids, positions, kv_caches,
++                                   input_metadata, cache_events)
++        next_tokens = self.sampler(self.lm_head.weight, hidden_states,
++                                   input_metadata)
++        return next_tokens
++
++    _column_parallel_layers = []
++    _row_parallel_layers = ["o_proj", "down_proj"]
++
++    def load_weights(self,
++                     model_name_or_path: str,
++                     cache_dir: Optional[str] = None,
++                     load_format: str = "auto",
++                     revision: Optional[str] = None):
++        if self.quant_config is None:
++            col_weight_suffixes = ["weight"]
++            row_weight_suffixes = ["weight"]
++        else:
++            col_weight_suffixes = (
++                self.quant_config.get_col_parallel_tensor_names())
++            row_weight_suffixes = (
++                self.quant_config.get_row_parallel_tensor_names())
++
++        column_parallel_weights: List[str] = []
++        for layer in self._column_parallel_layers:
++            for suffix in col_weight_suffixes:
++                column_parallel_weights.append(f"{layer}.{suffix}")
++        row_parallel_weights: List[str] = []
++        for layer in self._row_parallel_layers:
++            for suffix in row_weight_suffixes:
++                row_parallel_weights.append(f"{layer}.{suffix}")
++
++        tp_size = get_tensor_model_parallel_world_size()
++        tp_rank = get_tensor_model_parallel_rank()
++        q_proj_shard_size = (self.config.hidden_size // tp_size)
++        num_kv_heads_replicas = max(1,
++                                    tp_size // self.config.num_key_value_heads)
++        num_kv_heads_per_gpu = max(1,
++                                   self.config.num_key_value_heads // tp_size)
++        kv_proj_shard_size = (self.config.hidden_size //
++                              self.config.num_attention_heads *
++                              num_kv_heads_per_gpu)
++        attention_weight_specs = [
++            # (weight_name, shard_size, offset)
++            ("q_proj", q_proj_shard_size, 0),
++            ("k_proj", kv_proj_shard_size, q_proj_shard_size),
++            ("v_proj", kv_proj_shard_size,
++             q_proj_shard_size + kv_proj_shard_size),
++        ]
++        state_dict = self.state_dict()
++
++        for name, loaded_weight in hf_model_weights_iterator(
++                model_name_or_path, cache_dir, load_format, revision):
++            if "rotary_emb.inv_freq" in name:
++                continue
++
++
++            is_attention_weight = False
++            for weight_name, shard_size, offset in attention_weight_specs:
++                if weight_name not in name:
++                    continue
++                param = state_dict[name.replace(weight_name, "qkv_proj")]
++
++                if weight_name in ["k_proj", "v_proj"]:
++                    shard_id = tp_rank // num_kv_heads_replicas
++                else:
++                    shard_id = tp_rank
++                loaded_weight = loaded_weight[shard_size *
++                                              shard_id:shard_size *
++                                                       (shard_id + 1)]
++                param_slice = param.data[offset:offset + shard_size]
++                assert param_slice.shape == loaded_weight.shape
++
++                param_slice.copy_(loaded_weight)
++                is_attention_weight = True
++                break
++            if is_attention_weight:
++                continue
++
++            is_gate_up_weight = False
++            for stride_id, weight_name in enumerate(["gate_proj", "up_proj"]):
++                if weight_name not in name:
++                    continue
++                param = state_dict[name.replace(weight_name, "gate_up_proj")]
++
++                shard_size = param.shape[0] // 2
++                loaded_weight = loaded_weight[shard_size * tp_rank:shard_size *
++                                                                   (tp_rank + 1)]
++                param_slice = param.data[shard_size * stride_id:shard_size *
++                                                                (stride_id + 1)]
++                assert param_slice.shape == loaded_weight.shape
++                param_slice.copy_(loaded_weight)
++                is_gate_up_weight = True
++                break
++            if is_gate_up_weight:
++                continue
++
++            param = state_dict[name]
++
++            if "embed_tokens" in name or "lm_head" in name:
++                load_padded_tensor_parallel_vocab(param, loaded_weight,
++                                                  tp_rank)
++                continue
++
++            load_tensor_parallel_weights(param, loaded_weight, name,
++                                         column_parallel_weights,
++                                         row_parallel_weights, tp_rank)
++
++    def load_weights_from_model(self, hf_model):
++        self.model.embed_tokens.weight = hf_model.model.embed_tokens.weight
++        self.model.norm.weight = hf_model.model.norm.weight
++        self.lm_head._weight = hf_model.lm_head.weight
++
++        for i, l in enumerate(self.model.layers):
++            hf_layer = hf_model.model.layers[i]
++
++            l.self_attn.qkv_proj._weight_q = hf_layer.self_attn.q_proj.weight
++            l.self_attn.qkv_proj._weight_k = hf_layer.self_attn.k_proj.weight
++            l.self_attn.qkv_proj._weight_v = hf_layer.self_attn.v_proj.weight
++            l.self_attn.o_proj._weight = hf_layer.self_attn.o_proj.weight
++
++            l.mlp.gate_up_proj._weight_g = hf_layer.mlp.gate_proj.weight
++            l.mlp.gate_up_proj._weight_u = hf_layer.mlp.up_proj.weight
++            l.mlp.down_proj._weight = hf_layer.mlp.down_proj.weight
++
++            l.input_layernorm.weight = hf_layer.input_layernorm.weight
++            l.post_attention_layernorm.weight = hf_layer.post_attention_layernorm.weight
+diff --git a/vllm/model_executor/parallel_utils/layers_hf.py b/vllm/model_executor/parallel_utils/layers_hf.py
+new file mode 100644
+index 0000000..bfec9ce
+--- /dev/null
++++ b/vllm/model_executor/parallel_utils/layers_hf.py
+@@ -0,0 +1,305 @@
++# Copyright 2023 The vLLM team.
++# Adapted from
++# https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/core/tensor_parallel/layers.py
++# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
++
++# Parts of the code here are adapted from PyTorch
++# repo: https://github.com/pytorch/pytorch
++from typing import Optional
++
++import torch
++import torch.nn.functional as F
++from torch.nn.parameter import Parameter
++
++from vllm.model_executor.parallel_utils.parallel_state import (
++    get_tensor_model_parallel_rank,
++    get_tensor_model_parallel_world_size,
++)
++from vllm.model_executor.quantization_utils import QuantizationConfig
++from vllm.model_executor.parallel_utils.communication_op import (
++    tensor_model_parallel_all_reduce, tensor_model_parallel_all_gather)
++
++from vllm.model_executor.parallel_utils.utils import (
++    divide,
++    VocabUtility,
++    split_tensor_along_last_dim,
++)
++
++
++class VocabParallelEmbedding(torch.nn.Module):
++    """Embedding parallelized in the vocabulary dimension.
++
++    This is mainly adapted from torch.nn.Embedding and all the default
++    values are kept.
++    Arguments:
++        num_embeddings: vocabulary size.
++        embedding_dim: size of hidden state.
++        params_dtype: type of the parameters.
++    """
++
++    def __init__(self,
++                 num_embeddings: int,
++                 embedding_dim: int,
++                 params_dtype: Optional[torch.dtype] = None):
++        super().__init__()
++
++        # Keep the input dimensions.
++        self.num_embeddings = num_embeddings
++        self.embedding_dim = embedding_dim
++        if params_dtype is None:
++            params_dtype = torch.get_default_dtype()
++
++        # self.tp_size = get_tensor_model_parallel_world_size()
++        self.tp_size = 1
++        # TODO: Handle vocab padding here.
++        # Divide the weight matrix along the vocaburaly dimension.
++        self.vocab_start_index, self.vocab_end_index = (
++            VocabUtility.vocab_range_from_global_vocab_size(
++                self.num_embeddings, 1, self.tp_size))
++        self.num_embeddings_per_partition = (self.vocab_end_index -
++                                             self.vocab_start_index)
++
++        self.weight = Parameter(
++            torch.empty(self.num_embeddings_per_partition,
++                        self.embedding_dim,
++                        device=torch.cuda.current_device(),
++                        dtype=params_dtype))
++
++    def forward(self, input_):
++        if self.tp_size > 1:
++            # Build the mask.
++            input_mask = ((input_ < self.vocab_start_index) |
++                          (input_ >= self.vocab_end_index))
++            # Mask the input.
++            masked_input = input_.clone() - self.vocab_start_index
++            masked_input[input_mask] = 0
++        else:
++            masked_input = input_
++            # Get the embeddings.
++        output_parallel = F.embedding(masked_input, self.weight)
++        # Mask the output embedding.
++        if self.tp_size > 1:
++            output_parallel[input_mask, :] = 0.0
++        # Reduce across all the model parallel GPUs.
++        # output = tensor_model_parallel_all_reduce(output_parallel)
++        return output_parallel
++
++
++class ColumnParallelLinear(torch.nn.Module):
++    """Linear layer with column parallelism.
++
++    The linear layer is defined as Y = XA + b. A is parallelized along
++    its second dimension as A = [A_1, ..., A_p].
++
++    Arguments:
++        input_size: first dimension of matrix A.
++        output_size: second dimension of matrix A.
++
++    Keyword Arguments
++        bias: If true, add bias
++        gather_output: If true, call all-gather on output and make Y available
++                       to all GPUs, otherwise, every GPU will have its output
++                       which is Y_i = XA_i
++        skip_bias_add: This was added to enable performance optimizations where
++                       bias can be fused with other element-wise operations. we
++                       skip adding bias but instead return it.
++        params_dtype: Data type for the parameters.
++        quant_config: Quantization configuration.
++    """
++
++    def __init__(
++        self,
++        input_size: int,
++        output_size: int,
++        bias: bool = True,
++        gather_output: bool = True,
++        skip_bias_add: bool = False,
++        params_dtype: Optional[torch.dtype] = None,
++        quant_config: Optional[QuantizationConfig] = None,
++    ):
++        super().__init__()
++
++        # Keep input parameters
++        self.input_size = input_size
++        self.output_size = output_size
++        self.gather_output = gather_output
++        # Divide the weight matrix along the last dimension.
++        # self.tp_size = get_tensor_model_parallel_world_size()
++        self.tp_size = 1
++        self.output_size_per_partition = divide(output_size, self.tp_size)
++        self.skip_bias_add = skip_bias_add
++        self.quant_config = quant_config
++
++        if params_dtype is None:
++            params_dtype = torch.get_default_dtype()
++
++        # Parameters.
++        # NOTE: torch.nn.functional.linear performs XA^T + b and as a result
++        # we allocate the transpose.
++        self.create_weights(params_dtype)
++
++        if bias:
++            self.bias = Parameter(
++                torch.empty(self.output_size_per_partition,
++                            device=torch.cuda.current_device(),
++                            dtype=params_dtype))
++        else:
++            self.register_parameter('bias', None)
++
++    def create_weights(self, dtype: torch.dtype) -> None:
++        self.weight = Parameter(
++            torch.empty(self.output_size_per_partition,
++                        self.input_size,
++                        device=torch.cuda.current_device(),
++                        dtype=dtype))
++
++    def apply_weights(
++        self,
++        x: torch.Tensor,
++        bias: Optional[torch.Tensor],
++    ) -> torch.Tensor:
++        return F.linear(x, self.weight, bias)
++
++    def forward(self, input_):
++        """Forward of ColumnParallelLinear
++
++        Args:
++            input_: Tensor whose last dimension is `input_size`.
++
++        Returns:
++            - output
++            - bias
++        """
++        bias = self.bias if not self.skip_bias_add else None
++
++        input_parallel = input_
++        # Matrix multiply.
++        output_parallel = self.apply_weights(input_parallel, bias)
++        if self.gather_output:
++            # All-gather across the partitions.
++            output = tensor_model_parallel_all_gather(output_parallel)
++        else:
++            output = output_parallel
++        output_bias = self.bias if self.skip_bias_add else None
++        return output, output_bias
++
++
++class RowParallelLinear(torch.nn.Module):
++    """Linear layer with row parallelism.
++
++    The linear layer is defined as Y = XA + b. A is parallelized along
++    its first dimension and X along its second dimension as:
++               -   -
++              | A_1 |
++              | .   |
++          A = | .   |        X = [X_1, ..., X_p]
++              | .   |
++              | A_p |
++               -   -
++    Arguments:
++        input_size: first dimension of matrix A.
++        output_size: second dimension of matrix A.
++
++    Keyword Arguments:
++        bias: If true, add bias. Note that bias is not parallelized.
++        input_is_parallel: If true, we assume that the input is already
++                           split across the GPUs and we do not split
++                           again.
++        skip_bias_add: This was added to enable performance optimization where
++                       bias can be fused with other element-wise operations.
++                       We skip adding bias but instead return it.
++        params_dtype: Data type for the parameters.
++        quant_config: Quantization configuration.
++    """
++
++    def __init__(
++        self,
++        input_size: int,
++        output_size: int,
++        bias: bool = True,
++        input_is_parallel: bool = False,
++        skip_bias_add: bool = False,
++        params_dtype: Optional[torch.dtype] = None,
++        reduce_results: bool = True,
++        quant_config: Optional[QuantizationConfig] = None,
++    ):
++        super().__init__()
++        # Keep input parameters
++        self.input_size = input_size
++        self.output_size = output_size
++        self.input_is_parallel = input_is_parallel
++        self.reduce_results = reduce_results
++        if params_dtype is None:
++            params_dtype = torch.get_default_dtype()
++
++        # Divide the weight matrix along the last dimension.
++        # self.tp_size = get_tensor_model_parallel_world_size()
++        self.tp_size = 1
++        self.input_size_per_partition = divide(input_size, self.tp_size)
++        self.skip_bias_add = skip_bias_add
++        self.quant_config = quant_config
++
++        self.create_weights(params_dtype)
++
++        if not reduce_results and (bias and not skip_bias_add):
++            raise ValueError('When not reduce the results, adding bias to the '
++                             'results can lead to incorrect results')
++
++        if bias:
++            self.bias = Parameter(
++                torch.empty(self.output_size,
++                            device=torch.cuda.current_device(),
++                            dtype=params_dtype))
++
++            # Always initialize bias to zero.
++            with torch.no_grad():
++                self.bias.zero_()
++        else:
++            self.register_parameter('bias', None)
++
++    def create_weights(self, dtype: torch.dtype) -> None:
++        self.weight = Parameter(
++            torch.empty(self.output_size,
++                        self.input_size_per_partition,
++                        device=torch.cuda.current_device(),
++                        dtype=dtype))
++
++    def apply_weights(self, x: torch.Tensor) -> torch.Tensor:
++        return F.linear(x, self.weight)
++
++    def forward(self, input_):
++        """Forward of RowParallelLinear
++
++        Args:
++            input_: tensor whose last dimension is `input_size`. If
++                    `input_is_parallel` is set, then the last dimension
++                    is `input_size // tp_size`.
++
++        Returns:
++            - output
++            - bias
++        """
++        # Set up backprop all-reduce.
++        if self.input_is_parallel:
++            input_parallel = input_
++        else:
++            # TODO: simplify code below
++            tp_rank = get_tensor_model_parallel_rank()
++            splitted_input = split_tensor_along_last_dim(
++                input_, num_partitions=self.tp_size)
++            input_parallel = splitted_input[tp_rank].contiguous()
++
++        # Matrix multiply.
++        output_parallel = self.apply_weights(input_parallel)
++        if self.reduce_results and self.tp_size > 1:
++            output_ = tensor_model_parallel_all_reduce(output_parallel)
++        else:
++            output_ = output_parallel
++
++        if not self.skip_bias_add:
++            output = output_ + self.bias if self.bias is not None else output_
++            output_bias = None
++        else:
++            output = output_
++            output_bias = self.bias
++        return output, output_bias
+diff --git a/vllm/utils.py b/vllm/utils.py
+index 0e17e90..eebb49e 100644
+--- a/vllm/utils.py
++++ b/vllm/utils.py
+@@ -5,9 +5,6 @@ from platform import uname
+ import psutil
+ import torch
+ 
+-from vllm import cuda_utils
+-
+-
+ class Device(enum.Enum):
+     GPU = enum.auto()
+     CPU = enum.auto()
+@@ -31,6 +28,7 @@ def get_max_shared_memory_bytes(gpu: int = 0) -> int:
+     """Returns the maximum shared memory per thread block in bytes."""
+     # https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html
+     cudaDevAttrMaxSharedMemoryPerBlockOptin = 97  # pylint: disable=invalid-name
++    from vllm import cuda_utils
+     max_shared_mem = cuda_utils.get_device_attribute(
+         cudaDevAttrMaxSharedMemoryPerBlockOptin, gpu)
+     return int(max_shared_mem)
+diff --git a/vllm/worker/worker_hf.py b/vllm/worker/worker_hf.py
+new file mode 100644
+index 0000000..d0714e5
+--- /dev/null
++++ b/vllm/worker/worker_hf.py
+@@ -0,0 +1,103 @@
++"""A GPU worker class."""
++import os
++
++import torch
++import torch.distributed
++from torch import nn
++
++from vllm.config import ModelConfig
++from vllm.model_executor import set_random_seed
++from vllm.model_executor.model_loader import _get_model_architecture, _MODEL_CLASSES_SUPPORT_QUANTIZATION, \
++    _set_default_torch_dtype
++from vllm.model_executor.weight_utils import get_quant_config, initialize_dummy_weights
++
++# do not add any memory on top of HF model but maybe not compatible with LORA
++from vllm.model_executor.models.llama_hf_mopti import LlamaForCausalLM_HF
++# cache weight on GPU
++# from vllm.model_executor.models.llama_hf import LlamaForCausalLM_HF
++
++from vllm.worker.worker import Worker, _init_distributed_environment
++
++
++def get_model(model_config: ModelConfig, hf_model = None) -> nn.Module:
++    model_class = _get_model_architecture(model_config.hf_config)
++    # Get the quantization config.
++    quant_config = None
++    if model_config.quantization is not None:
++        if model_class not in _MODEL_CLASSES_SUPPORT_QUANTIZATION:
++            raise ValueError(
++                f"Quantization is not supported for {model_class}.")
++        quant_config = get_quant_config(model_config.quantization,
++                                        model_config.model,
++                                        model_config.download_dir)
++        capability = torch.cuda.get_device_capability()
++        capability = capability[0] * 10 + capability[1]
++        if capability < quant_config.get_min_capability():
++            raise ValueError(
++                f"The quantization method {model_config.quantization} is not "
++                "supported for the current GPU. "
++                f"Minimum capability: {quant_config.get_min_capability()}. "
++                f"Current capability: {capability}.")
++        supported_dtypes = quant_config.get_supported_act_dtypes()
++        if model_config.dtype not in supported_dtypes:
++            raise ValueError(
++                f"{model_config.dtype} is not supported for quantization "
++                f"method {model_config.quantization}. Supported dtypes: "
++                f"{supported_dtypes}")
++
++    with _set_default_torch_dtype(model_config.dtype):
++        # Create a model instance.
++        model_class = LlamaForCausalLM_HF
++        # The weights will be initialized as empty tensors.
++        if model_class in _MODEL_CLASSES_SUPPORT_QUANTIZATION:
++            model = model_class(model_config.hf_config, quant_config)
++        else:
++            model = model_class(model_config.hf_config)
++            # Load the weights from the cached or downloaded files.
++            # model.load_weights(model_config.model, model_config.download_dir,
++            #                    model_config.load_format, model_config.revision)
++            # model = model.cuda()
++            # or
++            model.load_weights_from_model(hf_model)
++    return model.eval()
++
++class WorkerHF(Worker):
++    """A worker class that executes (a partition of) the model on a GPU.
++
++    Each worker is associated with a single GPU. The worker is responsible for
++    maintaining the KV cache and executing the model on the GPU. In case of
++    distributed inference, each worker is assigned a partition of the model.
++    """
++
++    def init_model(self, hf_model = None):
++        # This env var set by Ray causes exceptions with graph building.
++        os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
++        # Env vars will be set by Ray.
++        self.rank = self.rank if self.rank is not None else int(
++            os.getenv("RANK", "-1"))
++        local_rank = int(os.getenv("LOCAL_RANK", "0"))
++        self.device = torch.device(f"cuda:{local_rank}")
++        if self.rank < 0:
++            raise ValueError("Invalid or unspecified rank.")
++        torch.cuda.set_device(self.device)
++
++        _check_if_gpu_supports_dtype(self.model_config.dtype)
++
++        # Initialize the distributed environment.
++        # _init_distributed_environment(self.parallel_config, self.rank,
++        #                               self.distributed_init_method)
++        # Initialize the model.
++        set_random_seed(self.model_config.seed)
++        self.model = get_model(self.model_config, hf_model=hf_model)
++
++
++def _check_if_gpu_supports_dtype(torch_dtype: torch.dtype):
++    # Check if the GPU supports the dtype.
++    if torch_dtype == torch.bfloat16:
++        compute_capability = torch.cuda.get_device_capability()
++        if compute_capability[0] < 8:
++            gpu_name = torch.cuda.get_device_name()
++            raise ValueError(
++                "Bfloat16 is only supported on GPUs with compute capability "
++                f"of at least 8.0. Your {gpu_name} GPU has compute capability "
++                f"{compute_capability[0]}.{compute_capability[1]}.")

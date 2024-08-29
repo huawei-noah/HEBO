@@ -1,0 +1,13 @@
+# @package _global_
+agent:
+  pre_action_flow: ???
+  prompt_builder:
+    template_paths:
+      - humaneval
+      - default
+
+task:
+  _target_: agent.tasks.humaneval.HumanEval
+
+max_episodes: 161
+max_env_steps: 1

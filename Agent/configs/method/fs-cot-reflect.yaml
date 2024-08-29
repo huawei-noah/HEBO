@@ -1,0 +1,11 @@
+# @package _global_
+agent:
+  pre_action_flow:
+    _target_: agent.commands.SequentialFlow
+    sequence:
+      - _target_: agent.commands.Reflect
+      - _target_: agent.commands.Act
+  prompt_builder:
+    default_kwargs:
+      cot_type: few_shot_cot
+      reflect_cot_type: few_shot_cot

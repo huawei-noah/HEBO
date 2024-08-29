@@ -1,0 +1,15 @@
+{% include "system_prompt.jinja" %}
+You will be given the history of a past experience in which you were placed in an environment and given a task to complete.
+Do not summarize your environment or past actions, but rather think about the strategy and path you took to attempt to complete the task.
+Devise a concise, new plan of action that accounts for your mistake very briefly with reference to specific actions that you should have taken.
+For example, if you tried A and B but forgot C, then devise a plan to achieve C with environment-specific actions.
+Give your plan after seeing the examples.
+[[ USER ]]
+{%- if reflect_cot_type in ["few_shot_cot", "few_shot"] %}
+Here are some examples:
+{% include "reflect_examples.jinja" %}
+{% endif %}
+{% include "trajectory.jinja" %}
+Do not provide an action or a thought, but a new plan of action.
+Answer in the format
+New plan: <plan>

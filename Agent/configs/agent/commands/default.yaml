@@ -1,0 +1,19 @@
+defaults:
+  - _self_
+
+summarize:
+  _target_: src.agent.commands.Summarize
+think:
+  _target_: src.agent.commands.Think
+  priority: 10
+  limit_per_turn: 1
+communicate:
+  _target_: src.agent.commands.Communicate
+  priority: 10
+  limit_per_turn: 1
+select_external_action:
+  _target_: src.agent.commands.SelectExternalAction
+generate_external_action:
+  _target_: src.agent.commands.GenerateExternalAction
+reflect:
+  _target_:src.agent.commands.Reflect

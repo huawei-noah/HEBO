@@ -1,0 +1,4 @@
+defaults:
+  - file_logger
+  - stdout_logger
+  - api_usage_logger

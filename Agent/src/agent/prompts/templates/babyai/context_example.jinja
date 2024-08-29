@@ -1,0 +1,61 @@
+You are attempting to solve a task. Examples of solving a similar task are presented below:
+
+Your task is to: go to the blue ball. What you see ahead of you:
+  - You see a wall 1 step right
+  - You see a blue ball 3 steps forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the blue ball, so i need to find the blue ball first and then go to it. I see it 3 steps forward.
+{%- endif %}
+Action: move forward.
+Observation: What you see ahead of you:
+  - You see a wall 1 step right
+  - You see a blue ball 2 steps forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the blue ball, so i need to find the blue ball first and then go to it. I see it 2 steps forward.
+{%- endif %}
+Action: move forward.
+
+Your task is to: go to the grey ball. What you see ahead of you:
+  - You see a wall 3 steps forward
+  - You see a wall 3 steps right
+  - You see a grey ball 1 step right and 1 step forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the grey ball, so i need to find the grey ball first and then go to it. I see it 1 step right and 1 step forward, and I prefer to move forward first.
+{%- endif %}
+Action: move forward.
+Observation: What you see ahead of you:
+  - You see a wall 2 steps forward
+  - You see a grey ball 1 step right
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the grey ball, so i need to find the grey ball first and then go to it. I see it 1 step right.
+{%- endif %}
+Action: rotate right.
+
+Your task is to: go to the green ball. What you see ahead of you:
+  - You see a wall 1 step forward
+  - You see a wall 2 steps left
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the green ball, so i need to find the green ball first and then go to it. I do not see it so I might face the wrong direction.
+{%- endif %}
+Action: rotate right.
+Observation: What you see ahead of you:
+  - You see a wall 1 step left
+  - You see a green ball 4 steps forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the green ball, so i need to find the green ball first and then go to it. I see it 4 steps forward.
+{%- endif %}
+Action: move forward.
+Observation: What you see ahead of you:
+  - You see a wall 1 step left
+  - You see a green ball 3 steps forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the green ball, so i need to find the green ball first and then go to it. I see it 3 steps forward.
+{%- endif %}
+Action: move forward.
+Observation: What you see ahead of you:
+  - You see a wall 1 step left
+  - You see a green ball 2 steps forward
+{%- if cot_type in ["few_shot_cot", "react"] %}
+Thought: The task is to go to the green ball, so i need to find the green ball first and then go to it. I see it 2 steps forward.
+{%- endif %}
+Action: move forward.

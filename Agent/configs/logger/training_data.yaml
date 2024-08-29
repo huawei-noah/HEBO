@@ -1,0 +1,10 @@
+defaults:
+  - default@_here_
+
+_target_: src.agent.utils.logger.TrainingDataLogger
+only_successes: False
+skip_tags:
+  - flow
+  - memory
+  - done
+  - plan

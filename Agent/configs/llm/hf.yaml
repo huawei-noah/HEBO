@@ -1,0 +1,6 @@
+_target_: agent.models.HuggingFaceLanguageBackend
+_partial_: true
+
+model_kwargs:
+  device_map: "cuda"
+tokenizer_kwargs: {}

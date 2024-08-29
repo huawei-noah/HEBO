@@ -1,6 +1,6 @@
 # Bayesian Optimisation & Reinforcement Learning Research
 
-This directory contains official implementations for Bayesian optimisation & Reinforcement Learning works developed by
+This directory contains official implementations for Bayesian optimization & Reinforcement Learning works developed by
 Huawei, Noah's Ark Lab.
 
 - Bayesian Optimisation Research
@@ -10,7 +10,7 @@ Huawei, Noah's Ark Lab.
     - [RDUCB: High Dimensional Bayesian Optimisation with Random Decompositions](./RDUCB)
     - [AntBO: Antibody Design with Combinatorial Bayesian Optimisation](./AntBO)
     - [BOiLS: Bayesian Optimisation for Logic Synthesis](./BOiLS)
-    - [T-LBO](./T-LBO)
+    - [T-LBO: BO in a latent space shaped by metric learning](./T-LBO)
     - [Bayesian Optimisation with Compositional Optimisers](./CompBO)
     - [AIRBO: Efficient Robust Bayesian Optimisation for Arbitrary Uncertain Inputs](./AIRBO)
 - Reinforcement Learning Research
@@ -26,18 +26,20 @@ Further instructions are provided in the README files associated to each project
 
 <img src="./HEBO/hebo.png" alt="drawing" width="400"/>
 
-Bayesian optimisation library developed by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong>
+Bayesian optimization library developed by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong>
 winning submission </strong> to
 the [NeurIPS 2020 Black-Box Optimisation Challenge](https://bbochallenge.com/leaderboard).
 
 ## [MCBO](./MCBO)
 
-<p align="center">
-    <img src="./MCBO/paper_results/images/all_mix_match.PNG" alt="drawing" width="500"/>
+<p float="center">
+<img src="MCBO/paper_results/images/all_mix_match.PNG" width="400"/>
+<img src="MCBO/paper_results/images/results.png" width="400"/>
 </p>
 
+
 Codebase associated to: [Framework and Benchmarks for Combinatorial and Mixed-variable Bayesian Optimization
-](https://arxiv.org/abs/2306.09803).
+](https://arxiv.org/abs/2306.09803) accepted at **NeurIPS** (2023).
 
 ##### Abstract
 
@@ -65,7 +67,8 @@ license at https://github.com/huawei-noah/HEBO/tree/master/MCBO.
 
 ![regret-all](./NAP/figures/regret-all.png)
 Codebase associated
-to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930).
+to: [End-to-End Meta-Bayesian Optimisation with Transformer Neural Processes](https://arxiv.org/abs/2305.15930),
+accepted at **NeurIPS** (2023).
 
 ##### Abstract
 
@@ -90,11 +93,12 @@ design, and logic synthesis for electronic design automation.
 </p>
 
 Codebase associated
-to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf).
+to: [Are Random Decomositions all we need in High Dimensional Bayesian Optimisation](https://arxiv.org/pdf/2301.12844.pdf)
+accepted at **ICML** (2023).
 
 ##### Abstract
 
-Learning decompositions of expensive-toevaluate black-box functions promises to scale Bayesian optimisation (BO) to
+Learning decompositions of expensive-to-evaluate black-box functions promises to scale Bayesian optimisation (BO) to
 high-dimensional
 problems. However, the success of these techniques depends on finding proper decompositions
 that accurately represent the black-box. While previous works learn those decompositions based
@@ -115,7 +119,8 @@ HEBO, showing improved practical gains in the highest dimensional tasks from Bay
 ![AntBO overview](./AntBO/figures/AntBO_illustrationPNG.PNG?raw=true)
 
 Codebase associated
-to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764).
+to: [AntBO: Towards Real-World Automated Antibody Design with Combinatorial Bayesian Optimisation](https://www.sciencedirect.com/science/article/pii/S2667237522002764)
+published in **Cell Reports Method**s (2023).
 
 ##### Abstract
 
@@ -157,7 +162,7 @@ exploitation through novel Gaussian process kernels and trust-region constrained
 on EPFL benchmarks, we demonstrate BOiLS's superior performance compared to state-of-the-art in terms of both sample
 efficiency and QoR values.
 
-## [T-LBO](./T-LBO)
+## [T-LBO: BO in a latent space shaped by metric learning](./T-LBO)
 
 <p float="center">
   <img src="./T-LBO/figures/LSBO.png" width="400" />
@@ -213,9 +218,16 @@ to: [Efficient Robust Bayesian Optimization for Arbitrary Uncertain Inputs](http
 
 ##### Abstract
 
-Bayesian Optimization (BO) is a sample-efficient optimization algorithm widely employed across various applications. In some challenging BO tasks, input uncertainty arises due to the inevitable randomness in the optimization process, such as machining errors, execution noise, or contextual variability. This uncertainty deviates the input from the intended value before evaluation, resulting in significant performance fluctuations in the final result. In this paper, we introduce a novel robust Bayesian Optimization algorithm, AIRBO, which can effectively identify a robust optimum that performs consistently well under arbitrary input uncertainty. Our method directly models the uncertain inputs of arbitrary distributions by empowering the Gaussian Process with the Maximum Mean Discrepancy (MMD) and further accelerates the posterior inference via Nystrom approximation. Rigorous theoretical regret bound is established under MMD estimation error and extensive experiments on synthetic functions and real problems demonstrate that our approach can handle various input uncertainties and achieve state-of-the-art performance.
-
-
+Bayesian Optimization (BO) is a sample-efficient optimization algorithm widely employed across various applications. In
+some challenging BO tasks, input uncertainty arises due to the inevitable randomness in the optimization process, such
+as machining errors, execution noise, or contextual variability. This uncertainty deviates the input from the intended
+value before evaluation, resulting in significant performance fluctuations in the final result. In this paper, we
+introduce a novel robust Bayesian Optimization algorithm, AIRBO, which can effectively identify a robust optimum that
+performs consistently well under arbitrary input uncertainty. Our method directly models the uncertain inputs of
+arbitrary distributions by empowering the Gaussian Process with the Maximum Mean Discrepancy (MMD) and further
+accelerates the posterior inference via Nystrom approximation. Rigorous theoretical regret bound is established under
+MMD estimation error and extensive experiments on synthetic functions and real problems demonstrate that our approach
+can handle various input uncertainties and achieve state-of-the-art performance.
 
 # Reinforcement Learning Research
 
@@ -275,7 +287,7 @@ stabilize training and improve the performance of safe RL with average constrain
 Code associdated
 to: [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](https://nips.cc/Conferences/2022/Schedule?showEvent=54842)
 accepted
-at **NeurIPS22** conference.
+at **NeurIPS (2022)** conference.
 
 #### Abstract
 
@@ -292,12 +304,3 @@ policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief
 iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
 condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
 results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-## Codebase Contributors
-
-<strong> Current contributors: </strong> Antoine Grosnit, Alexandre Max Maravel, Taher Jafferjee, Wenlong Lyu, Kaiyang Guo, Juliusz Ziomek, Paul Daoudi, Merwan Barlier.
-
-<strong> Alumni / External contributors: </strong> Alexander I. Cowen-Rivers, Kamil Dreczkowski, Aivar Sootla, Ryan Rhys Griffiths, Zhi Wang, Ludovic Dos Santos, Bogdan Robu, Christophe Prieur.
-

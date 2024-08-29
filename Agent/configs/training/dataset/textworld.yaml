@@ -1,0 +1,14 @@
+defaults:
+  - history: default
+
+loading_kwargs:
+  path: ???
+  name: textworld
+train_split: train
+validation_split: validation
+history_field: history
+
+history:
+  assistant_role: agent
+
+#system_prompt: null # Replaces existing system prompt or appends to front of history (requires history_field to be set)

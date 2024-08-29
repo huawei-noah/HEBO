@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: openchat_v3.2_super
+context_length: 4096

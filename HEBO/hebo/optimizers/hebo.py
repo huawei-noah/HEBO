@@ -10,10 +10,12 @@
 
 import numpy as np
 import pandas as pd
+import sys
 import torch
 from copy import deepcopy
 from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
 from hebo.acquisitions.acq import MACE, Mean, Sigma
+from hebo.design_space.design_space import DesignSpace
 from hebo.models.model_factory import get_model
 from hebo.utils.constr_utils import eval_constraint
 from sklearn.preprocessing import power_transform
@@ -31,9 +33,15 @@ class HEBO(AbstractOptimizer):
     support_contextual = True
 
     def __init__(
-            self, space, model_name='gp',
-            input_constraints: Optional[List[Union[Callable[[Dict[str, Any]], str]]]] = None, rand_sample=None,
-            acq_cls=MACE, es='nsga2', model_config=None, scramble_seed: Optional[int] = None
+            self,
+            space,
+            model_name="gp",
+            input_constraints: Optional[List[Union[Callable[[Dict[str, Any]], str]]]] = None,
+            rand_sample=None,
+            acq_cls=MACE,
+            es="nsga2",
+            model_config=None,
+            scramble_seed: Optional[int] = None,
     ):
         """
         model_name  : surrogate model to be used
@@ -89,14 +97,14 @@ class HEBO(AbstractOptimizer):
                 for k, v in fix_input.items():
                     df_samp[k] = v
             # CHECK VALIDITY of the sample
-            VALID = True
+            valid = True
             for input_constraint in self.input_constraints:
                 # instantiate the variables that may appear in the constraint formula
                 g = eval_constraint(para=df_samp.iloc[0].to_dict(), constr=input_constraint)
                 if g > 0:
-                    VALID = False
+                    valid = False
                     break
-            if not VALID:
+            if not valid:
                 continue
             if df_samps is None:
                 df_samps = df_samp
@@ -109,35 +117,27 @@ class HEBO(AbstractOptimizer):
     @property
     def model_config(self):
         if self._model_config is None:
-            if self.model_name == 'gp':
+            if self.model_name == "gp":
                 cfg = {
-                    'lr': 0.01,
-                    'num_epochs': 100,
-                    'verbose': False,
-                    'noise_lb': 8e-4,
-                    'pred_likeli': False
+                    "lr": 0.01,
+                    "num_epochs": 100,
+                    "verbose": False,
+                    "noise_lb": 8e-4,
+                    "pred_likeli": False,
                 }
-            elif self.model_name == 'gpy':
-                cfg = {
-                    'verbose': False,
-                    'warp': True,
-                    'space': self.space
-                }
-            elif self.model_name == 'gpy_mlp':
-                cfg = {
-                    'verbose': False
-                }
-            elif self.model_name == 'rf':
-                cfg = {
-                    'n_estimators': 20
-                }
+            elif self.model_name == "gpy":
+                cfg = {"verbose": False, "warp": True, "space": self.space}
+            elif self.model_name == "gpy_mlp":
+                cfg = {"verbose": False}
+            elif self.model_name == "rf":
+                cfg = {"n_estimators": 20}
             else:
                 cfg = {}
         else:
             cfg = deepcopy(self._model_config)
 
         if self.space.num_categorical > 0:
-            cfg['num_uniqs'] = [len(self.space.paras[name].categories) for name in self.space.enum_names]
+            cfg["num_uniqs"] = [len(self.space.paras[name].categories) for name in self.space.enum_names]
         return cfg
 
     def get_best_id(self, fix_input: dict = None) -> int:
@@ -146,7 +146,7 @@ class HEBO(AbstractOptimizer):
         X = self.X.copy()
         y = self.y.copy()
         for k, v in fix_input.items():
-            if X[k].dtype != 'float':
+            if X[k].dtype != "float":
                 crit = (X[k] != v).values
             else:
                 crit = ((X[k] - v).abs() > np.finfo(float).eps).values
@@ -158,7 +158,7 @@ class HEBO(AbstractOptimizer):
 
     def suggest(self, n_suggestions=1, fix_input=None):
         if self.acq_cls != MACE and n_suggestions != 1:
-            raise RuntimeError('Parallel optimization is supported only for MACE acquisition')
+            raise RuntimeError("Parallel optimization is supported only for MACE acquisition")
         if self.X.shape[0] < self.rand_sample:
             sample = self.quasi_sample(n_suggestions, fix_input)
             return sample
@@ -166,15 +166,20 @@ class HEBO(AbstractOptimizer):
             X, Xe = self.space.transform(self.X)
             try:
                 if self.y.min() <= 0:
-                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method='yeo-johnson'))
+                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="yeo-johnson"))
                 else:
-                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method='box-cox'))
+                    y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="box-cox"))
                     if y.std() < 0.5:
-                        y = torch.FloatTensor(power_transform(self.y / self.y.std(), method='yeo-johnson'))
+                        y = torch.FloatTensor(power_transform(self.y / self.y.std(), method="yeo-johnson"))
                 if y.std() < 0.5:
-                    raise RuntimeError('Power transformation failed')
-                model = get_model(self.model_name, self.space.num_numeric, self.space.num_categorical, 1,
-                                  **self.model_config)
+                    raise RuntimeError("Power transformation failed")
+                model = get_model(
+                    self.model_name,
+                    self.space.num_numeric,
+                    self.space.num_categorical,
+                    1,
+                    **self.model_config
+                )
                 model.fit(X, Xe, y)
             except:
                 y = torch.FloatTensor(self.y).clone()
@@ -198,7 +203,7 @@ class HEBO(AbstractOptimizer):
 
             acq = self.acq_cls(model, best_y=py_best, kappa=kappa)  # LCB < py_best
             mu = Mean(model)
-            sig = Sigma(model, linear_a=-1.)
+            sig = Sigma(model, linear_a=-1.0)
             opt = EvolutionOpt(self.space, acq, pop=100, iters=100, verbose=False, es=self.es,
                                input_constraints=self.input_constraints)
             rec = opt.optimize(initial_suggest=best_x, fix_input=fix_input).drop_duplicates()
@@ -234,7 +239,7 @@ class HEBO(AbstractOptimizer):
     def check_unique(self, rec: pd.DataFrame) -> [bool]:
         return (~pd.concat([self.X, rec], axis=0).duplicated().tail(rec.shape[0]).values).tolist()
 
-    def observe(self, X, y):
+    def observe_new_data(self, X, y):
         """Feed an observation back.
 
         Parameters
@@ -255,13 +260,13 @@ class HEBO(AbstractOptimizer):
     @property
     def best_x(self) -> pd.DataFrame:
         if self.X.shape[0] == 0:
-            raise RuntimeError('No data has been observed!')
+            raise RuntimeError("No data has been observed!")
         else:
             return self.X.iloc[[self.y.argmin()]]
 
     @property
     def best_y(self) -> float:
         if self.X.shape[0] == 0:
-            raise RuntimeError('No data has been observed!')
+            raise RuntimeError("No data has been observed!")
         else:
             return self.y.min()

@@ -1,0 +1,12 @@
+# @package _global_
+defaults:
+  - default_sa_eval
+  - _self_
+
+hydra:
+  run:
+    dir: tutorials/runs/exp_${hydra.job.override_dirname}
+
+paths:
+  output_dir: ${hydra.runtime.output_dir}
+  work_dir: ${hydra.runtime.cwd}

@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: Llama-2-70b-chat-hf
+context_length: 4096

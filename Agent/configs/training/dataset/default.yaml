@@ -1,0 +1,10 @@
+defaults:
+  - history: default
+
+loading_kwargs:
+  path: /path/to/dataset
+history_field: history
+text_field:
+train_split: train
+validation_split: validation
+system_prompt: null # Replaces existing system prompt or appends to front of history (requires history_field to be set)

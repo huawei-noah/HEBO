@@ -1,0 +1,5 @@
+defaults:
+  - openai
+
+model_id: gpt-3.5-turbo
+context_length: 4096

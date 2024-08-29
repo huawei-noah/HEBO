@@ -1,0 +1,4 @@
+_target_: agent.models.FastChatAPILanguageBackend
+_partial_: true
+server_ip: http://127.0.0.1:8000/v1
+api_key: EMPTY

@@ -1,0 +1,5 @@
+defaults:
+  - hf
+
+model_id: meta-llama/Llama-2-7b-chat-hf
+context_length: 4096

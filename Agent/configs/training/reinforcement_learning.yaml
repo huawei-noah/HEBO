@@ -1,0 +1,13 @@
+_target_: agent.train.ppo.PPOTrainer
+
+config:
+  buffer_size: 256                    # how many trajectories are collected before doing an update
+  learning_rate: 5e-5
+  mini_batch_size: 1                  # how many trajectories at a time on which the gradients will be computed
+  optim_epochs: 2                     # how many times the network see the full buffer_size within one training epoch
+  gradient_accumulation_steps: 16
+  kl_penalty: "kl"                    # use "kl" to use a KL constraint with the reference model, otherwise "none"
+  training_epochs: 10                 # how many training epoch to be done, one collecting a full buffer_size
+  env_step_wise_gae: True             # compute Generalized Advantage Estimation within env-step level
+  env_workers: 4                      # how many workers are collecting trajectories
+  use_gradient_checkpointing: True

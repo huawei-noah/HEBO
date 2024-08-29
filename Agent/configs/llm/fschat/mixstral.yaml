@@ -1,0 +1,5 @@
+defaults:
+  - fschat
+
+model_id: mistralai/Mixtral-8x7B-Instruct-v0.1
+context_length: 8192

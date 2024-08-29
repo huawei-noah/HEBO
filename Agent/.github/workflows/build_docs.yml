@@ -1,0 +1,41 @@
+name: Build Sphinx Documentation
+
+on:
+  push:
+    paths:
+      - 'docs/**/*'
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    container:
+      image: blang/latex:ctanfull
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Conda Environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: 'latest'
+          activate-environment: agent
+          environment-file: conda-linux-64.lock
+          auto-activate-base: false
+
+      - name: Install Poetry Dependencies
+        shell: bash -l {0}
+        run: |
+          poetry install --with dev
+
+      - name: Build LaTex PDF doc
+        shell: bash -l {0}
+        run: |
+          cd docs
+          make latexpdf
+
+      - name: Upload PDF as Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: sphinx-latex-pdf
+          path: docs/build/latex/*.pdf

@@ -1,0 +1,38 @@
+# @package _global_
+defaults:
+  - extras: default
+  - paths: default
+  - hydra: default
+  - logger: default
+  - agent@_agents.0: default
+  - training: reinforcement_learning
+  - task: ???
+  - method: ???
+  - training/peft@_agents.0.llm.model_kwargs.peft_config: lora
+
+  - _self_
+max_episodes: null  # set to `null` to run on the whole dataset
+max_env_steps: null  # set to `null` to run an episode until the environment is done
+max_thinking_steps: null  # set to `null` to run until all the agents are ready
+task:
+  agents: [0]
+agents: ${oc.dict.values:_agents}
+_agents:
+  '0':
+    main_flow: ???
+    prompt_builder:
+      default_kwargs: ???
+      template_paths: ???
+    llm:
+      model_class:
+        path: agent.train.models.AutoModelForCausalLMWithDetachedValueHead
+      model_kwargs:
+        is_trainable: True
+      max_length: 4096
+      max_new_tokens: 128
+      logits_processors:
+        - _target_: hydra.utils.get_object
+          path: agent.train.utils.ReActLP
+project_name: agent
+experiment_name: ${hydra:job.override_dirname}
+tags: [dev]
