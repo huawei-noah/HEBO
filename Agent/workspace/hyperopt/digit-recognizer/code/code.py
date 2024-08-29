@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split
 # Input data files are available in the "../input/" directory.
 # For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
 from keras.datasets import mnist
-FILE_PATH = "./workspace/hyperopt/tspf2/data/"
+FILE_PATH = "./workspace/hyperopt/digit-recognizer/data/"
 
 # import os
 # for dirname, _, filenames in os.walk('/kaggle/input'):
