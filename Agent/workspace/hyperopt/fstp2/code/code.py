@@ -28,9 +28,9 @@
 
 # ### Import Necessary Libraries and Data Sets.
 
-from subprocess import check_output
+# from subprocess import check_output
 
-print(check_output(["ls", "../input"]).decode("utf8"))
+# print(check_output(["ls", "../input"]).decode("utf8"))
 
 # Import the necessary packages
 import numpy as np
@@ -67,7 +67,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import accuracy_score
 
 # FILE_PATH = "../data/"
 FILE_PATH = "./workspace/hyperopt/fstp2/data/"
@@ -88,8 +88,11 @@ y_train = train["Cover_Type"].to_frame()
 # Combine train and test sets
 concat_data = pd.concat((train, test), sort=False).reset_index(drop=True)
 # Drop the target "Cover_Type" and Id columns
+print(concat_data.columns)
+
 concat_data.drop(["Cover_Type"], axis=1, inplace=True)
-concat_data.drop(["Id"], axis=1, inplace=True)
+# print(concat_data.columns)
+# concat_data.drop(["Id"], axis=1, inplace=True)
 # print("Total size is :",concat_data.shape)
 
 

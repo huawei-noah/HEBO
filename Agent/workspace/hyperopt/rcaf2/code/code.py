@@ -13,7 +13,7 @@ import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
 
 # FILE_PATH="../data/"
 FILE_PATH = "./workspace/hyperopt/rcaf2/data/"
-TARGET = "NObeyesdad"
+# TARGET = "NObeyesdad"
 submission_path = "ori_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73
@@ -118,27 +118,29 @@ clf3 = lgb.LGBMClassifier(
     n_estimators=500,
     learning_rate=0.2)
 
-clf1.fit(X_train, y_train)
-pred1 = clf1.predict(X_test)
-print("lgbm1: ", accuracy_score(pred1, y_test))
+# clf1.fit(X_train, y_train)
+# pred1 = clf1.predict(X_test)
+# print("lgbm1: ", accuracy_score(pred1, y_test))
 
-pred = clf1.predict_proba(test)
-sub = pd.DataFrame(pred, columns=["A", "B", "C", "D"])
-sub["id"] = test_id
-cols = sub.columns.tolist()
-cols = cols[-1:] + cols[:-1]
-sub = sub[cols]
-sub.to_csv("sub_lgb1.csv", index=False)
+# pred = clf1.predict_proba(test)
+# sub = pd.DataFrame(pred, columns=["A", "B", "C", "D"])
+# sub["id"] = test_id
+# cols = sub.columns.tolist()
+# cols = cols[-1:] + cols[:-1]
+# sub = sub[cols]
+# sub.to_csv("sub_lgb1.csv", index=False)
 
-clf2.fit(X_train, y_train)
-pred2 = clf2.predict(X_test)
-print("lgbm2: ", accuracy_score(pred2, y_test))
+# clf2.fit(X_train, y_train)
+# pred2 = clf2.predict(X_test)
+# print("lgbm2: ", accuracy_score(pred2, y_test))
 
-clf3.fit(X_train, y_train)
-pred3 = clf3.predict(X_test)
-print("lgbm3: ", accuracy_score(pred3, y_test))
-
-eclf3 = VotingClassifier(estimators=[
-    ("lr", clf1), ("rf", clf2), ("gnb", clf3)],
-    voting="soft", weights=[2, 1, 1],
-    flatten_transform=True)
+# clf3.fit(X_train, y_train)
+# pred3 = clf3.predict(X_test)
+# print("lgbm3: ", accuracy_score(pred3, y_test))
+voting_classifier_fix_params={
+    "estimators": [("lr", clf1), ("rf", clf2), ("gnb", clf3)],
+    "voting": "soft",
+    "weights": [2, 1, 1],
+    "flatten_transform": True
+}
+eclf3 = VotingClassifier(**voting_classifier_fix_params)

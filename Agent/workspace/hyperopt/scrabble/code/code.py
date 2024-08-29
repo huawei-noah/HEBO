@@ -28,8 +28,8 @@ from lightgbm import LGBMRegressor
 # # **Load Data file**
 
 FILE_PATH = "../data/"
-# FILE_PATH= "./workspace/hyperopt/scrabble/data/"
-TARGET = "NObeyesdad"
+FILE_PATH= "./workspace/hyperopt/scrabble/data/"
+# TARGET = "NObeyesdad"
 submission_path = "ori_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73
@@ -41,7 +41,7 @@ sample = pd.read_csv(FILE_PATH + "sample_submission.csv")
 games = pd.read_csv(FILE_PATH + "games.csv")
 turns = pd.read_csv(FILE_PATH + "turns.csv")
 
-print(train.shape, test.shape, sample.shape, games.shape, turns.shape)
+# print(train.shape, test.shape, sample.shape, games.shape, turns.shape)
 
 # # **KFold**
 

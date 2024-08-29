@@ -110,8 +110,8 @@ X = train
 # Below are the parameters for xgboost.
 
 xgb_params = {"booster": "gbtree",
-              "lambda": 0.8611971458776956,
-              "alpha": 3.3684132992886347e-07,
+              "reg_lambda": 0.8611971458776956,
+              "reg_alpha": 3.3684132992886347e-07,
               "max_depth": 3,
               "eta": 0.17374299923922656,
               "gamma": 1.2505690952357777e-06,
@@ -144,9 +144,9 @@ cb_model = CatBoostClassifier()
 
 
 # ## Voting Ensemble
-
+weight_list=[0.2,0.4,0.4]
 voter = VotingClassifier(estimators=[("m1", xgb_model), ("m2", lgbm_model), ("m3", cb_model)], voting="soft",
-                         weights=[0.2, 0.4, 0.4])
+                         weights=weight_list)
 # voter.fit(X,y)
 
 

@@ -26,7 +26,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 FILE_PATH = "./workspace/hyperopt/higgs-boson2/data/"
 # FILE_PATH ="../data/"
-TARGET = "NObeyesdad"
+# TARGET = "NObeyesdad"
 submission_path = "best_submission.csv"
 RANDOM_SEED = 73
 
