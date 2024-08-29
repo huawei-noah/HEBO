@@ -31,7 +31,7 @@ nltk.download('stopwords')
 
 
 # ## Loading Data
-FILE_PATH = "./workspace/hyperopt/ps311/data/"
+FILE_PATH = "./workspace/hyperopt/nlp-getting-started/data/"
 
 train = pd.read_csv(FILE_PATH+'nlp-getting-started/train.csv')
 test = pd.read_csv(FILE_PATH+'nlp-getting-started/test.csv')
