@@ -61,11 +61,10 @@ from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from category_encoders import OneHotEncoder, CatBoostEncoder, MEstimateEncoder
 from sklearn.model_selection import StratifiedGroupKFold
-
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 from lightgbm import LGBMClassifier
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, VotingClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 
 from sklearn import set_config
@@ -114,17 +113,17 @@ def prettify_df(df):
     print(table)
 
 
-train.head(10)
+# train.head(10)
 
-# Train Data
-print("Train Data")
-print(f"Total number of rows: {len(train)}")
-print(f"Total number of columns: {train.shape[1]}\n")
+# # Train Data
+# print("Train Data")
+# print(f"Total number of rows: {len(train)}")
+# print(f"Total number of columns: {train.shape[1]}\n")
 
-# Test Data
-print("Test Data")
-print(f"Total number of rows: {len(test)}")
-print(f"Total number of columns:{test.shape[1]}")
+# # Test Data
+# print("Test Data")
+# print(f"Total number of rows: {len(test)}")
+# print(f"Total number of columns:{test.shape[1]}")
 
 # check null and unique count
 # FHWO: family_history_with_overweight
@@ -254,44 +253,44 @@ target_mapping = {
 skf = StratifiedKFold(n_splits=n_splits)
 
 
-def cross_val_model(estimators, cv=skf, verbose=True):
-    """
-        estimators : pipeline consists preprocessing, encoder & model
-        cv : Method for cross validation (default: StratifiedKfold)
-        verbose : print train/valid score (yes/no)
-    """
+# def cross_val_model(estimators, cv=skf, verbose=True):
+#     """
+#         estimators : pipeline consists preprocessing, encoder & model
+#         cv : Method for cross validation (default: StratifiedKfold)
+#         verbose : print train/valid score (yes/no)
+#     """
 
-    X = train.copy()
-    y = X.pop(TARGET)
+#     X = train.copy()
+#     y = X.pop(TARGET)
 
-    y = y.map(target_mapping)
-    test_predictions = np.zeros((len(test), 7))
-    valid_predictions = np.zeros((len(X), 7))
+#     y = y.map(target_mapping)
+#     test_predictions = np.zeros((len(test), 7))
+#     valid_predictions = np.zeros((len(X), 7))
 
-    val_scores, train_scores = [], []
-    for fold, (train_ind, valid_ind) in enumerate(skf.split(X, y)):
-        model = clone(estimators)
-        # define train set
-        X_train = X.iloc[train_ind]
-        y_train = y.iloc[train_ind]
-        # define valid set
-        X_valid = X.iloc[valid_ind]
-        y_valid = y.iloc[valid_ind]
+#     val_scores, train_scores = [], []
+#     for fold, (train_ind, valid_ind) in enumerate(skf.split(X, y)):
+#         model = clone(estimators)
+#         # define train set
+#         X_train = X.iloc[train_ind]
+#         y_train = y.iloc[train_ind]
+#         # define valid set
+#         X_valid = X.iloc[valid_ind]
+#         y_valid = y.iloc[valid_ind]
 
-        model.fit(X_train, y_train)
-        if verbose:
-            print("-" * 100)
-            print(f"Fold: {fold}")
-            print(f"Train Accuracy Score:{accuracy_score(y_true=y_train, y_pred=model.predict(X_train))}")
-            print(f"Valid Accuracy Score:{accuracy_score(y_true=y_valid, y_pred=model.predict(X_valid))}")
-            print("-" * 100)
+#         model.fit(X_train, y_train)
+#         if verbose:
+#             print("-" * 100)
+#             print(f"Fold: {fold}")
+#             print(f"Train Accuracy Score:{accuracy_score(y_true=y_train, y_pred=model.predict(X_train))}")
+#             print(f"Valid Accuracy Score:{accuracy_score(y_true=y_valid, y_pred=model.predict(X_valid))}")
+#             print("-" * 100)
 
-        test_predictions += model.predict_proba(test) / cv.get_n_splits()
-        valid_predictions[valid_ind] = model.predict_proba(X_valid)
-        val_scores.append(accuracy_score(y_true=y_valid, y_pred=model.predict(X_valid)))
-    if verbose:
-        print(f"Average Mean Accuracy Score: {np.array(val_scores).mean()}")
-    return val_scores, valid_predictions, test_predictions
+#         test_predictions += model.predict_proba(test) / cv.get_n_splits()
+#         valid_predictions[valid_ind] = model.predict_proba(X_valid)
+#         val_scores.append(accuracy_score(y_true=y_valid, y_pred=model.predict(X_valid)))
+#     if verbose:
+#         print(f"Average Mean Accuracy Score: {np.array(val_scores).mean()}")
+#     return val_scores, valid_predictions, test_predictions
 
 
 # Combine Orignal & Synthetic Data
@@ -389,14 +388,14 @@ RFC = make_pipeline(
 )
 
 # Execute Random Forest Pipeline
-val_scores, val_predictions, test_predictions = cross_val_model(RFC)
+# val_scores, val_predictions, test_predictions = cross_val_model(RFC)
 
 # Save train/test predictions in dataframes
-for k, v in target_mapping.items():
-    oof_list[f"rfc_{k}"] = val_predictions[:, v]
+# for k, v in target_mapping.items():
+#     oof_list[f"rfc_{k}"] = val_predictions[:, v]
 
-for k, v in target_mapping.items():
-    predict_list[f"rfc_{k}"] = test_predictions[:, v]
+# for k, v in target_mapping.items():
+#     predict_list[f"rfc_{k}"] = test_predictions[:, v]
 # 0.8975337326149792
 # 0.9049682643904575
 
@@ -486,13 +485,13 @@ lgbm = make_pipeline(
 
 # Train LGBM Model
 
-val_scores, val_predictions, test_predictions = cross_val_model(lgbm)
+# val_scores, val_predictions, test_predictions = cross_val_model(lgbm)
 
-for k, v in target_mapping.items():
-    oof_list[f"lgbm_{k}"] = val_predictions[:, v]
+# for k, v in target_mapping.items():
+#     oof_list[f"lgbm_{k}"] = val_predictions[:, v]
 
-for k, v in target_mapping.items():
-    predict_list[f"lgbm_{k}"] = test_predictions[:, v]
+# for k, v in target_mapping.items():
+#     predict_list[f"lgbm_{k}"] = test_predictions[:, v]
 
 # 0.91420543252078
 
@@ -585,13 +584,13 @@ XGB = make_pipeline(
     XGBClassifier(**best_params, seed=RANDOM_SEED)
 )
 
-val_scores, val_predictions, test_predictions = cross_val_model(XGB)
+# val_scores, val_predictions, test_predictions = cross_val_model(XGB)
 
-for k, v in target_mapping.items():
-    oof_list[f"xgb_{k}"] = val_predictions[:, v]
+# for k, v in target_mapping.items():
+#     oof_list[f"xgb_{k}"] = val_predictions[:, v]
 
-for k, v in target_mapping.items():
-    predict_list[f"xgb_{k}"] = test_predictions[:, v]
+# for k, v in target_mapping.items():
+#     predict_list[f"xgb_{k}"] = test_predictions[:, v]
 
 # 0.90634942296329
 # 0.9117093455898445 with rounder
@@ -653,12 +652,12 @@ CB = make_pipeline(
 #                         )
 
 # Train Catboost Model
-val_scores, val_predictions, test_predictions = cross_val_model(CB)
-for k, v in target_mapping.items():
-    oof_list[f"cat_{k}"] = val_predictions[:, v]
+# val_scores, val_predictions, test_predictions = cross_val_model(CB)
+# for k, v in target_mapping.items():
+#     oof_list[f"cat_{k}"] = val_predictions[:, v]
 
-for k, v in target_mapping.items():
-    predict_list[f"cat_{k}"] = test_predictions[:, v]
+# for k, v in target_mapping.items():
+#     predict_list[f"cat_{k}"] = test_predictions[:, v]
 
 # best 0.91179835368868 with extract features, n_splits = 10
 # best 0.9121046227778054 without extract features, n_splits = 10
@@ -670,21 +669,31 @@ weights = {"rfc_": 0,
            "lgbm_": 3,
            "xgb_": 1,
            "cat_": 0}
-tmp = oof_list.copy()
-for k, v in target_mapping.items():
-    tmp[f"{k}"] = (weights["rfc_"] * tmp[f"rfc_{k}"] +
-                   weights["lgbm_"] * tmp[f"lgbm_{k}"] +
-                   weights["xgb_"] * tmp[f"xgb_{k}"] +
-                   weights["cat_"] * tmp[f"cat_{k}"])
-tmp["pred"] = tmp[target_mapping.keys()].idxmax(axis=1)
-tmp["label"] = train[TARGET]
-print(f"Ensemble Accuracy Scoe: {accuracy_score(train[TARGET], tmp["pred"])}")
 
-cm = confusion_matrix(y_true=tmp["label"].map(target_mapping),
-                      y_pred=tmp["pred"].map(target_mapping),
-                      normalize="true")
+weight_list=[3,1]
+voting_classifier=VotingClassifier(
+    estimators=[
+        # ('rfc',RFC),
+        ('lgbm',lgbm),
+        ('xgb',XGB),
+        # ('cat',CB)
+    ],
+    weights=weight_list)
+# tmp = oof_list.copy()
+# for k, v in target_mapping.items():
+#     tmp[f"{k}"] = (weights["rfc_"] * tmp[f"rfc_{k}"] +
+#                    weights["lgbm_"] * tmp[f"lgbm_{k}"] +
+#                    weights["xgb_"] * tmp[f"xgb_{k}"] +
+#                    weights["cat_"] * tmp[f"cat_{k}"])
+# tmp["pred"] = tmp[target_mapping.keys()].idxmax(axis=1)
+# tmp["label"] = train[TARGET]
+# print(f"Ensemble Accuracy Scoe: {accuracy_score(train[TARGET], tmp["pred"])}")
 
-cm = cm.round(2)
+# cm = confusion_matrix(y_true=tmp["label"].map(target_mapping),
+#                       y_pred=tmp["pred"].map(target_mapping),
+#                       normalize="true")
+
+# cm = cm.round(2)
 # plt.figure(figsize=(8,8))
 # disp = ConfusionMatrixDisplay(confusion_matrix = cm,
 #                               display_labels = target_mapping.keys())
@@ -705,15 +714,15 @@ cm = cm.round(2)
 
 # # Final Submission
 
-for k, v in target_mapping.items():
-    predict_list[f"{k}"] = (weights["rfc_"] * predict_list[f"rfc_{k}"] +
-                            weights["lgbm_"] * predict_list[f"lgbm_{k}"] +
-                            weights["xgb_"] * predict_list[f"xgb_{k}"] +
-                            weights["cat_"] * predict_list[f"cat_{k}"])
+# for k, v in target_mapping.items():
+#     predict_list[f"{k}"] = (weights["rfc_"] * predict_list[f"rfc_{k}"] +
+#                             weights["lgbm_"] * predict_list[f"lgbm_{k}"] +
+#                             weights["xgb_"] * predict_list[f"xgb_{k}"] +
+#                             weights["cat_"] * predict_list[f"cat_{k}"])
 
-final_pred = predict_list[target_mapping.keys()].idxmax(axis=1)
+# final_pred = predict_list[target_mapping.keys()].idxmax(axis=1)
 
-sample_sub[TARGET] = final_pred
-sample_sub.to_csv(os.path.join(FILE_PATH, submission_path), index=False)
+# sample_sub[TARGET] = final_pred
+# sample_sub.to_csv(os.path.join(FILE_PATH, submission_path), index=False)
 
-score = 1 - accuracy_score(train[TARGET], tmp["pred"])
+# score = 1 - accuracy_score(train[TARGET], tmp["pred"])

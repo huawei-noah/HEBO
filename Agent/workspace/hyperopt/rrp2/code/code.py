@@ -17,18 +17,18 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import KFold
 
 # FILE_PATH="../data/"
-FILE_PATH = "./workspace/hyperopt/rrp/data/"
+FILE_PATH = "./workspace/hyperopt/rrp2/data/"
 submission_path = "best_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73
 
 df = pd.read_csv(FILE_PATH + "train.csv.zip")
-df.shape
+# df.shape
 
 # The dataset is quite small so complex models with many parameters should be avoided. Using a complex model for this dataset will cause the model to overfit to the dataset. Regularization techniques will definitely need to be used to prevent the possibility of overfitting.
 
 test_df = pd.read_csv(FILE_PATH + "test.csv.zip")
-test_df.shape
+# test_df.shape
 
 # The **MB** Type will be replaced with the **DT** Type in the test set since it"s not available in our training set. The **City** feature is useless since our training set contains **34** unique cities but the test set contains **57** unique cities.
 
@@ -394,10 +394,10 @@ def get_models():
 
 
 # evaluate a given model using cross-validation
-def evaluate_model(model, X, y):
-    cv = RepeatedKFold(n_splits=10, n_repeats=5, random_state=19)
-    scores = cross_val_score(model, X, y, scoring="neg_mean_absolute_error", cv=cv, n_jobs=-1, error_score="raise")
-    return scores
+# def evaluate_model(model, X, y):
+#     cv = RepeatedKFold(n_splits=10, n_repeats=5, random_state=19)
+#     scores = cross_val_score(model, X, y, scoring="neg_mean_absolute_error", cv=cv, n_jobs=-1, error_score="raise")
+#     return scores
 
 
 # get the models to evaluate

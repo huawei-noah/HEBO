@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler, LabelEncoder
 
 # FILE_PATH= "../data/"
 FILE_PATH = "./workspace/hyperopt/sf-crime/data/"
@@ -84,6 +84,12 @@ df = df[df.Y <= 38].reset_index(drop=True)
 
 # df["target"]
 df.Category.value_counts()
+class_counts = df.Category.value_counts()
+
+# Filter out classes with fewer than 5 instances
+valid_classes = class_counts[class_counts >= 5].index
+df = df[df.Category.isin(valid_classes)]
+
 
 df["year"] = df["Dates"].dt.year
 df["month"] = df["Dates"].dt.month
@@ -107,7 +113,7 @@ df = df.drop_duplicates(subset=usecols).reset_index(drop=True)
 X_train, X_test, y_train, y_test = train_test_split(
     df[usecols],
     df.Category,
-    test_size=.3,
+    test_size=.1,
     random_state=2024,
     shuffle=True,
 )
@@ -135,7 +141,7 @@ prep_pipe.fit(X_train, y_train)
 
 prep_pipe.fit(X_train, y_train)
 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
 # Подбор количества итераций
@@ -145,32 +151,34 @@ test_scores = []
 train_scores = []
 X_test_transformed = prep_pipe.transform(X_test)
 X_train_transformed = prep_pipe.transform(X_train)
+le=LabelEncoder()
+y_train_full_encoded = le.fit_transform(y_train)
 
-for n in range(1, 30):
-    # print(f"step {n}", end="\r")
-    clf = RandomForestClassifier(n_estimators=n, n_jobs=-1, max_depth=3)
-    clf.fit(X_train_transformed, y_train)
+# for n in range(1, 30):
+#     # print(f"step {n}", end="\r")
+#     clf = RandomForestClassifier(n_estimators=n, n_jobs=-1, max_depth=3)
+#     clf.fit(X_train_transformed, y_train)
 
-    test_scores.append(
-        roc_auc_score(
-            y_test,
-            clf.predict_proba(X_test_transformed),
-            multi_class="ovr"
-        ))
+#     test_scores.append(
+#         roc_auc_score(
+#             y_test,
+#             clf.predict_proba(X_test_transformed),
+#             multi_class="ovr"
+#         ))
 
-    train_scores.append(
-        roc_auc_score(
-            y_train,
-            clf.predict_proba(X_train_transformed),
-            multi_class="ovr"
-        ))
+#     train_scores.append(
+#         roc_auc_score(
+#             y_train,
+#             clf.predict_proba(X_train_transformed),
+#             multi_class="ovr"
+#         ))
 
-    x.append(n)
+#     x.append(n)
 
-    if abs(test_scores[-1] - train_scores[-1]) > .2:
-        print(f"n_estimators: {n}")
-        print(f"scores train/test {train_scores[-1]:.2f}/{test_scores[-1]:2f}")
-        break
+#     if abs(test_scores[-1] - train_scores[-1]) > .2:
+#         print(f"n_estimators: {n}")
+#         print(f"scores train/test {train_scores[-1]:.2f}/{test_scores[-1]:2f}")
+#         break
 
 # plt.plot(x, train_scores)
 # plt.plot(x, test_scores)
@@ -182,7 +190,7 @@ for n in range(1, 30):
 
 n_estimator = [i for i, x in enumerate(test_scores) if x == max(test_scores)]
 
-clf = RandomForestClassifier(n_estimators=n, n_jobs=-1, max_depth=3)
+clf = RandomForestClassifier(n_jobs=-1, max_depth=3)
 # clf.fit(X_train_transformed, y_train)
 
 

@@ -105,19 +105,15 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.10, random_s
 
 # List of models to evaluate
 catboost_model = CatBoostRegressor(random_state=1, verbose=False)
-# lgbm_model = LGBMRegressor(verbose=-1, random_state=1)
-# xgb_model = XGBRegressor(verbose=0, random_state=1, enable_categorical=True)
+
 
 # # Fit the models on the training data
 # catboost_model.fit(X_train, y_train)
-# lgbm_model.fit(X_train, y_train)
-# xgb_model.fit(X_train, y_train)
 
 
 # # Evaluate the models
 # catboost_preds = catboost_model.predict(X_val)
-# lgbm_preds = lgbm_model.predict(X_val)
-# xgb_preds = xgb_model.predict(X_val)
+
 
 # final_preds = np.round((catboost_preds + lgbm_preds + xgb_preds) / 3).astype("int")
 

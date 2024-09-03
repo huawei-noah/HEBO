@@ -91,19 +91,19 @@ X_test = np.array(X_test)
 
 # We further split the full training set into train and validation set. We use Stratified sampling to ensure that the training and val set contains a proper representation of the categories present in the total population
 
-import sklearn
-from sklearn.model_selection import StratifiedShuffleSplit
+# import sklearn
+# from sklearn.model_selection import StratifiedShuffleSplit
 
-sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=42)
+# sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=42)
 
-for train_index, test_index in sss.split(X_train_full, y_train_full):
-    X_train, y_train = X_train_full[train_index], y_train_full[train_index]
-    X_val, y_val = X_train_full[test_index], y_train_full[test_index]
+# for train_index, test_index in sss.split(X_train_full, y_train_full):
+#     X_train, y_train = X_train_full[train_index], y_train_full[train_index]
+#     X_val, y_val = X_train_full[test_index], y_train_full[test_index]
 
 # Next, lets set a pipeline to preprocess the datasets. StandardScaler() to normalise the numerical atttributes and OneHotEncoder() to convert the categorical attributes to arrays.
 
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 
 num_attribs = [2, 3]
@@ -118,8 +118,8 @@ full_pipeline = ColumnTransformer([
     ("cat", OneHotEncoder(), cat_attribs)
 ])
 
-X_train_prepared = full_pipeline.fit_transform(X_train)
-X_val_prepared = full_pipeline.transform(X_val)
+X_train_prepared = full_pipeline.fit_transform(X_train_full)
+# X_val_prepared = full_pipeline.transform(X_val)
 X_test_prepared = full_pipeline.transform(X_test)
 
 # # Select and train model
@@ -128,28 +128,29 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 import xgboost
 
-X_train_prepared.shape
-
+X_train_prepared = X_train_prepared.toarray()
+le = LabelEncoder()
+y_train_full_encoded = le.fit_transform(y_train_full)
 # The train set contains 658 486 rows which lead to slow training time for me. Therefore, we will reduce the training set to 100 000 rows use Stratified Sampling again to get a good representation of the population.
 
-ss = StratifiedShuffleSplit(n_splits=1, train_size=100_000, random_state=42)
-for train_index, _ in ss.split(X_train_prepared, y_train):
-    X_train_prepared_small, y_train_small = X_train_prepared[train_index], y_train[train_index].ravel()
+# ss = StratifiedShuffleSplit(n_splits=1, train_size=100_000, random_state=42)
+# for train_index, _ in ss.split(X_train_prepared, y_train):
+#     X_train_prepared_small, y_train_small = X_train_prepared[train_index], y_train[train_index].ravel()
 
-X_train_prepared_small.shape, y_train_small.shape
+# X_train_prepared_small.shape, y_train_small.shape
 
 # Ensemble Learning aggregates the prediction of a group of predictors. We usually get better results from it compared with just a single best individual predictor.
 # 
 # From a prior, not very thorough, testing with different classifiers such as LinearSVC, BaggingClassifier, ExtraTreesClassifier. I found that Ensemble learning with XGBoost and RandomForest yield the best results.
 
 rf_clf = RandomForestClassifier(max_depth=16, random_state=42, n_jobs=-1, verbose=3)
-xg_clf = xgboost.XGBClassifier()
+xg_clf = xgboost.XGBClassifier() # reg_alpha, reg_lambda, learning_rate ... 
 
 estimators = [
     ("rf", rf_clf),
     ("xg", xg_clf)
 ]
-
+from sklearn.metrics import accuracy_score
 voting_clf = VotingClassifier(estimators, n_jobs=-1, voting="soft")
 # voting_clf.fit(X_train_prepared_small, y_train_small)
 # voting_clf.score(X_val_prepared, y_val)

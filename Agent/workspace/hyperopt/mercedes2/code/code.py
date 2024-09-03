@@ -14,13 +14,13 @@ import xgboost as xgb
 
 # FILE_PATH = "../data/"
 FILE_PATH = "./workspace/hyperopt/mercedes2/data/"
-TARGET = "NObeyesdad"
+# TARGET = "NObeyesdad"
 submission_path = "ori_submission.csv"
 n_splits = 9
 RANDOM_SEED = 73
 
-train = pd.read_csv(FILE_PATH + "train.csv")
-test = pd.read_csv(FILE_PATH + "test.csv")
+train = pd.read_csv(FILE_PATH + "train.csv.zip")
+test = pd.read_csv(FILE_PATH + "test.csv.zip")
 
 y_train = train["y"].values
 y_mean = np.mean(y_train)

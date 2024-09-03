@@ -33,7 +33,7 @@ APPLY_FEATURE_ENGINEERING = True
 
 np.random.seed(RANDOM_SEED)
 random.seed(RANDOM_SEED)
-FILE_PATH = "./workspace/hyperopt/abalone/data/"
+FILE_PATH = "./workspace/hyperopt/abalone2/data/"
 # FILE_PATH="../data/"
 submmision_file = "submission.csv"
 train = pd.read_csv(FILE_PATH + "train.csv")
@@ -317,14 +317,15 @@ weight_best_params = {
     "xgboost_weight": 0.48550637896530635,
     "catboost_weight": 4.189724537494019,
 }
-
-voting_regressor = VotingRegressor(
-    estimators=cv_estimators,
-    weights=[
+weights_list=[
         weight_best_params["lgbm_weight"],
         weight_best_params["xgboost_weight"],
         weight_best_params["catboost_weight"]
-    ]
+
+]
+voting_regressor = VotingRegressor(
+    estimators=cv_estimators,
+    weights=weights_list
 )
 
 # cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_SEED)
