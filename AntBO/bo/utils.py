@@ -1,8 +1,7 @@
-import pickle
-from typing import Any, Optional
-
 import numpy as np
 import os
+import pickle
+from typing import Any, Optional
 
 
 def spearman(pred, target) -> float:
