@@ -1,12 +1,10 @@
 # import pymol
 import __main__
+import numpy as np
 import os
+import pandas as pd
 import subprocess
 import time
-
-import numpy as np
-import pandas as pd
-
 # from pymol import cmd
 from task.base import BaseTool
 
@@ -171,7 +169,7 @@ class PyMolVisualisation:
         spectrum count, green_yellow_red
         color blue, ligands
         set cartoon_fancy_helices, 1
-
+        
         mset 1 x{num_frames}
         util.mroll 1, {num_frames}, 1
         set ray_trace_frames, 1
@@ -278,10 +276,21 @@ class TableFilling(BaseTool):
         # save sequences
         dirname = os.path.dirname(self.path_to_eval_csv)
         os.makedirs(dirname, exist_ok=True)
-        to_eval = pd.DataFrame([[self.antigen, seq, None, 0] for i, seq in enumerate(sequences)],
-                               columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
+        if os.getenv("ANTBO_DEBUG", False):
+            values = np.random.randint(0, 100, len(sequences)) + np.random.randn(len(sequences))
+            validations = np.ones(len(sequences))
+        else:
+            print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
+            values = [None for i in range(len(sequences))]
+            validations = np.zeros(len(sequences))
+
+        to_eval = pd.DataFrame(
+            [[self.antigen, seq, value, validation] for i, seq, value, validation in
+             zip(range(len(sequences)), sequences, values, validations
+                 )],
+            columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
+
         to_eval.to_csv(self.path_to_eval_csv, index=False)
-        print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
 
         # Try to read the evaluations
 

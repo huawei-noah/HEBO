@@ -232,11 +232,12 @@ class Optimizer:
             if X_next.ndim == 1:
                 X_next = X_next[None, :]
             self.X_init = self.X_init[n_init:, :]  # Remove these pending points
-            table_of_candidates = update_table_of_candidates(
-                original_table=table_of_candidates,
-                observed_candidates=X_next[:n_init],
-                check_candidates_in_table=True
-            )
+            if table_of_candidates is not None:
+                table_of_candidates = update_table_of_candidates(
+                    original_table=table_of_candidates,
+                    observed_candidates=X_next[:n_init],
+                    check_candidates_in_table=True
+                )
 
         # Get remaining points from TuRBO
         n_adapt = n_suggestions - n_init
@@ -261,7 +262,7 @@ class Optimizer:
                         hypers={},
                         table_of_candidates=table_of_candidates
                     )[-n_adapt:, :]
-                except (ValueError, NanError, NotPSDError):
+                except (ValueError, NanError, NotPSDError) as e:
                     print(f"Acquisition Failure with Kernel {self.casmopolitan.kernel_type}")
                     if self.casmopolitan.kernel_type == 'ssk':
                         print(f"Trying with kernel {self.casmopolitan.kernel_type}")
@@ -330,8 +331,8 @@ class Optimizer:
         # check if some points are in X_init:
         if isinstance(self.X_init, torch.Tensor):
             self.X_init = update_table_of_candidates_torch(original_table=self.X_init,
-                                                       observed_candidates=torch.tensor(XX).to(self.X_init),
-                                                       check_candidates_in_table=False)
+                                                           observed_candidates=torch.tensor(XX).to(self.X_init),
+                                                           check_candidates_in_table=False)
         else:
             assert len(self.X_init) == 0 or self.X_init is None
 

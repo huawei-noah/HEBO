@@ -9,6 +9,7 @@ import scipy
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PolynomialMutation
 from pymoo.operators.repair.rounding import RoundingRepair
+from tqdm import tqdm
 
 from bo.kernels import *
 
@@ -319,7 +320,7 @@ def local_table_search(x_center: np.ndarray,
 
     current_center = deepcopy(x_center)
 
-    for _ in range(10):
+    for _ in tqdm(range(10)):
         if len(table_of_candidates) == 0:
             break
 
@@ -459,7 +460,7 @@ def local_search(x_center,
         x = x_center_local
 
         acq_x = f(x).detach().cpu().numpy()
-        for i in range(step):
+        for _ in tqdm(range(step), f"local search to acquire point {i + 1}"):
             tol_ = tol
             is_valid = False
             while not is_valid:

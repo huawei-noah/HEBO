@@ -104,6 +104,9 @@ class CASMOPOLITANCat:
         self.dim = dim
         self.config = config
         self.kwargs = kwargs
+        self.dtype = torch.float32 if dtype == "float32" else torch.float64
+        self.device = torch.device(device) if "cuda" in device else torch.device("cpu")
+
         # self.lb = lb
         # self.ub = ub
         # Settings
@@ -120,14 +123,18 @@ class CASMOPOLITANCat:
             self.kwargs['noise_variance'] = None
         self.acq = acq
         self.kernel_type = kernel_type
+        self.antigen = None
         if self.kernel_type in ['rbfBERT', 'rbf-pca-BERT', 'cosine-BERT', 'cosine-pca-BERT']:
-            self.BERT_model = self.kwargs['BERT_model']
-            self.BERT_tokeniser = self.kwargs['BERT_tokeniser']
+            from transformers import BertModel, BertTokenizer
+
+            self.BERT_model = BertModel.from_pretrained(pretrained_model_name_or_path=kwargs['BERT_model_path']).to(
+                device=self.device, dtype=self.dtype)
+            self.BERT_tokeniser = BertTokenizer.from_pretrained(self.kwargs['BERT_tokeniser_path'], do_lower_case=False)
             self.BERT_batchsize = self.kwargs['BERT_batchsize']
-            self.antigen = self.kwargs['antigen']
+            if self.kernel_type in ['rbf-pca-BERT', 'cosine-pca-BERT']:
+                self.antigen = self.kwargs['antigen']
         else:
             self.BERT_model, self.BERT_tokeniser, self.BERT_batchsize = None, None, None
-            self.antigen = None
 
         # Hyperparameters
         self.mean = np.zeros((0, 1))
@@ -173,8 +180,6 @@ class CASMOPOLITANCat:
         self.min_cuda = min_cuda if kernel_type != 'ssk' else 0
         # Device and dtype for GPyTorch
         # self.min_cuda = min_cuda
-        self.dtype = torch.float32 if dtype == "float32" else torch.float64
-        self.device = torch.device("cuda") if device == "cuda" else torch.device("cpu")
         if self.verbose:
             print("Using dtype = %s \nUsing device = %s" % (self.dtype, self.device))
             sys.stdout.flush()
@@ -219,7 +224,6 @@ class CASMOPOLITANCat:
         else:
             fX = (fX - fX.mean()) / (fX.std() + 1e-8)
 
-        global device
         if len(X) < self.min_cuda:
             device, dtype = torch.device("cpu"), torch.float32
         else:
@@ -300,10 +304,8 @@ class CASMOPOLITANCat:
                 from bo.utils import BERTFeatures
                 from einops import rearrange
                 bert = BERTFeatures(self.BERT_model, self.BERT_tokeniser)
-                x_reprsn = bert.compute_features(X)
-                x_reprsn = rearrange(x_reprsn, 'b l d -> b (l d)')
+                x_reprsn = bert.compute_features(X.to(device))
                 x_center_reprsn = bert.compute_features(torch.tensor(x_center[0].reshape(1, -1)))
-                x_center_reprsn = rearrange(x_center_reprsn, 'b l d -> b (l d)')
                 if self.kernel_type in ['rbf-pca-BERT', 'cosine-pca-BERT']:
                     from joblib import load
                     pca = load(f"/nfs/aiml/asif/CDRdata/pca/{self.antigen}_pca.joblib")
@@ -375,12 +377,12 @@ class CASMOPOLITANCat:
                                              n_restart=3, batch_size=1, cdr_constraints=self.cdr_constraints,
                                              seed=self.seed, dtype=self.dtype, device=self.device,
                                              table_of_candidates=table_of_candidates)
-
-                    table_of_candidates = update_table_of_candidates(
-                        original_table=table_of_candidates,
-                        observed_candidates=x_next,
-                        check_candidates_in_table=True
-                    )
+                    if table_of_candidates is not None:
+                        table_of_candidates = update_table_of_candidates(
+                            original_table=table_of_candidates,
+                            observed_candidates=x_next,
+                            check_candidates_in_table=True
+                        )
 
                     x_next = torch.tensor(x_next, dtype=torch.float32, device=self.device)
                     # The fantasy point is filled by the posterior mean of the Gaussian process.
@@ -389,7 +391,6 @@ class CASMOPOLITANCat:
                         from einops import rearrange
                         bert = BERTFeatures(self.BERT_model, self.BERT_tokeniser)
                         x_next_reprsn = bert.compute_features(x_next)
-                        x_next_reprsn = rearrange(x_next_reprsn, 'b l d -> b (l d)')
                         if self.kernel_type in ['rbf-pca-BERT', 'cosine-pca-BERT']:
                             from joblib import load
                             pca = load(f"{self.antigen}_pca.joblib")
@@ -416,7 +417,7 @@ class CASMOPOLITANCat:
                             antigen=self.antigen,
                             search_strategy=self.search_strategy
                         )
-                    X_next = torch.cat((X_next, x_next), dim=0)
+                    X_next = torch.cat((X_next, x_next.to(X_next)), dim=0)
                     acq_next = np.hstack((acq_next, acq))
 
         elif self.acq == 'thompson':

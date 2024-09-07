@@ -97,14 +97,16 @@ class BERTFeatures:
         self.tokeniser = tokeniser
 
     def compute_features(self, x1):
+        assert x1.ndim == 2
         inp_device = x1.device
+        self.model = self.model.to(inp_device)
         with torch.no_grad():
             x1 = [" ".join(self.idx_to_AA[i.item()] for i in x_i) for x_i in x1]
             ids1 = self.tokeniser.batch_encode_plus(x1, add_special_tokens=False, padding=True)
-            input_ids1 = torch.tensor(ids1['input_ids']).to(self.model.device)
-            attention_mask1 = torch.tensor(ids1['attention_mask']).to(self.model.device)
-            reprsn1 = self.model(input_ids=input_ids1, attention_mask=attention_mask1)[0]
-        return reprsn1.to(inp_device)
+            input_ids1 = torch.tensor(ids1['input_ids']).to(inp_device)
+            attention_mask1 = torch.tensor(ids1['attention_mask']).to(inp_device)
+            reprsn1 = self.model.to(inp_device)(input_ids=input_ids1, attention_mask=attention_mask1)[0]
+        return reprsn1.mean(1)
 
 
 if __name__ == '__main__':
@@ -162,7 +164,6 @@ if __name__ == '__main__':
             for seq_batch in batch_iterator(sequences, bert_config['batch_size']):
                 seq_batch = torch.tensor([[bert_features.AA_to_idx[aa] for aa in seq] for seq in seq_batch]).to(device)
                 seq_reprsn = bert_features.compute_features(seq_batch)
-                seq_reprsn = rearrange(seq_reprsn, 'b l d -> b (l d)')
                 reprsns.append(seq_reprsn.cpu().numpy())
                 if len(reprsns) == 1000:
                     break

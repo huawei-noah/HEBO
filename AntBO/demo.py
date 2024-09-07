@@ -57,7 +57,8 @@ if __name__ == "__main__":
         'normalise': True,
         'batch_size': args.batch_size,
         'save_path': save_path,
-        'kernel_type': 'transformed_overlap',
+        # 'kernel_type': 'transformed_overlap',
+        'kernel_type': 'rbfBERT',
         'noise_variance': '1e-6',
         'search_strategy': 'local',
         'resume': args.resume,
@@ -70,6 +71,7 @@ if __name__ == "__main__":
         # },
         'bbox': {
             'tool': 'table_filling',
+            # 'tool': 'manual',
             'antigen': args.antigen,
             'path_to_eval_csv': args.path_to_eval_csv
         },

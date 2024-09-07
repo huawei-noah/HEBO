@@ -55,6 +55,7 @@ class BOExperiments:
 
         """
         self.config = config
+        self.table_of_aas_inds = None
         if self.config["tabular_search_csv"] is not None:
             print(
                 f"Tabular BO setting: will select antibodies among available ones from: {config['tabular_search_csv']}"
@@ -223,7 +224,10 @@ class BOExperiments:
             'length_max_discrete': self.config['seq_len'],
             'device': self.config['device'],
             'seed': self.seed,
-            'search_strategy': self.search_strategy
+            'search_strategy': self.search_strategy,
+            'BERT_model_path': self.config.get('BERT_model_path', 'Rostlab/prot_bert_bfd'),
+            'BERT_tokeniser_path': self.config.get('BERT_tokenizer_path', 'Rostlab/prot_bert_bfd'),
+            'BERT_batchsize': self.config.get('BERT_batchsize', 128),
         }
 
         if self.config['resume']:

@@ -1,11 +1,9 @@
 import warnings
 from typing import Optional, Tuple
 
-import botorch
-import gpytorch
 import torch.nn.functional
+from botorch.fit import fit_gpytorch_model
 from botorch.models.gp_regression import MIN_INFERRED_NOISE_LEVEL
-from gpytorch.constraints import Interval
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.kernels import ScaleKernel
 from gpytorch.likelihoods import GaussianLikelihood
@@ -16,69 +14,19 @@ from gpytorch.models import ExactGP
 from bo.kernels import *
 
 
-class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, kern, outputscale_constraint=None):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
-        self.mean_module = gpytorch.means.ConstantMean()
-        if kern is None:
-            kern = gpytorch.kernels.RBFKernel()
-        self.covar_module = self.covar_module = ScaleKernel(kern, outputscale_constraint=outputscale_constraint)
-
-    def forward(self, x):
-        mean_x = self.mean_module(x)
-        covar_x = self.covar_module(x)
-        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
-
-
-# GP Model
-def run_test():
-    import torch
-    import gpytorch
-    import pyro
-    from pyro.infer.mcmc import NUTS, MCMC
-    num_samples = 2
-    warmup_steps = 2
-    # Training data is 11 points in [0,1] inclusive regularly spaced
-    train_x = torch.randint(0, 20, (5, 11))
-    # True function is sin(2*pi*x) with Gaussian noise
-    train_y = torch.randn((5))
-    # We will use the simplest form of GP model, exact inference
-
-    from gpytorch.priors import UniformPrior
-    # Use a positive constraint instead of usual GreaterThan(1e-4) so that LogNormal has support over full range.
-    likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_constraint=gpytorch.constraints.Positive())
-    model = ExactGPModel(train_x, train_y, likelihood)
-
-    model.mean_module.register_prior("mean_prior", UniformPrior(-1, 1), "constant")
-    model.covar_module.base_kernel.register_prior("lengthscale_prior", UniformPrior(0.01, 0.5), "lengthscale")
-    model.covar_module.register_prior("outputscale_prior", UniformPrior(1, 2), "outputscale")
-    likelihood.register_prior("noise_prior", UniformPrior(0.01, 0.5), "noise")
-
-    mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
-
-    def pyro_model(x, y):
-        with gpytorch.settings.fast_computations(False, False, False):
-            sampled_model = model.pyro_sample_from_prior()
-            output = sampled_model.likelihood(sampled_model(x))
-            pyro.sample("obs", output, obs=y)
-        return y
-
-    nuts_kernel = NUTS(pyro_model)
-    mcmc_run = MCMC(nuts_kernel, num_samples=num_samples, warmup_steps=warmup_steps, disable_progbar=False)
-    mcmc_run.run(train_x, train_y)
-    model.pyro_load_from_samples(mcmc_run.get_samples())
-    model.eval()
-    test_x = torch.randint(0, 20, (100, 11))
-    expanded_test_x = test_x.unsqueeze(0).repeat(num_samples, 1, 1)
-    output = model(expanded_test_x)
-    preds = likelihood(output)
-    print(preds.stddev)
+def identity(x):
+    return x
 
 
 class GP(ExactGP):
     def __init__(self, train_x, train_y, likelihood,
                  outputscale_constraint=None, ard_dims=None, kern=None, MeanMod=ConstantMean, cat_dims=None,
-                 batch_shape=torch.Size()):
+                 batch_shape=torch.Size(), transform_inputs=None):
+        if transform_inputs is None:
+            transform_inputs = identity
+        self.transform_inputs = transform_inputs
+        if transform_inputs:
+            train_x = transform_inputs(train_x)
         super(GP, self).__init__(train_x, train_y, likelihood)
         self.dim = train_x.shape[1]
         self.ard_dims = ard_dims
@@ -90,6 +38,9 @@ class GP(ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return MultivariateNormal(mean_x, covar_x)
+
+    def __call__(self, *args, **kwargs):
+        return super().__call__(*[self.transform_inputs(input_point) for input_point in args], **kwargs)
 
     def dmu_dphi(self, num_cats: int, xs: Optional[torch.Tensor] = None) -> torch.Tensor:
         if self.prediction_strategy is None:
@@ -172,6 +123,7 @@ class GP(ExactGP):
 def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', hypers={},
              noise_variance=None,
              cat_configs=None,
+             antigen=None,
              search_strategy='local',
              acq='EI',
              num_samples=51,
@@ -206,30 +158,21 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
 
     outputscale_constraint = Interval(0.5, 5.)
 
-    # if search_strategy in ['glocal', 'global', 'batch_local']:
-    #     n_constr = GreaterThan(1e-5)
-    #     n_prior = LogNormalPrior(-4.63, 0.5)
-    #     # Remove constraints for better GP fit
-    #     likelihood = GaussianLikelihood(noise_constraint=n_constr, noise_prior=n_prior).to(device=train_x.device, dtype=train_y.dtype)
-    # else:
     likelihood = GaussianLikelihood(noise_constraint=noise_constraint).to(device=train_x.device,
                                                                           dtype=train_y.dtype)
 
     ard_dims = train_x.shape[1] if use_ard else None
-
+    transform_inputs = None
     if kern == 'overlap':
         kernel = CategoricalOverlap(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims, )
     elif kern == 'transformed_overlap':
-        # if search_strategy in ['glocal', 'global', 'batch_local']:
-        #     kernel = TransformedCategorical(ard_num_dims=ard_dims)
-        # else:
         kernel = TransformedCategorical(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
     elif kern == 'ordinal':
         kernel = OrdinalKernel(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims, config=cat_configs)
     elif kern == 'ssk':
         kernel = FastStringKernel(seq_length=train_x.shape[1], alphabet_size=params['alphabet_size'],
                                   device=train_x.device)
-    elif kern == 'rbfBERT':
+    elif kern in ['rbfBERT', 'rbf-pca-BERT', 'cosine-BERT', 'cosine-pca-BERT']:
         from bo.utils import BERTFeatures, batch_iterator
         bert = BERTFeatures(params['BERT_model'], params['BERT_tokeniser'])
         nm_samples = train_x.shape[0]
@@ -241,17 +184,24 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
             reprsn1 = torch.cat(reprsn1, 0)
         else:
             reprsn1 = bert.compute_features(train_x)
-        reprsn1 = rearrange(reprsn1, 'b l d -> b (l d)')
-        if use_pca:
-            pca = load(f"{antigen}_pca.joblib")
-            scaler = load(f"{antigen}_scaler.joblib")
+        if kern in ['rbf-pca-BERT', 'cosine-pca-BERT']:
+            from joblib import load
+            pca = load(f"./{antigen}_pca.joblib")  # /nfs/aiml/asif/CDRdata/pca
+            scaler = load(f"./{antigen}_scaler.joblib")  # /nfs/aiml/asif/CDRdata/pca
             reprsn1 = torch.from_numpy(pca.transform(scaler.transform(reprsn1.cpu().numpy())))
-        train_x = reprsn1.clone()
+        train_x = reprsn1.clone().to(device=device)
         del reprsn1, bert
         ard_dims = train_x.shape[1] if use_ard else None
-        kernel = BERTWarpRBF(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
-    elif kern == 'cosineBERT':
-        kernel = BERTWarpCosine(lengthscale_constraint=lengthscale_constraint, ard_num_dims=None)
+        if kern in ['rbfBERT', 'rbf-pca-BERT']:
+            kernel = BERTWarpRBF(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
+        else:
+            kernel = BERTWarpCosine(lengthscale_constraint=lengthscale_constraint, ard_num_dims=None)
+        if kern in ['rbfBERT', "cosine-BERT"]:
+            min_x = train_x.min(0)[0]
+            max_x = train_x.max(0)[0]
+            transform_inputs = lambda input_x: (input_x - min_x.to(input_x)) / (
+                        max_x.to(input_x) - min_x.to(input_x) + 1e-8)
+
     elif kern == 'rbf':
         kernel = RBFKernel(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
     else:
@@ -264,11 +214,14 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
         kern=kernel,
         outputscale_constraint=outputscale_constraint,
         ard_dims=ard_dims,
+        transform_inputs=transform_inputs
     ).to(device=train_x.device, dtype=train_x.dtype)
 
     # Find optimal model hyperparameters
     model.train()
     likelihood.train()
+
+    # "Loss" for GPs - the marginal log likelihood
     mll = ExactMarginalLogLikelihood(likelihood, model)
 
     if search_strategy in ['glocal', 'global', 'batch_local']:
@@ -282,7 +235,7 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
         else:
             hypers = {}
             hypers["covar_module.outputscale"] = 1.0
-            if not isinstance(kernel, FastStringKernel):
+            if not isinstance(kernel, (FastStringKernel, CosineKernel)):
                 hypers["covar_module.base_kernel.lengthscale"] = np.sqrt(0.01 * 0.5)
             hypers["likelihood.noise"] = noise_variance if noise_variance is not None else 0.005
             model.initialize(**hypers)
@@ -308,41 +261,41 @@ def load_mcmc_samples_to_model(_model, mcmc_samples) -> None:
     if "noise" in mcmc_samples:
         _model.likelihood.noise_covar.noise = (
             mcmc_samples["likelihood.noise_prior"]
-                .detach()
-                .clone()
-                .view(_model.likelihood.noise_covar.noise.shape)  # pyre-ignore
-                .clamp_min(MIN_INFERRED_NOISE_LEVEL)
+            .detach()
+            .clone()
+            .view(_model.likelihood.noise_covar.noise.shape)  # pyre-ignore
+            .clamp_min(MIN_INFERRED_NOISE_LEVEL)
         )
     _model.covar_module.base_kernel.lengthscale = (
         mcmc_samples["covar_module.base_kernel.lengthscale_prior"]
-            .detach()
-            .clone()
-            .view(_model.covar_module.base_kernel.lengthscale.shape)  # pyre-ignore
+        .detach()
+        .clone()
+        .view(_model.covar_module.base_kernel.lengthscale.shape)  # pyre-ignore
     )
     _model.covar_module.outputscale = (  # pyre-ignore
         mcmc_samples["covar_module.outputscale_prior"]
-            .detach()
-            .clone()
-            .view(_model.covar_module.outputscale.shape)
+        .detach()
+        .clone()
+        .view(_model.covar_module.outputscale.shape)
     )
     _model.mean_module.constant.data = (
         mcmc_samples["mean_module.mean_prior"]
-            .detach()
-            .clone()
-            .view(_model.mean_module.constant.shape)  # pyre-ignore
+        .detach()
+        .clone()
+        .view(_model.mean_module.constant.shape)  # pyre-ignore
     )
     if "c0" in mcmc_samples:
         _model.input_transform._set_concentration(  # pyre-ignore
             i=0,
             value=mcmc_samples["c0"]
-                .detach()
-                .clone()
-                .view(_model.input_transform.concentration0.shape),  # pyre-ignore
+            .detach()
+            .clone()
+            .view(_model.input_transform.concentration0.shape),  # pyre-ignore
         )
         _model.input_transform._set_concentration(
             i=1,
             value=mcmc_samples["c1"]
-                .detach()
-                .clone()
-                .view(_model.input_transform.concentration1.shape),  # pyre-ignore
+            .detach()
+            .clone()
+            .view(_model.input_transform.concentration1.shape),  # pyre-ignore
         )
