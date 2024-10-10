@@ -1,0 +1,16 @@
+torch>=1.13.1
+transformers>=4.37.2,<=4.41.0
+fschat>=0.2.35
+datasets>=2.17.0,<=2.21.0
+omegaconf
+accelerate
+
+# evaluation
+rouge==1.0.1
+fuzzywuzzy==0.18.0
+jieba==0.42.1
+spacy
+evaluate
+rouge_score
+
+./en_core_web_sm-3.7.1-py3-none-any.whl
