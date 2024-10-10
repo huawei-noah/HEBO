@@ -1,6 +1,6 @@
 import numpy as np
 from bo.base import TestFunction
-from task.tools import Absolut, Manual, TableFilling
+from task.tools import Absolut, Manual, TableFilling, RandomBlackBox
 import torch
 
 class BOTask(TestFunction):
@@ -30,6 +30,8 @@ class BOTask(TestFunction):
             self.fbox = Manual(self.bbox)
         elif self.bbox['tool'] == 'table_filling':
             self.fbox = TableFilling(self.bbox)
+        elif self.bbox['tool'] == 'random':
+            self.fbox = RandomBlackBox(self.bbox)
         else:
             assert 0,f"{self.bbox['tool']} Not Implemented"
 

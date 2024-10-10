@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import pickle
 from typing import Any, Optional
 
@@ -71,9 +70,6 @@ import yaml
 def get_config(config):
     with open(config, 'r') as f:
         return yaml.safe_load(f)
-
-
-from einops import rearrange
 
 
 def batch_iterator(data1, step=8):
@@ -202,7 +198,7 @@ def update_table_of_candidates(original_table: np.ndarray, observed_candidates: 
 
 
 def update_table_of_candidates_torch(original_table: torch.Tensor, observed_candidates: torch.Tensor,
-                               check_candidates_in_table: bool) -> np.ndarray:
+                                     check_candidates_in_table: bool) -> np.ndarray:
     """ Update the table of candidates, removing the newly observed candidates from the table
 
     Args:

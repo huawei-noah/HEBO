@@ -1,11 +1,12 @@
 # Implementation of various kernels
 
+import numpy as np
+import torch
+from gpytorch.constraints import Interval
 from gpytorch.kernels import Kernel
+from gpytorch.kernels.cosine_kernel import CosineKernel
 from gpytorch.kernels.matern_kernel import MaternKernel
 from gpytorch.kernels.rbf_kernel import RBFKernel
-from gpytorch.constraints import Interval
-import torch
-import numpy as np
 from torch import Tensor
 
 
@@ -107,34 +108,6 @@ class TransformedCategorical(CategoricalOverlap):
             k_cat = mat52(diff1, self.ard_num_dims is not None and self.ard_num_dims > 1)
         else:
             raise ValueError('Exponentiation scheme %s is not recognised!' % exp)
-        if diag:
-            return torch.diag(k_cat).float()
-        return k_cat.float()
-
-    def forward_one_hot(self, x1: torch.tensor, x2: torch.tensor, diag=False, last_dim_is_batch=False, exp='rbf'):
-        assert not last_dim_is_batch
-        assert x1.shape[-2:] == x2.shape[-2:], (x1.shape, x2.shape)
-
-        diff = x1[:, None] - x2[None, :]
-        assert diff.shape == (*x1.shape[:-2], *x2.shape[:-2], *x1.shape[-2:]), diff.shape
-        diff_per_var = diff.abs().sum(dim=-1).div(2)
-
-        def rbf(d, ard):
-            if ard:
-                return torch.exp(torch.sum(d * self.lengthscale, dim=-1) / torch.sum(self.lengthscale))
-            else:
-                return torch.exp(self.lengthscale * torch.sum(d, dim=-1) / x1.shape[1])
-
-        def mat52(d, ard):
-            raise NotImplementedError
-
-        if exp == 'rbf':
-            k_cat = rbf(diff_per_var, self.ard_num_dims is not None and self.ard_num_dims > 1)
-        elif exp == 'mat52':
-            k_cat = mat52(diff_per_var, self.ard_num_dims is not None and self.ard_num_dims > 1)
-        else:
-            raise ValueError('Exponentiation scheme %s is not recognised!' % exp)
-
         if diag:
             return torch.diag(k_cat).float()
         return k_cat.float()
@@ -318,67 +291,24 @@ class FastStringKernel(Kernel):
         return torch.pow(self.gap_decay * self.tril, self.exp)
 
 
-# from transformers import pipeline,\
-#                         AutoTokenizer, \
-#                         Trainer, \
-#                         AutoModel
-# import os
-# from einops import rearrange
-#
-# def batch_iterator(data1, data2, step=8):
-#     assert len(data1)==len(data2), "The data sets should be of same size"
-#     size = len(data1)
-#     for i in range(0, size, step):
-#         yield data1[i:min(i+step, size)], data2[i:min(i+step, size)]
-#
-#
-# BERT_config = {'path':'/nfs/aiml/asif/ProtBERT',
-#               'modelname':'prot_bert_bfd',
-#             'batch_size': 16}
-# BERT_device = 'cuda:1'
-# BERT_tokenizer = AutoTokenizer.from_pretrained(f"{BERT_config['path']}/{BERT_config['modelname']}")
-# model = AutoModel.from_pretrained(f"{BERT_config['path']}/{BERT_config['modelname']}").to(BERT_device)
-#
-# class BERTWarpRBF(RBFKernel):
-#     """Similar to above, but applied to RBF."""
-#
-#     def __init__(self, **kwargs):
-#         super(BERTWarpRBF, self).__init__(**kwargs)
-#         AAs = 'ACDEFGHIKLMNPQRSTVWY'
-#         self.AA_to_idx = {aa: i for i, aa in enumerate(AAs)}
-#         self.idx_to_AA = {value: key for key, value in self.AA_to_idx.items()}
-#
-#     def compute_features(self, x1, x2):
-#         with torch.no_grad():
-#             x1 = [" ".join(self.idx_to_AA[i.item()] for i in x_i) for x_i in x1]
-#             ids1 = BERT_tokenizer.batch_encode_plus(x1, add_special_tokens=False, padding=True)
-#             input_ids1 = torch.tensor(ids1['input_ids']).to(BERT_device)
-#             attention_mask1 = torch.tensor(ids1['attention_mask']).to(BERT_device)
-#             reprsn1 = model(input_ids=input_ids1, attention_mask=attention_mask1)[0]
-#
-#             x2 = [" ".join(self.idx_to_AA[i.item()] for i in x_i) for x_i in x2]
-#             ids2 = BERT_tokenizer.batch_encode_plus(x2, add_special_tokens=False, padding=True)
-#             input_ids2 = torch.tensor(ids2['input_ids']).to(BERT_device)
-#             attention_mask2 = torch.tensor(ids2['attention_mask']).to(BERT_device)
-#             reprsn2 = model(input_ids=input_ids2, attention_mask=attention_mask2)[0]
-#         return reprsn1, reprsn2
-#
-#     def forward(self, samples1, samples2, diag=False, **params):
-#         inp_device = samples1.device
-#         nm_samples = samples1.shape[0]
-#         if nm_samples>BERT_config['batch_size']:
-#             reprsn1, reprsn2 = [], []
-#             for x1, x2 in batch_iterator(samples1, samples2, BERT_config['batch_size']):
-#                 features1, features2 = self.compute_features(x1, x2)
-#                 reprsn1.append(features1)
-#                 reprsn2.append(features2)
-#             reprsn1 = torch.cat(reprsn1, 0)
-#             reprsn2 = torch.cat(reprsn2, 0)
-#         else:
-#             reprsn1, reprsn2 = self.compute_features(samples1, samples2)
-#         reprsn1 = rearrange(reprsn1, 'b l d -> b (l d)').to(inp_device)
-#         reprsn2 = rearrange(reprsn2, 'b l d -> b (l d)').to(inp_device)
-#         return super().forward(reprsn1, reprsn2, diag=diag, **params)
+class BERTWarpCosine(CosineKernel):
+    """Applied to Cosine."""
+
+    def __init__(self, **kwargs):
+        super(BERTWarpCosine, self).__init__(**kwargs)
+
+    def forward(self, x1, x2, diag=False, **params):
+        return super().forward(x1, x2, diag=diag, **params)
+
+
+class BERTWarpRBF(RBFKernel):
+    """Similar to above, but applied to RBF."""
+
+    def __init__(self, **kwargs):
+        super(BERTWarpRBF, self).__init__(**kwargs)
+
+    def forward(self, x1, x2, diag=False, **params):
+        return super().forward(x1, x2, diag=diag, **params)
 
 
 if __name__ == '__main__':

@@ -1,10 +1,12 @@
 # import pymol
 import __main__
-import numpy as np
 import os
-import pandas as pd
 import subprocess
 import time
+
+import numpy as np
+import pandas as pd
+
 # from pymol import cmd
 from task.base import BaseTool
 
@@ -227,6 +229,11 @@ class Manual(BaseTool):
             sequences.append(seq2char)
             print(seq2char)
 
+        energies = self.get_energies(sequences=sequences)
+
+        return np.array(energies), sequences
+
+    def get_energies(self, sequences) -> list[float]:
         energies = []
         for i in range(len(sequences)):
             default = np.random.randn()
@@ -240,8 +247,14 @@ class Manual(BaseTool):
                 energy2 = float(custom_input(message=f"[{self.antigen}] Confirm energy for {sequences[i]}:",
                                              default=default))
             energies.append(energy1)
+        return energies
 
-        return np.array(energies), sequences
+
+class RandomBlackBox(Manual):
+    """ Suitable for quick debugging """
+
+    def get_energies(self, sequences) -> list[float]:
+        return [np.random.random() for _ in range(len(sequences))]
 
 
 class TableFilling(BaseTool):
@@ -281,7 +294,7 @@ class TableFilling(BaseTool):
             validations = np.ones(len(sequences))
         else:
             print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
-            values = [None for i in range(len(sequences))]
+            values = [None for _ in range(len(sequences))]
             validations = np.zeros(len(sequences))
 
         to_eval = pd.DataFrame(

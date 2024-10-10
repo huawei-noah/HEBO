@@ -34,7 +34,7 @@ if __name__ == '__main__':
                 results[iter_num] = {}
                 results[iter_num]['CDR3s'] = []
                 results[iter_num]['binding_energies'] = []
-                results[iter_num]['see\d'] = []
+                results[iter_num]['seed'] = []
 
             # Gather all data required for visualisation
             for seed in config['random_seeds']:

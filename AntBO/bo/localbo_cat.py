@@ -302,7 +302,6 @@ class CASMOPOLITANCat:
             # flip for minimization problems
             if self.kernel_type in ['rbfBERT', 'rbf-pca-BERT', 'cosine-BERT', 'cosine-pca-BERT']:
                 from bo.utils import BERTFeatures
-                from einops import rearrange
                 bert = BERTFeatures(self.BERT_model, self.BERT_tokeniser)
                 x_reprsn = bert.compute_features(X.to(device))
                 x_center_reprsn = bert.compute_features(torch.tensor(x_center[0].reshape(1, -1)))

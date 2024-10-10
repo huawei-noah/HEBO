@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 import warnings
 from typing import Optional, Tuple
 
 import torch.nn.functional
 from botorch.fit import fit_gpytorch_model
 from botorch.models.gp_regression import MIN_INFERRED_NOISE_LEVEL
+from gpytorch.constraints import Interval
 from gpytorch.distributions import MultivariateNormal
-from gpytorch.kernels import ScaleKernel
+from gpytorch.kernels import ScaleKernel, RBFKernel, CosineKernel
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.means import ConstantMean
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from gpytorch.models import ExactGP
 
-from bo.kernels import *
+import numpy as np
+
+from bo import CategoricalOverlap, TransformedCategorical, OrdinalKernel, FastStringKernel
+from bo.kernels import BERTWarpRBF, BERTWarpCosine
 
 
 def identity(x):
@@ -120,7 +126,7 @@ class GP(ExactGP):
         return ag_phi, ev_phi
 
 
-def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', hypers={},
+def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', hypers: dict | None =None,
              noise_variance=None,
              cat_configs=None,
              antigen=None,
@@ -139,6 +145,9 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
     assert train_x.ndim == 2
     assert train_y.ndim == 1
     assert train_x.shape[0] == train_y.shape[0]
+
+    if hypers is None:
+        hypers = {}
 
     device = train_x.device
     # Create hyper parameter bounds
