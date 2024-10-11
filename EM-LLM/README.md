@@ -15,7 +15,7 @@ Large language models (LLMs) have shown remarkable capabilities, but still strug
 ### Architecture
 <div align="center">
 
-  <img src="./images/architecture.png" alt="architecture" width="70%">
+  <img src="./images/architecture.png" alt="architecture" width="70%"/>
 
   **Figure 1:**  Schematic illustrating our proposed process for memory formation and retrieval in each layer: ① Input sequence with surprise-based segmentation (purple arrows indicate high surprise). ② Formation of episodic memories: input is segmented into events and stored, with initial tokens and local context preserved. Note that the boundary refinement process is not shown here for clarity. ③ Memory retrieval via k-NN search, selecting contiguous events from episodic memory. ④ Final context window structure, comprising initial tokens, contiguity buffer (populated by neighbouring events), similarity buffer (from k-NN retrieval), and local context.
 
@@ -27,7 +27,7 @@ Large language models (LLMs) have shown remarkable capabilities, but still strug
 <div align="center">
 
 
-  <img src="./images/emllm_rag_fc.png" alt="emllm_rag_fc" width="40%">
+  <img src="./images/emllm_rag_fc.png" alt="emllm_rag_fc" width="40%"/>
 
   **Figure 2:** **(Top)** EM-LLM$_S$ vs. RAG (NV-Embed-v2 retriever) vs. full-context, with LLaMA-3.1-8B as the base LLM, evaluated on LongBench. **(Bottom)** Comparison of various long-sequence methods (sorted based on their context window length) on an extended version of $\infty$-Bench's _Retrieve.PassKey_.
 

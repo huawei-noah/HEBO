@@ -1,6 +1,6 @@
-# Bayesian Optimisation & Reinforcement Learning Research
+# Bayesian Optimization, Reinforcement Learning, & Generative Model Research
 
-This directory contains official implementations for Bayesian optimization & Reinforcement Learning works developed by
+This directory contains official implementations for Bayesian Optimization, Reinforcement Learning, & Generative Model works developed by
 Huawei, Noah's Ark Lab.
 
 - Bayesian Optimisation Research
@@ -17,6 +17,8 @@ Huawei, Noah's Ark Lab.
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
     - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+- Generative Model Research
+    - [EM-LLM: Human-like Episodic Memory for Infinite Context LLMs](./EM-LLM)
 
 Further instructions are provided in the README files associated to each project.
 
@@ -209,8 +211,7 @@ performance improvements across all domains in which Bayesian optimisation is cu
 
 ## [AIRBO](./AIRBO)
 
-<div style="text-align:center"><img src="./AIRBO/figures\opt_performance.png" alt="drawing" width="600"/>
-
+<div style="text-align:center"><img src="./AIRBO/figures\opt_performance.png" alt="drawing" width="600"/></div>
 
 
 Codebase associated
@@ -304,3 +305,18 @@ policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief
 iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
 condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
 results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
+
+
+# Generative Model Research
+
+## [EM-LLM: Human-like Episodic Memory for Infinite Context LLMs](./EM-LLM)
+
+Code associated with our EM-LLM paper: [[arXiv]](https://arxiv.org/abs/2407.09450).
+
+<div align="center">
+  <img src="./EM-LLM/images/emllm_rag_fc.png" alt="emllm_rag_fc" width="400"/>
+</div>
+
+#### Abstract
+
+Large language models (LLMs) have shown remarkable capabilities, but still struggle with processing extensive contexts, limiting their ability to maintain coherence and accuracy over long sequences. In contrast, the human brain excels at organising and retrieving episodic experiences across vast temporal scales, spanning a lifetime. In this work, we introduce EM-LLM, a novel approach that integrates key aspects of human episodic memory and event cognition into LLMs with no fine-tuning, enabling them to handle practically infinite context lengths while maintaining computational efficiency. EM-LLM organises sequences of tokens into coherent episodic events using a combination of Bayesian surprise and graph-theoretic boundary refinement in an online fashion. When needed, these events are retrieved through a two-stage memory process, combining similarity-based and temporally contiguous retrieval for efficient and human-like access to relevant information. Experiments on the LongBench and $\infty$-Bench benchmarks demonstrate EM-LLM's superior performance, consistently outperforming the state-of-the-art retrieval model InfLLM across various baseline LLMs. In addition, EM-LLM outperforms its popular counterpart, RAG, in a wide range of tasks, while requiring similar resources. Notably, EM-LLM's performance even surpasses full-context models in most tasks, while successfully performing retrieval across 5 million tokens -- a scale computationally infeasible for such models. Finally, our analysis reveals strong correlations between EM-LLM's event segmentation and human-perceived events, suggesting a bridge between this artificial system and its biological counterpart, thereby offering a novel computational framework for exploring human memory mechanisms.
