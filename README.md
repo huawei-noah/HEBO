@@ -17,6 +17,7 @@ Huawei, Noah's Ark Lab.
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
     - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+    - [SparsePO: Controlling Preference Alignment of LLMs via Sparse Token Masks](./SparsePO)
 - Generative Model Research
     - [EM-LLM: Human-like Episodic Memory for Infinite Context LLMs](./EM-LLM)
 
