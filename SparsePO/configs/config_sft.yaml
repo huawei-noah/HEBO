@@ -1,0 +1,43 @@
+# Model arguments
+model_name_or_path: EleutherAI/pythia-1.4b-deduped
+torch_dtype: null
+
+# Data training arguments
+dataset_mixer:
+  Anthropic/hh-rlhf: 1.0
+dataset_splits:
+- train
+- test
+preprocessing_num_workers: 24
+
+# DPOTrainer arguments
+dataset_text_field: "text"
+packing: false
+eval_packing: false
+dataset_batch_size: 10000
+fp16: true
+do_train: true
+do_eval: true
+gradient_accumulation_steps: 2
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: True
+learning_rate: 2.0e-5
+log_level: info
+logging_steps: 10
+lr_scheduler_type: cosine
+max_seq_length: 2048
+num_train_epochs: 1
+optim: adamw_torch
+output_dir: tmp
+per_device_train_batch_size: 16
+per_device_eval_batch_size: 16
+push_to_hub: false
+save_strategy: epoch
+save_total_limit: 3
+eval_strategy: epoch
+seed: 42
+warmup_ratio: 0.1
+report_to:
+- tensorboard
+logging_first_step: true
