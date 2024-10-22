@@ -17,6 +17,7 @@ Huawei, Noah's Ark Lab.
     - [Enhancing Reinforcement Learning Agents with Local Guides](RLLG)
     - [Sauté RL and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation ](./SIMMER)
     - [Model-Based Offline Reinforcement Learning with Pessimism-Modulated Dynamics Belief](./PMDB)
+    - [SparsePO: Controlling Preference Alignment of LLMs via Sparse Token Masks](./SparsePO)
 - Generative Model Research
     - [EM-LLM: Human-like Episodic Memory for Infinite Context LLMs](./EM-LLM)
 
@@ -305,6 +306,25 @@ policy-dependent reweighting factor, termed *Pessimism-Modulated Dynamics Belief
 iterative regularized policy optimization algorithm for the game, with guarantee of monotonous improvement under certain
 condition. To make practical, we further devise an offline RL algorithm to approximately find the solution. Empirical
 results show that the proposed approach achieves state-of-the-art performance on a wide range of benchmark tasks.
+
+## [SparsePO: Controlling Preference Alignment of LLMs via Sparse Token Masks](.SparsePO)
+
+Code associated with the paper "[SparsePO: Controlling Preference Alignment of LLMs via Sparse Token Masks](https://arxiv.org/abs/2410.05102)"
+
+#### Abstract
+
+Preference Optimization (PO) has proven an effective step for aligning language models to human-desired behaviors. 
+Current variants, following the offline Direct Preference Optimization objective, have focused on a strict setting where all tokens 
+are contributing signals of KL divergence and rewards to the loss function. However, human preference is not affected by each word in 
+a sequence equally but is often dependent on specific words or phrases, e.g. existence of toxic terms leads to non-preferred responses. 
+Based on this observation, we argue that not all tokens should be weighted equally during PO and propose a flexible objective 
+termed SparsePO, that aims to automatically learn to weight the KL divergence and reward corresponding to each token during PO training. 
+We propose two different variants of weight-masks that can either be derived from the reference model itself or learned on the fly.
+Notably, our method induces sparsity in the learned masks, allowing the model to learn how to best weight reward and KL divergence
+contributions at the token level, learning an optimal level of mask sparsity. Extensive experiments on multiple domains, 
+including sentiment control, dialogue, text summarization and text-to-code generation, illustrate that our approach assigns meaningful 
+weights to tokens according to the target task, generates more responses with the desired preference and improves reasoning tasks by 
+up to 2 percentage points compared to other token- and response-level PO methods.
 
 
 # Generative Model Research
