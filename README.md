@@ -314,7 +314,7 @@ results show that the proposed approach achieves state-of-the-art performance on
 Code associated with our EM-LLM paper: [[arXiv]](https://arxiv.org/abs/2407.09450).
 
 <div align="center">
-  <img src="./EM-LLM/images/emllm_rag_fc.png" alt="emllm_rag_fc" width="400"/>
+  <img src="./EM-LLM/images/emllm_rag_fc.png" alt="emllm_rag_fc" width="70%"/>
 </div>
 
 #### Abstract
