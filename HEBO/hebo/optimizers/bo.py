@@ -57,8 +57,7 @@ class BO(AbstractOptimizer):
             if Xe.shape[1] == 0:
                 num_uniqs = None
             else:
-                _num = lambda n: len(self.space.paras[name].categories)
-                num_uniqs = [_num(name) for name in self.space.enum_names]
+                num_uniqs = [len(self.space.paras[name].categories) for name in self.space.enum_names]
 
             model = get_model(
                 self.model_name,
