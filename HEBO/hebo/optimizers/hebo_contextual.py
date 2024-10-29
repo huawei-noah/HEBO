@@ -11,10 +11,10 @@
 import numpy as np
 import pandas as pd
 import torch
+from hebo.acquisitions.acq import Acquisition, MACE
 
 from .abstract_optimizer import AbstractOptimizer
 from .hebo import HEBO
-from hebo.acquisitions.acq import Acquisition, MACE
 
 
 class HEBO_VectorContextual(AbstractOptimizer):
@@ -23,6 +23,7 @@ class HEBO_VectorContextual(AbstractOptimizer):
     support_contextual = True
 
     def __init__(self, space, context_dict: dict, model_name: str = "gp", rand_sample: int = None):
+        super().__init__(space=space, csv_save_path=None)
         self.hebo = HEBO(space, model_name, rand_sample)
         self.context_dict = context_dict
         self.context = None
