@@ -1,4 +1,4 @@
-# Saut\'e and Simmer {RL}: Safe Reinforcement Learning Using Safety State Augmentation
+# Sauté and Simmer RL: Safe Reinforcement Learning Using Safety State Augmentation
 
 ###  Sauté RL: Almost Surely Safe RL Using State Augmentation
 
@@ -39,7 +39,7 @@ conda env create -f sauterl.yml
 conda activate sauterl
 ```
 
-Our implementation is based on the Open AI safety starter agents. To install the Open AI libraries run the following commands:
+Our implementation is based on the Open AI safety starter agents (distributed under MIT license). To install the Open AI libraries run the following commands:
 
 ```console
 mkdir safe-rl
