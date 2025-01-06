@@ -1,0 +1,13 @@
+hydra-core
+trl==0.8.2
+tensorboard
+transformers<4.46 # position_ids removed
+torch
+datasets
+accelerate
+deepspeed==0.15.4 # if deepspeed==0.16 fails in stage 2
+tqdm
+#for inference
+shortuuid
+safetensors
+numpy

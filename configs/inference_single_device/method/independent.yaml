@@ -1,0 +1,13 @@
+defaults:
+  - /tree_decoding
+
+model_class:
+  _target_: hydra.utils.get_object
+  path: moa_spec.models.inference.single_device.independent.IndependentLlamaForCausalLM
+
+model_config:
+  drafter:
+    pretrained_model_name_or_path: ${....drafter}
+    torch_dtype:
+      _target_: hydra.utils.get_object
+      path: ${.....model_kwargs.torch_dtype.path}

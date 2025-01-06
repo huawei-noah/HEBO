@@ -1,0 +1,6 @@
+model_config:
+  tree_decoding: True
+  verification: True
+  depth: 7  # (depth - 1) is the depth of the tree
+  breadth: 8  # breadth of the tree
+  total_tokens: 62  # number of tokens to verify per round (with tree decoding only)

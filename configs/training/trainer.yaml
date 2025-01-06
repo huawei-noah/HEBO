@@ -1,0 +1,16 @@
+trainer:
+  _target_: moa_spec.trainer.Trainer
+  epochs: 30
+  learning_rate: 3e-5
+  weight_decay: 0.0
+  warmup_steps: 50
+  max_grad_norm: 1.0
+
+  # lr scheduler
+  zero_peak_constant: True # should be True if starting a new training, False otherwise
+
+  # batch size to achieve with gradient accumulation
+  batch_size: 32 # the gradient accumulation steps are computed automatically from the world size and mini_batch_size
+
+  # batch size on one GPU device
+  mini_batch_size: 1  # bigger mini batch size are not useful if GPU is already compute bounded

@@ -1,0 +1,15 @@
+defaults:
+  - /tree_decoding
+
+model_class:
+  _target_: hydra.utils.get_object
+  path: moa_spec.models.inference.single_device.moa_spec.MOASpecLlamaForCausalLM
+
+model_config:
+  self_attention_num_key_value_heads: 4
+  self_attention_intermediate_size: 6144
+  cross_attention_num_key_value_heads: 4
+  cross_attention_intermediate_size: 6144
+  layer_self_attention_num_key_value_heads: 8
+  layer_self_attention_intermediate_size: 3072
+  target_layer_inference: 0

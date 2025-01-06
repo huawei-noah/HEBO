@@ -1,0 +1,36 @@
+defaults:
+  - trainer
+  - method: moa_spec
+  - override hydra/job_logging: default
+  - override hydra/hydra_logging: default
+  - _self_
+
+model: "meta-llama/Meta-Llama-3-8B-Instruct"
+drafter: null
+
+model_kwargs:
+  pretrained_model_name_or_path: ${..model}
+
+  torch_dtype:
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16
+
+tokenizer_kwargs:
+  pretrained_model_name_or_path: ${..model}
+  padding_side: "right"
+  use_fast: True
+
+training_dataset:
+  path: "HuggingFaceH4/ultrachat_200k"
+  split: "train_sft"
+
+validation_dataset:
+  path: "HuggingFaceH4/ultrachat_200k"
+  split: "test_sft"
+
+seed: 0
+max_length: 2048  # only remove 0.06% and shorten 7.5% of the dataset but save memory
+
+hydra:
+  run:
+    dir: logs/train_${now:%Y-%m-%d}_${now:%H-%M-%S}

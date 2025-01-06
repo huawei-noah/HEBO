@@ -1,0 +1,27 @@
+defaults:
+  - method: moa_spec
+  - override hydra/job_logging: default
+  - override hydra/hydra_logging: default
+  - _self_
+
+model: "meta-llama/Meta-Llama-3-8B-Instruct"
+drafter: ???
+
+model_kwargs:
+  pretrained_model_name_or_path: ${..model}
+
+  torch_dtype:
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16
+  device_map: "cuda:0"
+
+tokenizer_kwargs:
+  pretrained_model_name_or_path: ${..model}
+  padding_side: "right"
+  use_fast: True
+
+seed: 0
+
+hydra:
+  run:
+    dir: logs/inf_${now:%Y-%m-%d}_${now:%H-%M-%S}

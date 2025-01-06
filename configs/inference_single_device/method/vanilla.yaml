@@ -1,0 +1,3 @@
+model_class:
+  _target_: hydra.utils.get_object
+  path: transformers.LlamaForCausalLM
