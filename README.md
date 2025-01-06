@@ -1,6 +1,6 @@
 # Mixture of Attentions for Speculative Decoding
 
-This repository contains the implementation of the paper "Mixture of Attentions For Speculative Decoding" by Matthieu Zimmer*, Milan Gritta*, Gerasimos Lampouras, Haitham Bou Ammar, and Jun Wang. The paper introduces a novel architecture for speculative decoding that enhances the speed of large language model (LLM) inference.
+This repository contains the implementation of the paper "[Mixture of Attentions For Speculative Decoding](https://arxiv.org/abs/2410.03804)" by Matthieu Zimmer*, Milan Gritta*, Gerasimos Lampouras, Haitham Bou Ammar, and Jun Wang. The paper introduces a novel architecture for speculative decoding that enhances the speed of large language model (LLM) inference.
 
 ## Overview
 
