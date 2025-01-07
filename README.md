@@ -84,7 +84,10 @@ We wrote our code for vLLM version v0.6.3.post2.dev14.
 cd vllm
 CUDACXX=/usr/local/cuda-12.1/bin/nvcc VLLM_USE_PRECOMPILED=1 pip install --editable .
 
-# convert MOA checkpoints to vLLM format with our script
+# you can test our model with command:
+llm serve "meta-llama/Meta-Llama-3-8B-Instruct" --speculative-model "huawei-noah/MOASpec-Llama-3-8B-Instruct" --num_speculative_tokens 3 --max-model-len 2048 --dtype bfloat16 --enforce-eager 
+
+# if you trained your own model, you can convert MOA checkpoints to vLLM format with this script
 python convert_checkpoint.py ../logs/train_XXX/snapshot.XXX.pt/ ../logs/train_XXX/snapshot.XXX.pt.vllm/
 
 vllm serve "meta-llama/Meta-Llama-3-8B-Instruct" --speculative-model ../logs/train_XXX/snapshot.XXX.pt.vllm/ --num_speculative_tokens 3 --max-model-len 2048 --dtype bfloat16 --enforce-eager
@@ -97,6 +100,13 @@ We obtained the following results with vLLM with benchmark_serving.py:
 #### Client-Server
 This code hasn't been cleaned yet. If you're interested, please leave an issue or email us.
 
+### Checkpoints
+
+| Base Model  | MOA Spec on Hugging Face  | Base Model Parameters  | MOA Spec Parameters |
+|------|------|------|------|
+| meta-llama/Meta-Llama-3-8B-Instruct | [huawei-noah/MOASpec-Llama-3-8B-Instruct](https://huggingface.co/huawei-noah/MOASpec-Llama-3-8B-Instruct) | 8B | 0.25B |
+
+
 ### Configuration
 
 To use a model other than Llama, you can specify a Hugging Face model by providing its name, 
@@ -104,7 +114,7 @@ such as "meta-llama/Meta-Llama-3-8B", or by specifying the path to the model.
 This can be done for both training and inference in the command line.
 
 ```bash
-model="meta-llama/Meta-Llama-3-8B"
+model="meta-llama/Meta-Llama-3-8B-Instruct"
 ```
 
 The configuration files are located in the `configs` directory. These files allow you to customize various aspects of the training and evaluation process, such as learning rate, batch size, and model architecture.
