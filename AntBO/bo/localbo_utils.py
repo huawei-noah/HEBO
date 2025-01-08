@@ -302,10 +302,12 @@ def local_table_search(x_center: np.ndarray,
         x_candidates: 2d ndarray acquisition points
         f_x_candidates: 1d array function value of these points
     """
+    print(f"-- Start local table search (Max hamming: {max_hamming_dist}, "
+          f"number of candidates: {len(table_of_candidates)}) --")
+
     assert x_center.ndim == 1, x_center.shape
     assert table_of_candidates.ndim == 2, table_of_candidates.shape
     assert batch_size == 1, "Methods is designed to output only one candidate for now"
-    n_candidates = 0
     hamming_dists = scipy.spatial.distance.cdist(table_of_candidates, x_center.reshape(1, -1), metric="hamming")
     hamming_dists *= x_center.shape[-1]  # denormalize
     hamming_dists = hamming_dists.flatten()
@@ -315,6 +317,8 @@ def local_table_search(x_center: np.ndarray,
     max_hamming_dist = max(max_hamming_dist, np.argmax(np.cumsum(n_cand_per_dist) > 0))
 
     table_of_candidates = table_of_candidates[hamming_dists <= max_hamming_dist]
+    print(f"---> Will search candidates with at most distance "
+          f"{max_hamming_dist} among {len(table_of_candidates)} candidates")
 
     fmax = -np.inf
 
@@ -322,6 +326,7 @@ def local_table_search(x_center: np.ndarray,
 
     for _ in tqdm(range(10)):
         if len(table_of_candidates) == 0:
+            print("---> No more candidates, stop the search")
             break
 
         # gather points from closest to farthest
@@ -334,15 +339,16 @@ def local_table_search(x_center: np.ndarray,
         dist_to_current_center = 1
         while cand_filtr.sum() < max_batch_size and dist_to_current_center <= table_of_candidates.shape[-1]:
             new_filtr = hamming_dists == dist_to_current_center
-            n_ones = max_batch_size - cand_filtr.sum()
-            n_zeros = new_filtr.sum() - n_ones
             if cand_filtr.sum() + new_filtr.sum() > max_batch_size:
+                n_ones = max_batch_size - cand_filtr.sum()
+                n_zeros = new_filtr.sum() - n_ones
                 new_filtr[new_filtr] = np.random.permutation(
                     np.concatenate([np.zeros(n_zeros), np.ones(n_ones)]).astype(bool))
             cand_filtr = cand_filtr + new_filtr
             dist_to_current_center += 1
 
         if cand_filtr.sum() == 0:  # no more candidates to evaluate
+            print(f"---> Couldn't find any candidate with distance smaller or equal to {table_of_candidates.shape[-1]}")
             break
 
         # evaluate acquisition function
@@ -353,7 +359,7 @@ def local_table_search(x_center: np.ndarray,
 
         # remove already evaluated points from table of candidates
         table_of_candidates = table_of_candidates[~cand_filtr]
-
+    print("-- End of the local search --")
     return current_center.reshape(1, -1), np.array([fmax])
 
 
