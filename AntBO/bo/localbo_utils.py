@@ -313,7 +313,7 @@ def local_table_search(x_center: np.ndarray,
     hamming_dists = hamming_dists.flatten()
 
     # entry `i` contains the number of points in the table of candidates that are at distance `i` of the center
-    n_cand_per_dist = np.array([(hamming_dists == i).sum() for i in range(table_of_candidates.shape[-1])])
+    n_cand_per_dist = np.array([(hamming_dists == i).sum() for i in range(table_of_candidates.shape[-1] + 1)])
     max_hamming_dist = max(max_hamming_dist, np.argmax(np.cumsum(n_cand_per_dist) > 0))
 
     table_of_candidates = table_of_candidates[hamming_dists <= max_hamming_dist]
@@ -326,7 +326,6 @@ def local_table_search(x_center: np.ndarray,
 
     for _ in tqdm(range(10)):
         if len(table_of_candidates) == 0:
-            print("---> No more candidates, stop the search")
             break
 
         # gather points from closest to farthest
@@ -348,7 +347,6 @@ def local_table_search(x_center: np.ndarray,
             dist_to_current_center += 1
 
         if cand_filtr.sum() == 0:  # no more candidates to evaluate
-            print(f"---> Couldn't find any candidate with distance smaller or equal to {table_of_candidates.shape[-1]}")
             break
 
         # evaluate acquisition function
