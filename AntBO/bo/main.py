@@ -200,13 +200,13 @@ class BOExperiments:
 
         antibodies = self.f_obj.idx_to_seq(x)
 
-        def add_best(step: int, y_val: float, last_protein: str) -> None:
+        def add_res(step: int, y_val: float, last_protein: str) -> None:
             argmin = np.argmin(y[:step + 1])
             x_best = ''.join([self.f_obj.fbox.idx_to_AA[ind] for ind in optim.casmopolitan.X[argmin].flatten()])
             self.res.iloc[step, :] = [step, y_val, float(np.min(y[:(step + 1)])), rtime, last_protein, x_best]
 
         for idx, j in enumerate(range(itern * self.config['batch_size'], (itern + 1) * self.config['batch_size'])):
-            add_best(step=j, y_val=float(y[j]), last_protein=antibodies[idx])
+            add_res(step=j, y_val=float(y[j]), last_protein=antibodies[idx])
 
     def run(self):
         random.seed(self.seed)
