@@ -1,6 +1,5 @@
 # Implementation of various kernels
 
-import numpy as np
 import torch
 from gpytorch.constraints import Interval
 from gpytorch.kernels import Kernel
@@ -176,13 +175,17 @@ class FastStringKernel(Kernel):
         for i in range(self.maxlen - 1):
             self.exp[i, i + 1:] = torch.arange(self.maxlen - i - 1)
 
-    def K_diag(self, X: Tensor):
+        self.symmetric = None
+        self.D = None
+
+    @staticmethod
+    def K_diag(self, x: torch.tensor) -> torch.tensor:
         r"""
         The diagonal elements of the string kernel are always unity (due to normalisation)
         """
-        return torch.ones(X.shape[:-1], dtype=torch.double)
+        return torch.ones(x.shape[:-1], dtype=torch.double)
 
-    def forward(self, X1, X2, diag=False, last_dim_is_batch=False, **params):
+    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, **params):
         r"""
         Vectorized kernel calc.
         Following notation from Beck (2017), i.e have tensors S,D,Kpp,Kp
@@ -196,43 +199,43 @@ class FastStringKernel(Kernel):
         # pad until all have length of self.maxlen
         if diag:
             raise ValueError()
-        if X2 is None:
-            X2 = X1
+        if x2 is None:
+            x2 = x1
             self.symmetric = True
         else:
             self.symmetric = False
         # keep track of original input sizes
-        X1_shape = X1.shape[0]
-        X2_shape = X2.shape[0]
+        x1_shape = x1.shape[0]
+        x2_shape = x2.shape[0]
 
         # prep the decay tensor D
-        self.D = self._precalc().to(X1)
+        self.D = self._precalc().to(x1)
 
         # turn into one-hot  i.e. shape (# strings, #characters+1, alphabet size)
-        X1 = torch.nn.functional.one_hot(X1.to(int), self.alphabet_size).to(X1)
-        X2 = torch.nn.functional.one_hot(X2.to(int), self.alphabet_size).to(X2)
+        x1 = torch.nn.functional.one_hot(x1.to(int), self.alphabet_size).to(x1)
+        x2 = torch.nn.functional.one_hot(x2.to(int), self.alphabet_size).to(x2)
 
-        # get indicies of all possible pairings from X and X2
+        # get indicies of all possible pairings from X and x2
         # this way allows maximum number of kernel calcs to be squished onto the GPU (rather than just doing individual rows of gram)
-        indicies_2, indicies_1 = torch.meshgrid(torch.arange(0, X2.shape[0]), torch.arange(0, X1.shape[0]))
+        indicies_2, indicies_1 = torch.meshgrid(torch.arange(0, x2.shape[0]), torch.arange(0, x1.shape[0]))
         indicies = torch.cat([torch.reshape(indicies_1.T, (-1, 1)), torch.reshape(indicies_2.T, (-1, 1))], axis=1)
 
         # if symmetric then only calc upper matrix (fill in rest later)
         if self.symmetric:
             indicies = indicies[indicies[:, 1] >= indicies[:, 0]]
 
-        X1_full = torch.repeat_interleave(X1.unsqueeze(0), len(indicies), dim=0)[
+        x1_full = torch.repeat_interleave(x1.unsqueeze(0), len(indicies), dim=0)[
             np.arange(len(indicies)), indicies[:, 0]]
-        X2_full = torch.repeat_interleave(X2.unsqueeze(0), len(indicies), dim=0)[
+        x2_full = torch.repeat_interleave(x2.unsqueeze(0), len(indicies), dim=0)[
             np.arange(len(indicies)), indicies[:, 1]]
 
         if not self.symmetric:
             # also need to calculate some extra kernel evals for the normalization terms
-            X1_full = torch.cat([X1_full, X1, X2], 0)
-            X2_full = torch.cat([X2_full, X1, X2], 0)
+            x1_full = torch.cat([x1_full, x1, x2], 0)
+            x2_full = torch.cat([x2_full, x1, x2], 0)
 
         # Make S: the similarity tensor of shape (# strings, #characters, # characters)
-        S = torch.matmul(X1_full, torch.transpose(X2_full, 1, 2))
+        S = torch.matmul(x1_full, torch.transpose(x2_full, 1, 2))
 
         # store squared match coef
         match_sq = self.match_decay ** 2
@@ -253,9 +256,9 @@ class FastStringKernel(Kernel):
         # put results into the right places in the gram matrix and normalize
         if self.symmetric:
             # if symmetric then only put in top triangle (inc diag)
-            mask = torch.triu(torch.ones((X1_shape, X2_shape)), 0).to(S)
+            mask = torch.triu(torch.ones((x1_shape, x2_shape)), 0).to(S)
             non_zero = mask > 0
-            k_results = torch.zeros((X1_shape, X2_shape)).to(S)
+            k_results = torch.zeros((x1_shape, x2_shape)).to(S)
             k_results[non_zero] = k.squeeze()
             # add in mising elements (lower diagonal)
             k_results = k_results + k_results.T - torch.diag(k_results.diag())
@@ -270,15 +273,15 @@ class FastStringKernel(Kernel):
 
             # COULD SPEED THIS UP FOR PREDICTIONS, AS MANY NORM TERMS ALREADY IN GRAM
 
-            X_diag_Ks = k[X1_shape * X2_shape:X1_shape * X2_shape + X1_shape].flatten()
+            X_diag_Ks = k[x1_shape * x2_shape:x1_shape * x2_shape + x1_shape].flatten()
 
-            X2_diag_Ks = k[-X2_shape:].flatten()
+            x2_diag_Ks = k[-x2_shape:].flatten()
 
-            k = k[0:X1_shape * X2_shape]
-            k_results = k.reshape(X1_shape, X2_shape)
+            k = k[0:x1_shape * x2_shape]
+            k_results = k.reshape(x1_shape, x2_shape)
 
             # normalise
-            norm = torch.matmul(X_diag_Ks[:, None], X2_diag_Ks[None, :])
+            norm = torch.matmul(X_diag_Ks[:, None], x2_diag_Ks[None, :])
             k_results = torch.divide(k_results, torch.sqrt(norm))
 
         return k_results
@@ -316,7 +319,7 @@ if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
 
-    x1 = torch.tensor([[13., 4.],
+    x1_ = torch.tensor([[13., 4.],
                        [43., 15.],
                        [32., 19.],
                        [41., 9.],
@@ -339,7 +342,7 @@ if __name__ == '__main__':
 
     o = OrdinalKernel(config=[51, 51])
     o.lengthscale = 1.
-    K = o.forward(x1, x1).detach().numpy()
+    K = o.forward(x1_, x1_).detach().numpy()
     plt.imshow(K)
     plt.colorbar()
     plt.show()

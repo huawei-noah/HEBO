@@ -1,3 +1,5 @@
+import numpy as np
+
 from task.base import BaseTask
 from task.utils import plot_mean_std
 from task.tools import Absolut, Visualisation
@@ -24,7 +26,7 @@ class Task(BaseTask):
         else:
             assert 0,f"{self.config['method']} Not Implemented"
 
-    def energy(self, x):
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
         '''
         x: categorical vector
         '''

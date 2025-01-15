@@ -1,23 +1,19 @@
 import os
 import sys
 import time
-from pathlib import Path
+
+import matplotlib
+import numpy as np
+import pandas as pd
+
+from utilities.config_utils import save_config
+from utilities.constraint_utils import check_constraint_satisfaction_batch
+from utilities.utils import AA_to_idx, sample_to_aa_seq
 
 # ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 # sys.path.insert(0, ROOT_PROJECT)
 
-import numpy as np
-import pandas as pd
-
-from task.tools import Absolut  # Importing this prints "MoTTY X11 proxy: Authorisation not recognised" in MobaXterm
-from utilities.config_utils import save_config
-from utilities.utils import AA_to_idx, sample_to_aa_seq
-from utilities.constraint_utils import check_constraint_satisfaction_batch
-
-import matplotlib
-
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 
 # Calculate total number of function evaluations

@@ -1,7 +1,9 @@
 import numpy as np
+import torch
+
 from bo.base import TestFunction
 from task.tools import Absolut, Manual, TableFilling, RandomBlackBox
-import torch
+
 
 class BOTask(TestFunction):
     """
@@ -9,6 +11,7 @@ class BOTask(TestFunction):
     """
     # this should be changed if we are tackling a mixed, or continuous problem, for e.g.
     problem_type = 'categorical'
+
     def __init__(self,
                  device,
                  n_categories,
@@ -33,8 +36,7 @@ class BOTask(TestFunction):
         elif self.bbox['tool'] == 'random':
             self.fbox = RandomBlackBox(self.bbox)
         else:
-            assert 0,f"{self.bbox['tool']} Not Implemented"
-
+            assert 0, f"{self.bbox['tool']} Not Implemented"
 
     def compute(self, x):
         '''

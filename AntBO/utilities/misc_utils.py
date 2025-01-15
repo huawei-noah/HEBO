@@ -34,7 +34,7 @@ def log(message, header: Optional[str] = None, end: Optional[str] = None):
     print(f'[{header}' + ' {:%Y-%m-%d %H:%M:%S}'.format(datetime.now()) + f"]  {message}", end=end)
 
 
-def _filter_kwargs(function: Callable, **kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def filter_kwargs(function: Callable, **kwargs: dict[str, Any]) -> Dict[str, Any]:
     r"""Given a function, select only the arguments that are applicable.
 
     Return:
@@ -63,25 +63,25 @@ def load_w_pickle(path: str, filename: Optional[str] = None) -> Any:
     with open(os.path.join(path, filename), 'rb') as f:
         try:
             return pickle.load(f)
-        except EOFError as e:
+        except EOFError:
             print(path, filename)
             raise
 
 
-def cummax(X: np.ndarray, return_ind=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def cummax(x: np.ndarray, return_ind=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """ Return array containing at index `i` the value max(X)[:i] """
     cmaxind: List[int] = [0]
-    cmax: List[float] = [X[0]]
-    for i, x in enumerate(X[1:]):
+    cmax: List[float] = [x[0]]
+    for i, xx in enumerate(x[1:]):
         i += 1
-        if x > cmax[-1]:
-            cmax.append(x)
+        if xx > cmax[-1]:
+            cmax.append(xx)
             cmaxind.append(i)
         else:
             cmax.append(cmax[-1])
             cmaxind.append(cmaxind[-1])
     cmax_np = np.array(cmax)
-    assert np.all(X[cmaxind] == cmax_np), (X, X[cmaxind], cmax_np)
+    assert np.all(x[cmaxind] == cmax_np), (x, x[cmaxind], cmax_np)
     if return_ind:
         return cmax_np, np.array(cmaxind)
     return cmax_np
@@ -145,9 +145,9 @@ def get_common_chunk_sizes(ys: List[np.ndarray]):
 
     output = []
     for i in range(1, len(lens)):
-        Xs = np.arange(lens[i - 1], lens[i])
+        xs = np.arange(lens[i - 1], lens[i])
         y = [y[lens[i - 1]:lens[i]] for y in ys if len(y) >= lens[i]]
-        output.append((Xs, y))
+        output.append((xs, y))
     return output
 
 
@@ -157,37 +157,37 @@ def plot_mean_std(*args, n_std: Optional[int] = 1,
     """ Plot mean and std (with fill between) of sequential data Y of shape (n_trials, lenght_of_a_trial)
 
     Args:
-        X: x-values (if None, we will take `range(0, len(Y))`)
-        Y: y-values
+        args: 
+            x: x-values (if None, we will take `range(0, len(Y))`)
+            y: y-values
         n_std: number of std to plot around the mean (if `0` only the mean is plotted)
         ax: axis on which to plot the curves
-        color: color of the curve
         alpha: parameter for `fill_between`
 
     Returns:
         The axis.
     """
     if len(args) == 1:
-        Y = args[0]
-        X = None
+        y = args[0]
+        x = None
     elif len(args) == 2:
-        X, Y = args
+        x, y = args
     else:
         raise RuntimeError('Wrong number of arguments (should be [X], Y,...)')
 
-    assert len(Y) > 0, 'Y should be a non-empty array, nothing to plot'
-    Y = np.atleast_2d(Y)
-    if X is None:
-        X = np.arange(Y.shape[1])
-    assert X.ndim == 1, f'X should be of rank 1, got {X.ndim}'
-    mean = Y.mean(0)
-    std = Y.std(0)
+    assert len(y) > 0, 'Y should be a non-empty array, nothing to plot'
+    y = np.atleast_2d(y)
+    if x is None:
+        x = np.arange(y.shape[1])
+    assert x.ndim == 1, f'X should be of rank 1, got {x.ndim}'
+    mean = y.mean(0)
+    std = y.std(0)
     if ax is None:
         ax = plt.subplot()
 
-    line_plot = ax.plot(X, mean, **plot_mean_kwargs)
+    line_plot = ax.plot(x, mean, **plot_mean_kwargs)
 
-    if n_std > 0 and Y.shape[0] > 1:
-        ax.fill_between(X, mean - n_std * std, mean + n_std * std, alpha=alpha, color=line_plot[0].get_c())
+    if n_std > 0 and y.shape[0] > 1:
+        ax.fill_between(x, mean - n_std * std, mean + n_std * std, alpha=alpha, color=line_plot[0].get_c())
 
     return ax

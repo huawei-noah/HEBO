@@ -1,32 +1,32 @@
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
+import numpy as np
 import torch.nn.functional
 from botorch.fit import fit_gpytorch_model
 from botorch.models.gp_regression import MIN_INFERRED_NOISE_LEVEL
 from gpytorch.constraints import Interval
 from gpytorch.distributions import MultivariateNormal
-from gpytorch.kernels import ScaleKernel, RBFKernel, CosineKernel
-from gpytorch.likelihoods import GaussianLikelihood
+from gpytorch.kernels import ScaleKernel, RBFKernel, CosineKernel, MaternKernel
+from gpytorch.likelihoods import GaussianLikelihood, Likelihood
 from gpytorch.means import ConstantMean
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from gpytorch.models import ExactGP
 
-import numpy as np
-
 from bo import CategoricalOverlap, TransformedCategorical, OrdinalKernel, FastStringKernel
 from bo.kernels import BERTWarpRBF, BERTWarpCosine
+from bo.localbo_utils import SEARCH_STRATS
 
 
-def identity(x):
+def identity(x: Any) -> Any:
     return x
 
 
 class GP(ExactGP):
-    def __init__(self, train_x, train_y, likelihood,
-                 outputscale_constraint=None, ard_dims=None, kern=None, MeanMod=ConstantMean, cat_dims=None,
+    def __init__(self, train_x: torch.tensor, train_y: torch.tensor, likelihood: Likelihood,
+                 outputscale_constraint=None, ard_dims=None, kern=None, mean_mode=ConstantMean, cat_dims=None,
                  batch_shape=torch.Size(), transform_inputs=None):
         if transform_inputs is None:
             transform_inputs = identity
@@ -37,15 +37,15 @@ class GP(ExactGP):
         self.dim = train_x.shape[1]
         self.ard_dims = ard_dims
         self.cat_dims = cat_dims
-        self.mean_module = MeanMod(batch_shape=batch_shape)
+        self.mean_module = mean_mode(batch_shape=batch_shape)
         self.covar_module = ScaleKernel(kern, outputscale_constraint=outputscale_constraint, batch_shape=batch_shape)
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> MultivariateNormal:
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return MultivariateNormal(mean_x, covar_x)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> MultivariateNormal:
         return super().__call__(*[self.transform_inputs(input_point) for input_point in args], **kwargs)
 
     def dmu_dphi(self, num_cats: int, xs: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -92,7 +92,7 @@ class GP(ExactGP):
         Parameters
         ----------
         num_cats: number of categories
-        dmu_dphi: matrix of partial derivatives d mu / d phi of shape (n_points, n_dim, n_categories) --> compute it if None
+        dmu_dphi: matrix of partial derivatives d mu / d phi of shape (n_pts, n_dim, n_cats) --> compute it if None
         xs: points for which derivatives have been computed --> assume it is the training points of the GP if None
         n_samples_threshold: if number of samples having feature phi_ij is less than this threshold, AG_ij will be nan
 
@@ -126,19 +126,13 @@ class GP(ExactGP):
         return ag_phi, ev_phi
 
 
-def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', hypers: dict | None =None,
-             noise_variance=None,
-             cat_configs=None,
-             antigen=None,
-             search_strategy='local',
-             acq='EI',
-             num_samples=51,
-             warmup_steps=102,
-             thinning=1,
-             max_tree_depth=6,
-             **params):
-    """Fit a GP model where train_x is in [0, 1]^d and train_y is standardized.
+def train_gp(train_x: torch.tensor, train_y: torch.tensor, use_ard: bool, num_steps: int,
+             kern: str = 'transformed_overlap', hypers: Optional[dict] = None, noise_variance: float = None,
+             cat_configs=None, antigen: str = None, search_strategy: SEARCH_STRATS = 'local', **params):
+    """
+    Fit a GP model where train_x is in [0, 1]^d and train_y is standardized.
     （train_x, train_y）: pairs of x and y (trained)
+
     noise_variance: if provided, this value will be used as the noise variance for the GP model. Otherwise, the noise
         variance will be inferred from the model.
     """
@@ -167,8 +161,7 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
 
     outputscale_constraint = Interval(0.5, 5.)
 
-    likelihood = GaussianLikelihood(noise_constraint=noise_constraint).to(device=train_x.device,
-                                                                          dtype=train_y.dtype)
+    likelihood = GaussianLikelihood(noise_constraint=noise_constraint).to(device=train_x.device, dtype=train_y.dtype)
 
     ard_dims = train_x.shape[1] if use_ard else None
     transform_inputs = None
@@ -208,11 +201,13 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
         if kern in ['rbfBERT', "cosine-BERT"]:
             min_x = train_x.min(0)[0]
             max_x = train_x.max(0)[0]
-            transform_inputs = lambda input_x: (input_x - min_x.to(input_x)) / (
-                        max_x.to(input_x) - min_x.to(input_x) + 1e-8)
 
+            def transform_inputs(input_x: torch.tensor) -> torch.tensor:
+                return (input_x - min_x.to(input_x)) / (max_x.to(input_x) - min_x.to(input_x) + 1e-8)
     elif kern == 'rbf':
         kernel = RBFKernel(lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
+    elif kern == "mat52":
+        kernel = MaternKernel(nu=2.5, lengthscale_constraint=lengthscale_constraint, ard_num_dims=ard_dims)
     else:
         raise ValueError('Unknown kernel choice %s' % kern)
 
@@ -223,7 +218,7 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
         kern=kernel,
         outputscale_constraint=outputscale_constraint,
         ard_dims=ard_dims,
-        transform_inputs=transform_inputs
+        transform_inputs=transform_inputs,
     ).to(device=train_x.device, dtype=train_x.dtype)
 
     # Find optimal model hyperparameters
@@ -257,7 +252,6 @@ def train_gp(train_x, train_y, use_ard, num_steps, kern='transformed_overlap', h
             output = model(train_x, )
             loss = -mll(output, train_y).float()
             loss.backward()
-            # print(f"Loss Step {i} = {loss.item()}")
             optimizer.step()
 
     # Switch to eval mode

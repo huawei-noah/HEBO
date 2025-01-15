@@ -75,4 +75,4 @@ if __name__ == '__main__':
                 print(
                     f"\n - method: {method} \n - bb evals: {iter_num} \n - antigen: {antigen} \n - CDR3: {cdr3_seq} \n - binding energy: {binding_energy:.4f} \n - hp: {scores['hp'][0]:.4f} \n - charge: {scores['charge'][0]:.4f} \n - instability_index: {scores['stability'][0]:.4f}\n")
 
-                # absolut_visualiser.visualise(antigen=antigen, CDR3=cdr3_seq)
+                # absolut_visualiser.visualise(antigen=antigen, cdr3=cdr3_seq)

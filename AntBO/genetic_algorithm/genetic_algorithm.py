@@ -9,7 +9,6 @@ sys.path.insert(0, ROOT_PROJECT)
 import numpy as np
 import pandas as pd
 
-from task.tools import Absolut  # Importing this prints "MoTTY X11 proxy: Authorisation not recognised" in MobaXterm
 from utilities.config_utils import save_config
 from utilities.aa_utils import aa_to_idx, indices_to_aa_seq
 from utilities.constraint_utils import check_constraint_satisfaction_batch

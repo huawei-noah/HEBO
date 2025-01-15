@@ -1,6 +1,8 @@
-import numpy as np
+import os
 import pickle
 from typing import Any, Optional
+
+import numpy as np
 
 
 def spearman(pred, target) -> float:
@@ -19,7 +21,6 @@ def pearson(pred, target) -> float:
 def negative_log_likelihood(pred, pred_std, target) -> float:
     """Compute the negative log-likelihood on the validation dataset"""
     from scipy.stats import norm
-    import numpy as np
     n = pred.shape[0]
     res = 0.
     for i in range(n):
@@ -104,6 +105,56 @@ class BERTFeatures:
         return reprsn1.mean(1)
 
 
+def update_table_of_candidates(
+        original_table: np.ndarray,
+        observed_candidates: np.ndarray, check_candidates_in_table: bool,
+        table_of_candidate_embeddings: Optional[np.ndarray]
+) -> tuple[np.ndarray, Optional[np.ndarray]]:
+    """ Update the table of candidates, removing the newly observed candidates from the table
+
+    Args:
+        original_table: table of candidates before observation
+        observed_candidates: new observed points
+        check_candidates_in_table: whether the observed candidates should be in the original_table or not
+        table_of_candidate_embeddings: if not None, the embeddings of the candidates should be used to build the
+            surrogate model
+    Returns:
+          Updated original_table and embeddings
+    """
+    if observed_candidates.ndim == 1:
+        observed_candidates = observed_candidates.reshape(1, -1)
+    for candidate in observed_candidates:
+        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
+        if not np.any(filtr) and check_candidates_in_table:
+            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
+        original_table = original_table[~filtr]
+        if table_of_candidate_embeddings is not None:
+            table_of_candidate_embeddings = table_of_candidate_embeddings[~filtr]
+    return original_table, table_of_candidate_embeddings
+
+
+def update_table_of_candidates_array(original_table: np.ndarray, observed_candidates: np.ndarray,
+                                     check_candidates_in_table: bool) -> np.ndarray:
+    """ Update the table of candidates, removing the newly observed candidates from the table
+
+    Args:
+        original_table: table of candidates before observation
+        observed_candidates: new observed points
+        check_candidates_in_table: whether the observed candidates should be in the original_table or not
+
+    Returns:
+          Updated table
+    """
+    if observed_candidates.ndim == 1:
+        observed_candidates = observed_candidates.reshape(1, -1)
+    for candidate in observed_candidates:
+        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
+        if not np.any(filtr) and check_candidates_in_table:
+            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
+        original_table = original_table[~filtr]
+    return original_table
+
+
 if __name__ == '__main__':
     bert_config = {'datapath': '/nfs/aiml/asif/CDRdata',
                    'path': '/nfs/aiml/asif/ProtBERT',
@@ -112,11 +163,10 @@ if __name__ == '__main__':
                    'batch_size': 256
                    }
     device_ids = [2, 3]
-    import os
     import glob
     import numpy as np
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(str(id) for id in device_ids)
+    os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(str(id_) for id_ in device_ids)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     from transformers import AutoTokenizer, \
         AutoModel
@@ -128,7 +178,6 @@ if __name__ == '__main__':
 
     antigens = ['1ADQ_A', '1FBI_X', '1H0D_C', '1NSN_S', '1OB1_C', '1WEJ_F', '2YPV_A', '3RAJ_A', '3VRL_C', '2DD8_S',
                 '1S78_B', '2JEL_P']
-    # antigens = [antigen.strip().split()[1] for antigen in open(f"/nfs/aiml/asif/CDRdata/antigens.txt", 'r') if antigen != '\n']
 
     from sklearn.preprocessing import StandardScaler
     from sklearn.decomposition import PCA
@@ -173,47 +222,3 @@ if __name__ == '__main__':
                 os.makedirs(results_path)
             dump(pca, f"{results_path}/{antigen}_pca.joblib")
             dump(scaler, f"{results_path}/{antigen}_scaler.joblib")
-
-
-def update_table_of_candidates(original_table: np.ndarray, observed_candidates: np.ndarray,
-                               check_candidates_in_table: bool) -> np.ndarray:
-    """ Update the table of candidates, removing the newly observed candidates from the table
-
-    Args:
-        original_table: table of candidates before observation
-        observed_candidates: new observed points
-        check_candidates_in_table: whether the observed candidates should be in the original_table or not
-
-    Returns:
-          Updated original_table
-    """
-    if observed_candidates.ndim == 1:
-        observed_candidates = observed_candidates.reshape(1, -1)
-    for candidate in observed_candidates:
-        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
-        if not np.any(filtr) and check_candidates_in_table:
-            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
-        original_table = original_table[~filtr]
-    return original_table
-
-
-def update_table_of_candidates_torch(original_table: torch.Tensor, observed_candidates: torch.Tensor,
-                                     check_candidates_in_table: bool) -> np.ndarray:
-    """ Update the table of candidates, removing the newly observed candidates from the table
-
-    Args:
-        original_table: table of candidates before observation
-        observed_candidates: new observed points
-        check_candidates_in_table: whether the observed candidates should be in the original_table or not
-
-    Returns:
-          Updated table
-    """
-    if observed_candidates.ndim == 1:
-        observed_candidates = observed_candidates.reshape(1, -1)
-    for candidate in observed_candidates:
-        filtr = torch.all(original_table == candidate.reshape(1, -1), axis=1)
-        if not torch.any(filtr) and check_candidates_in_table:
-            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
-        original_table = original_table[~filtr]
-    return original_table

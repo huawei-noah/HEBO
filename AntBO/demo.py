@@ -27,7 +27,9 @@ if __name__ == "__main__":
                         help='Path to csv file containing the binding energy of already evaluated antibody sequences.')
     parser.add_argument('--tabular_search_csv', type=str,
                         help='Path to csv file containing the set of eligible antibodies with their pre-computed '
-                             'binding energy (to test optimisation in a controlled scenario).')
+                             'binding energy (to test optimisation in a controlled scenario). '
+                             'This table can also have extra columns d1,... dk corresponding '
+                             'to vector representation of the antibody')
     parser.add_argument('--path_to_eval_csv', type=str, default="./eval.csv",
                         help='If the black-box evaluations are provided by filling a table, path to this table.')
     parser.add_argument('--cuda_id', type=int, default=0, help='ID of the cuda device to use.')
@@ -57,6 +59,7 @@ if __name__ == "__main__":
         'normalise': True,
         'batch_size': args.batch_size,
         'save_path': save_path,
+        # 'kernel_type': 'mat52',
         # 'kernel_type': 'transformed_overlap',
         'kernel_type': 'rbfBERT',
         'noise_variance': '1e-6',
