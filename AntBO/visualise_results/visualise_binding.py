@@ -1,9 +1,8 @@
 import argparse
 import os
+import pandas as pd
 import sys
 from pathlib import Path
-
-import pandas as pd
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
@@ -14,8 +13,10 @@ from utilities.config_utils import load_config
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(add_help=True,
-                                     description='Script to visualise the CDR3-antigen binding for various methods at various timesteps')
+    parser = argparse.ArgumentParser(
+        add_help=True,
+        description='Script to visualise the CDR3-antigen binding for various methods at various timesteps'
+    )
     parser.add_argument('--config', type=str,
                         default='/home/asif/workspace/antigenbinding/visualise_results/visualise_binding_config.yaml',
                         help='Path to configuration File')
@@ -61,7 +62,8 @@ if __name__ == '__main__':
                         _results = pd.read_csv(
                             os.path.join(
                                 config['results_dir'], method,
-                                f"antigen_{antigen}_kernel_{config['methods'][method]['kernel']}_seed_{seed}_cdr_constraint_True_seqlen_{config['sequence_length']}",
+                                f"antigen_{antigen}_kernel_{config['methods'][method]['kernel']}"
+                                f"_seed_{seed}_cdr_constraint_True_seqlen_{config['sequence_length']}",
                                 'results.csv'))
                 except:
                     continue

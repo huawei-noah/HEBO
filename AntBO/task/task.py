@@ -30,9 +30,9 @@ class Task(BaseTask):
         '''
         x: categorical vector
         '''
-        return self.Binding.Energy(x)
+        return self.Binding.energy(x)
 
-    def plotEnergy(self, x):
+    def plot_energy(self, x):
         '''
         x: (seeds x trials) numpy array of energy
 
@@ -41,7 +41,7 @@ class Task(BaseTask):
         '''
         return plot_mean_std(x)
 
-    def visualiseBinding(self, x, y=None):
+    def visualise_binding(self, x, y=None):
         '''
         x: CDR3 sequence to visualise
         y: Antibody identifier

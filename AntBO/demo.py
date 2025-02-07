@@ -3,13 +3,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
-
-ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent)
-sys.path.insert(0, ROOT_PROJECT)
-
 import warnings
-from gpytorch.utils.warnings import NumericalWarning
-from bo.main import BOExperiments
 import time
 
 import pandas as pd
@@ -39,7 +33,7 @@ if __name__ == "__main__":
                         help='Whether to resume from an existing run.')
     args = parser.parse_args()
 
-    # TOFILL
+    # TO FILL
     save_path = './results/'
     n_init = 20
     max_iters = 400

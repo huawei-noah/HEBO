@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Any, Dict, Optional
 
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 
 class BaseTask(ABC):
@@ -17,13 +17,13 @@ class BaseTask(ABC):
         """
         raise NotImplementedError
 
-    def plotEnergy(self, x: np.ndarray):
+    def plot_energy(self, x: np.ndarray) -> Axes:
         """
         x: (seeds x trials) numpy array of energy
         """
         raise NotImplementedError
 
-    def visualiseBinding(self, x, y=None):
+    def visualise_binding(self, x: list[str], y: Optional[str] = None):
         """
         x: CDR3 sequence to visualise
         y: Antibody identifier
@@ -53,7 +53,7 @@ class BaseTool(ABC):
     def convert_array_aas_to_idx(self, aas: np.ndarray) -> np.ndarray:
         return self.convert_array(arr=aas, conversion_dic=self.AA_to_idx, end_type=int)
 
-    def Energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
         """
         x: categorical vector
         """

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import torch
 
@@ -19,7 +21,7 @@ class BOTask(TestFunction):
                  bbox=None,
                  normalise=True,
                  mean=None,
-                 std=None):
+                 std=None) -> None:
         super(BOTask, self).__init__(normalise)
         self.device = device
         self.bbox = bbox
@@ -38,15 +40,15 @@ class BOTask(TestFunction):
         else:
             assert 0, f"{self.bbox['tool']} Not Implemented"
 
-    def compute(self, x):
-        '''
+    def compute(self, x: np.ndarray, normalise: Optional[bool] = None) -> torch.tensor:
+        """
         x: categorical vector
-        '''
-        energy, _ = self.fbox.Energy(x)
+        """
+        energy, _ = self.fbox.energy(x=x)
         energy = torch.tensor(energy, dtype=torch.float32).to(self.device)
         return energy
 
-    def idx_to_seq(self, x):
+    def idx_to_seq(self, x: np.array) -> list[str]:
         seqs = []
         for seq in x:
             seqs.append(''.join(self.fbox.idx_to_AA[int(aa)] for aa in seq))

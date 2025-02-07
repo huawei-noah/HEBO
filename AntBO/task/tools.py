@@ -45,7 +45,7 @@ class Absolut(BaseTool):
         assert self.config['startTask'] >= 0 and (self.config['startTask'] + self.config['process'] < os.cpu_count()), \
             f"{self.config['startTask']} is not a valid cpu"
 
-    def Energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
         """
         x: categorical vector (num_Seq x Length)
         """
@@ -169,7 +169,7 @@ class PyMolVisualisation:
         spectrum count, green_yellow_red
         color blue, ligands
         set cartoon_fancy_helices, 1
-        
+
         mset 1 x{num_frames}
         util.mroll 1, {num_frames}, 1
         set ray_trace_frames, 1
@@ -212,7 +212,7 @@ class Manual(BaseTool):
         self.config = config
         self.antigen = self.config["antigen"]
 
-    def Energy(self, x) -> tuple[np.ndarray, list[str]]:
+    def energy(self, x) -> tuple[np.ndarray, list[str]]:
         """
         x: categorical vector (num_Seq x Length)
         """
@@ -271,7 +271,7 @@ class TableFilling(BaseTool):
         self.antigen = self.config["antigen"]
         self.path_to_eval_csv = os.path.abspath(self.config["path_to_eval_csv"])
 
-    def Energy(self, x):
+    def energy(self, x):
         """
         x: categorical vector (num_Seq x Length)
         """
