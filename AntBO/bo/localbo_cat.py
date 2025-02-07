@@ -361,7 +361,7 @@ class CASMOPOLITANCat:
                     max_cont_dist=self.length,
                     n_restart=3, batch_size=self.batch_size,
                     cdr_constraints=self.cdr_constraints, seed=self.seed, dtype=self.dtype,
-                    device=self.device, table_of_candidates=table_of_candidates,
+                    device=device, table_of_candidates=table_of_candidates,
                     table_of_candidate_embeddings=table_of_candidate_embeddings,
                     embedding_from_array_dict=embedding_from_array_dict,
                     per_dim_max_dist=per_dim_max_dist
@@ -379,7 +379,7 @@ class CASMOPOLITANCat:
                     search_kwargs = dict(
                         x_center=x_center_as_ind[0], f=f_acq, config=self.config, max_hamming_dist=self.length_discrete,
                         max_cont_dist=self.length, n_restart=3, batch_size=1, cdr_constraints=self.cdr_constraints,
-                        seed=self.seed, dtype=self.dtype, device=self.device, table_of_candidates=table_of_candidates,
+                        seed=self.seed, dtype=self.dtype, device=device, table_of_candidates=table_of_candidates,
                         table_of_candidate_embeddings=table_of_candidate_embeddings,
                         embedding_from_array_dict=embedding_from_array_dict, per_dim_max_dist=per_dim_max_dist
                     )
@@ -397,7 +397,7 @@ class CASMOPOLITANCat:
                     else:
                         x_next_step_gp_aux = embedding_from_array_dict[str(x_next_step.flatten().astype(int))].reshape(
                             1, -1)
-                    x_next_step_gp = torch.tensor(x_next_step_gp_aux, dtype=torch.float32, device=self.device)
+                    x_next_step_gp = torch.tensor(x_next_step_gp_aux, dtype=torch.float32, device=device)
                     # The fantasy point is filled by the posterior mean of the Gaussian process.
                     if self.kernel_type in ['rbfBERT', 'rbf-pca-BERT', 'cosine-BERT', 'cosine-pca-BERT']:
                         from bo.utils import BERTFeatures
@@ -415,8 +415,8 @@ class CASMOPOLITANCat:
                     else:
                         y_next = gp(x_next_step_gp).mean.detach()
                     with gpytorch.settings.max_cholesky_size(self.max_cholesky_size):
-                        x_torch = torch.cat((x_torch, x_next_step_gp), dim=0).to(device=self.device)
-                        y_torch = torch.cat((y_torch, y_next), dim=0).to(device=self.device)
+                        x_torch = torch.cat((x_torch, x_next_step_gp), dim=0).to(device=device)
+                        y_torch = torch.cat((y_torch, y_next), dim=0).to(device=device)
                         gp = train_gp(
                             train_x=x_torch, train_y=y_torch, use_ard=self.use_ard, num_steps=n_training_steps,
                             kern=self.kernel_type,
