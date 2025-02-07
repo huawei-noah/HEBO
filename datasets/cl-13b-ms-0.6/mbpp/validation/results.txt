@@ -1,0 +1,7 @@
+Problems (total): 90
+Problems (filtered): 56
+Problems (ratio): 62.22
+
+Solutions (total): 9000
+Solutions (filtered): 5108
+Solutions (ratio): 56.76
