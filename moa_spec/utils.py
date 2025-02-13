@@ -92,7 +92,7 @@ def prepare_dataset(dataset, tokenizer, total_number_tokens, max_length=2048, ra
         [{"role": "user", "content": unique_token}, {"role": "assistant", "content": unique_token}], tokenize=False
     )
     instruction_template, response_template = chat_str.split(unique_token)[:2]
-    response_template_tokens = tokenizer(response_template).input_ids
+    response_template_tokens = tokenizer(response_template, add_special_tokens=False).input_ids
 
     data_collator = DataCollatorForCompletionOnlyLM(
         instruction_template=instruction_template,
@@ -125,7 +125,7 @@ def prepare_dataset(dataset, tokenizer, total_number_tokens, max_length=2048, ra
     if rank == 0:
         logger.info("Tokenize...")
 
-    all_input_ids = tokenizer(formatted_examples, truncation=False, padding=False).input_ids
+    all_input_ids = tokenizer(formatted_examples, truncation=False, padding=False, add_special_tokens=False).input_ids
 
     if rank == 0:
         logger.info("Filter by size and set label...")
@@ -166,6 +166,7 @@ def prepare_dataset(dataset, tokenizer, total_number_tokens, max_length=2048, ra
                     f"and {shorten_sequence} shorten (including the removed).")
         logger.info(f"Remaining datapoint: {len(input_texts)}")
 
+    assert len(input_texts) > 0
     return dataset
 
 

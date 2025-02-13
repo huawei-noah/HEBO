@@ -1,6 +1,6 @@
 trainer:
   _target_: moa_spec.trainer.Trainer
-  epochs: 30
+  epochs: 40
   learning_rate: 3e-5
   weight_decay: 0.0
   warmup_steps: 50

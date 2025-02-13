@@ -104,15 +104,15 @@ class Trainer:
         lr_scheduler = LambdaLR(optimizer,
             lr_lambda=zero_peak_constant_scheduler(
                 zero_warmup_steps=warmup_steps,
-                decay_steps=len(training_dataloader) / batch_size,
+                decay_steps=len(training_dataset) // batch_size,
                 peak_lr=20 * learning_rate,
                 constant_lr=learning_rate,
             ) if zero_peak_constant else
-                      zero_peak_constant_scheduler(
-                zero_warmup_steps=warmup_steps,
-                decay_steps=warmup_steps,
-                peak_lr=learning_rate,
-                constant_lr=learning_rate,
+                zero_peak_constant_scheduler(
+                    zero_warmup_steps=warmup_steps,
+                    decay_steps=warmup_steps,
+                    peak_lr=learning_rate,
+                    constant_lr=learning_rate,
             )
         )
 
@@ -133,7 +133,7 @@ class Trainer:
         assert self.accelerator.num_processes == self.world_size
         len_training_dataloader = len(training_dataloader)
 
-        # don't pass lr_scheduler as it's needed more sync between worker
+        # don't pass lr_scheduler as it'd need more sync between workers
         self.lr_scheduler = lr_scheduler
         self.model, self.training_dataloader, self.validation_dataloader, self.optimizer = (
             self.accelerator.prepare(
@@ -304,4 +304,4 @@ class Trainer:
         return last_layer.self_attn.v_proj.weight[0, 0].item()
 
     def get_internal_module(self):
-        return self.model.module if self.accelerator.use_distributed else self.model
+        return self.model.module if self.is_distributed else self.model

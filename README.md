@@ -19,7 +19,7 @@ cd mixture-of-attentions
 
 conda create --name moa_spec python=3.10
 conda activate moa_spec
-pip install -r requirements.txt
+pip install -e .
 ```
 
 Ensure you have Python 3.10 or later installed.
@@ -106,6 +106,12 @@ This code hasn't been cleaned yet. If you're interested, please leave an issue o
 |------|------|------|------|
 | meta-llama/Meta-Llama-3-8B-Instruct | [huawei-noah/MOASpec-Llama-3-8B-Instruct](https://huggingface.co/huawei-noah/MOASpec-Llama-3-8B-Instruct) | 8B | 0.25B |
 
+You can download small models with:
+
+```python
+from transformers import LlamaForCausalLM
+LlamaForCausalLM.from_pretrained("huawei-noah/MOASpec-Llama-3-8B-Instruct")
+```
 
 ### Configuration
 
