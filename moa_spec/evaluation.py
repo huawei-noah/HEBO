@@ -27,7 +27,7 @@ import time
 import hydra
 import shortuuid
 import torch
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
@@ -53,8 +53,11 @@ def get_model_answers(
         tokenizer,
         questions,
         answer_file,
+        pad_token_id,
+        eos_token_id
 ):
     question = questions[0]
+    stop_token_ids = eos_token_id
 
     # warmup
     for _ in range(3):
@@ -84,8 +87,8 @@ def get_model_answers(
                 torch.as_tensor(input_ids).cuda(),
                 do_sample=False,
                 max_new_tokens=min(512, 1976 - len(input_ids[0])),
-                pad_token_id=128010,
-                eos_token_id=[128001, 128009]
+                pad_token_id=pad_token_id,
+                eos_token_id=eos_token_id
             )
             idx = model.call_to_big - 1
             new_token = output_ids.shape[1] - len(input_ids[0])
@@ -93,11 +96,6 @@ def get_model_answers(
             torch.cuda.synchronize()
             total_time = time.time() - start_time
             output_ids = output_ids[0][len(input_ids[0]):]
-            # be consistent with the template's stop_token_ids
-            stop_token_ids = [
-                tokenizer.eos_token_id,
-                tokenizer.convert_tokens_to_ids("<|eot_id|>")
-            ]
 
             if stop_token_ids:
                 stop_token_ids_index = [
@@ -160,8 +158,8 @@ def get_model_answers(
                     torch.as_tensor(input_ids).cuda(),
                     do_sample=False,
                     max_new_tokens=min(512, 1976 - len(input_ids[0])),
-                    pad_token_id=128010,
-                    eos_token_id=[128001, 128009]
+                    pad_token_id=pad_token_id,
+                    eos_token_id=eos_token_id
                 )
                 idx = model.call_to_big - 1
                 new_token = output_ids.shape[1] - len(input_ids[0])
@@ -169,11 +167,6 @@ def get_model_answers(
                 torch.cuda.synchronize()
                 total_time = time.time() - start_time
                 output_ids = output_ids[0][len(input_ids[0]):]
-                # be consistent with the template's stop_token_ids
-                stop_token_ids = [
-                    tokenizer.eos_token_id,
-                    tokenizer.convert_tokens_to_ids("<|eot_id|>")
-                ]
 
                 if stop_token_ids:
                     stop_token_ids_index = [
@@ -256,17 +249,30 @@ def main(cfg: DictConfig) -> None:
     model_class = hydra.utils.instantiate(cfg.method.model_class)
 
     model_config = hydra.utils.instantiate(cfg.method.model_config) if hasattr(cfg.method, "model_config") else {}
+    if "drafter" in model_config:
+        model_config = OmegaConf.to_container(cfg.method.model_config, resolve=True)
 
     model = model_class.from_pretrained(
         **model_kwargs,
         **model_config,
     )
+    model.generation_config.temperature = 1.0
+    model.generation_config.top_k = None
+    model.generation_config.top_p = 1.0
+    model.generation_config.repetition_penalty = None
+
     if hasattr(model, "custom_load"):
         model.custom_load(cfg.drafter, dtype=model_kwargs["torch_dtype"])
     model.eval()
 
     tokenizer_kwargs = hydra.utils.instantiate(cfg.tokenizer_kwargs)
     tokenizer = AutoTokenizer.from_pretrained(**tokenizer_kwargs)
+
+    model.generation_config.pad_token_id = tokenizer.pad_token_id = pad_token_id = int(model.lm_head.out_features) - 1
+    eos_token_id = model.generation_config.eos_token_id
+
+    assert pad_token_id not in eos_token_id
+    assert len(eos_token_id) > 0
 
     output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
 
@@ -281,6 +287,8 @@ def main(cfg: DictConfig) -> None:
             tokenizer,
             questions,
             answer_file,
+            pad_token_id=pad_token_id,
+            eos_token_id=eos_token_id
         )
 
         reorg_answer_file(answer_file)

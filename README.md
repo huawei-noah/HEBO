@@ -42,6 +42,9 @@ accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml 
 
 # training independent model
 accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml moa_spec/train.py method=independent drafter="andrijdavid/Llama3-1B-Base"
+
+# training a Qwen2 model
+accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml moa_spec/train.py model=Qwen/Qwen2.5-3B-Instruct method.model_class.path=moa_spec.models.train.moa_spec.MOASpecQwen2ForCausalLM
 ```
 
 ### Evaluation

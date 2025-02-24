@@ -33,7 +33,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
-from moa_spec.models.train.moa_spec import MOASpecLlamaForCausalLM
+from moa_spec.models.train.moa_spec import MOASpecLlamaForCausalLM, MOASpecQwen2ForCausalLM
 from moa_spec.utils import DataCollatorWithPadding, convert_list_of_dicts_to_dict_of_lists, \
     zero_peak_constant_scheduler
 
@@ -51,7 +51,10 @@ class Trainer:
         self.mini_batch_size = mini_batch_size
         self.max_grad_norm = max_grad_norm
         self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
-        self.forward_use_cache = isinstance(model, MOASpecLlamaForCausalLM)
+        self.forward_use_cache = (
+                isinstance(model, MOASpecLlamaForCausalLM) or
+                isinstance(model, MOASpecQwen2ForCausalLM)
+        )
 
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 

@@ -84,6 +84,12 @@ class LlamaDecoderLayerCrossAttention(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
 
+        # cover more models
+        config.attention_bias = False
+        config.mlp_bias = False
+        config.rope_scaling = None
+        config.pretraining_tp = 1
+
         self.self_attn = LlamaCrossAttention(config=config, layer_idx=layer_idx)
 
         self.mlp = LlamaMLP(config)

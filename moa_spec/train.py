@@ -24,7 +24,7 @@ import logging
 
 import hydra
 from datasets import load_dataset
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from transformers import AutoTokenizer
 
 from moa_spec.utils import setup_distributed_environment, set_and_print_config, set_seed, prepare_dataset
@@ -45,6 +45,8 @@ def main(cfg: DictConfig) -> None:
     model_class = hydra.utils.instantiate(cfg.method.model_class)
 
     model_config = hydra.utils.instantiate(cfg.method.model_config) if hasattr(cfg.method, "model_config") else {}
+    if "drafter" in model_config:
+        model_config = OmegaConf.to_container(cfg.method.model_config, resolve=True)
 
     model = model_class.from_pretrained(
         **model_kwargs,
