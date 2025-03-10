@@ -34,6 +34,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
 from moa_spec.models.train.moa_spec import MOASpecLlamaForCausalLM, MOASpecQwen2ForCausalLM
+from moa_spec.models.train.glide import GlideLlamaForCausalLM, GlideQwen2ForCausalLM
 from moa_spec.utils import DataCollatorWithPadding, convert_list_of_dicts_to_dict_of_lists, \
     zero_peak_constant_scheduler
 
@@ -53,7 +54,9 @@ class Trainer:
         self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
         self.forward_use_cache = (
                 isinstance(model, MOASpecLlamaForCausalLM) or
-                isinstance(model, MOASpecQwen2ForCausalLM)
+                isinstance(model, MOASpecQwen2ForCausalLM) or
+                isinstance(model, GlideLlamaForCausalLM) or 
+                isinstance(model, GlideQwen2ForCausalLM)
         )
 
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)

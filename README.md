@@ -40,6 +40,9 @@ accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml 
 # training EAGLE
 accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml moa_spec/train.py method=eagle
 
+# training Glide
+accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml moa_spec/train.py method=glide
+
 # training independent model
 accelerate launch --num-processes=4 --config_file configs/deepspeed/stage0.yaml moa_spec/train.py method=independent drafter="andrijdavid/Llama3-1B-Base"
 

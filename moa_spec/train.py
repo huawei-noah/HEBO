@@ -69,6 +69,9 @@ def main(cfg: DictConfig) -> None:
     elif cfg.method.name == "eagle":
         param_groups = (model.spec_model.parameters(),
                         model.spec_model_fc.parameters())
+    elif cfg.method.name == "glide":
+        param_groups = (model.self_attention.parameters(), 
+                        model.cross_attention.parameters())
     elif cfg.method.name == "independent":
         param_groups = (model.spec_model.model.layers.parameters(), )
     else:
