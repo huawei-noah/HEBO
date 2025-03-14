@@ -137,13 +137,11 @@ The configuration files are located in the `configs` directory. These files allo
 If you use this code in your research, please cite the paper:
 
 ```bibtex
-@misc{zimmer2024mixtureattentionsspeculativedecoding,
+@inproceedings{zimmer2024mixtureattentionsspeculativedecoding,
       title={Mixture of Attentions For Speculative Decoding}, 
       author={Matthieu Zimmer and Milan Gritta and Gerasimos Lampouras and Haitham Bou Ammar and Jun Wang},
-      year={2024},
-      eprint={2410.03804},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
+      booktitle={Proceedings of the International Conference on Learning Representations (ICLR)},
+      year={2025},
       url={https://arxiv.org/abs/2410.03804}, 
 }
 ```
