@@ -1,0 +1,11 @@
+defaults:
+  - /tree_decoding
+
+model_class:
+  _target_: hydra.utils.get_object
+  path: moa_spec.models.inference.single_device.glide.GlideLlamaForCausalLM
+
+model_config:
+  # set to match the 250M trainable parameters of EAGLE for fair comparison
+  self_attention_num_key_value_heads: 8
+  self_attention_intermediate_size: 14336

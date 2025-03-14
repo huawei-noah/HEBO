@@ -26,7 +26,7 @@ import os
 import torch
 import warnings
 from safetensors import safe_open
-from torch import nn
+
 from transformers import LlamaForCausalLM, LogitsProcessorList, StoppingCriteriaList, DynamicCache, Qwen2ForCausalLM
 from transformers.generation import GenerateEncoderDecoderOutput, GenerateDecoderOnlyOutput, validate_stopping_criteria
 from transformers.generation.streamers import BaseStreamer
@@ -36,21 +36,16 @@ from transformers.models.llama.modeling_llama import LlamaDecoderLayer
 from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer
 from typing import Tuple, Union, Optional, List
 
-from moa_spec.models.inference.cross_attention import LlamaDecoderLayerCrossAttention
+from moa_spec.models.inference.cross_attention import GlideCrossAttention
 from moa_spec.models.inference.tree_attention import LlamaModelTreeAttentionMask
 
 
 def create_class(baseclass, baselayer):
-    class MOASpec(baseclass):
+    class Glide(baseclass):
         def __init__(self,
                      config,
-                     layer_self_attention_num_key_value_heads,
-                     layer_self_attention_intermediate_size,
                      self_attention_num_key_value_heads,
                      self_attention_intermediate_size,
-                     cross_attention_num_key_value_heads,
-                     cross_attention_intermediate_size,
-                     target_layer_inference,
                      tree_decoding,
                      verification,
                      depth,
@@ -58,27 +53,15 @@ def create_class(baseclass, baselayer):
                      total_tokens,
             ):
             super().__init__(config)
-            self.target_layer_inference = target_layer_inference
             self.call_to_big = 0
 
             config2 = copy.deepcopy(config)
-            config2._attn_implementation = "sdpa"
+            self.cross_attention = GlideCrossAttention(config2, 0)
 
+            config2._attn_implementation = "sdpa"
             config2.num_key_value_heads = self_attention_num_key_value_heads
             config2.intermediate_size = self_attention_intermediate_size
             self.self_attention = baselayer(config2, 0)
-
-            config2.num_key_value_heads = cross_attention_num_key_value_heads
-            config2.intermediate_size = cross_attention_intermediate_size
-            self.cross_attention = LlamaDecoderLayerCrossAttention(config2, 0)
-
-            config2.hidden_size = 2 * config.num_key_value_heads * (config.hidden_size // config.num_attention_heads)
-            config2.num_key_value_heads = layer_self_attention_num_key_value_heads
-            config2.intermediate_size = layer_self_attention_intermediate_size
-            config2.head_dim = config2.hidden_size // config2.num_attention_heads
-            self.layer_self_attention = baselayer(config2, 0)
-
-            self.Ekv2E = nn.Linear(config2.hidden_size, config.hidden_size)
 
             if not isinstance(self.model, LlamaModelTreeAttentionMask):
                 self.model.__class__ = LlamaModelTreeAttentionMask
@@ -154,8 +137,6 @@ def create_class(baseclass, baselayer):
             gen_step=None,
             **kwargs,
         ) -> Union[Tuple, CausalLMOutputWithPast]:
-            batch_size, seq_len = input_ids.shape
-
             if last_hidden_state is None:
                 self.call_to_big += 1
                 with torch.no_grad():
@@ -167,23 +148,9 @@ def create_class(baseclass, baselayer):
                                                         output_hidden_states=True, return_dict=return_dict,
                                                         cache_position=cache_position, **kwargs)
 
-                nb_layers = len(base_model_output['past_key_values'])
                 last_hidden_state = base_model_output.hidden_states[-1]
 
-                KV = torch.stack([
-                    torch.cat(kv, dim=-1).permute(0, 2, 1, 3).reshape(batch_size, seq_len, -1)
-                    for kv in base_model_output['past_key_values']], 2)
-
-                # Layer Self-Attention
-                KV = KV.reshape(-1, nb_layers, KV.shape[-1])
-                (KV, ) = self.layer_self_attention(
-                    hidden_states=KV,
-                    attention_mask=torch.zeros((1, 1, nb_layers, nb_layers), device=self.device, dtype=self.dtype),
-                    position_ids=torch.arange(nb_layers, device=self.device, dtype=position_ids.dtype)[None],
-                    use_cache=False,
-                )
-                KV = KV.mean(1).reshape(batch_size, seq_len, -1)
-                KV = self.Ekv2E(KV)
+                KV = base_model_output['past_key_values'][-1]
 
                 # Cross Attention caching KV inputs
                 KV = self.cross_attention.process_kv(KV, 0)
@@ -253,47 +220,45 @@ def create_class(baseclass, baselayer):
                 input_embs = self.model.embed_tokens(input_ids[:, -self.breadth:])
 
             # Self-Attention
-            (attn_output, past_key_values2) = self.self_attention(
-                hidden_states=input_embs,
-                position_ids=position_ids2 if not first_call else position_ids,
+            residual = input_embs
+            hidden_states = self.self_attention.input_layernorm(input_embs)
+
+            hidden_states, _, past_key_values2 = self.self_attention.self_attn(
+                hidden_states=hidden_states,
                 attention_mask=tree_masks,
+                position_ids=position_ids2 if not first_call else position_ids,
+                past_key_value=past_key_values2,
+                output_attentions=False,
                 use_cache=True,
-                past_key_value=past_key_values2
+                cache_position=None,
+                position_embeddings=None,
             )
+            hidden_states = residual + hidden_states
+
+            residual = hidden_states
 
             if first_call:
-                attn_output = attn_output[:, -1:]
+                hidden_states = hidden_states[:, -1:]
+                residual = residual[:, -1:]
 
             # Cross Attention
-            (attn_output,) = self.cross_attention(
-                hidden_states=attn_output,
+            (hidden_states, _, _) = self.cross_attention(
+                hidden_states=hidden_states,
                 hidden_states2=KV,
                 position_ids=position_ids2,
             )
 
-            # Target Layer Inference
-            if self.target_layer_inference > 0:
-                for k, i in enumerate(range(self.target_layer_inference, 0, -1)):
-                    self.model.layers[-i].self_attn.layer_idx = k
+            hidden_states = residual + hidden_states
 
-                for i in range(self.target_layer_inference, 0, -1):
-                    (attn_output,) = self.model.layers[-i](
-                        hidden_states=attn_output,
-                        attention_mask=tree_masks,
-                        position_ids=position_ids2,
-                        use_cache=False,
-                    )
+            # Fully Connected
+            residual = hidden_states
+            hidden_states = self.self_attention.post_attention_layernorm(hidden_states)
+            hidden_states = self.self_attention.mlp(hidden_states)
+            hidden_states = residual + hidden_states
 
-                attn_output = self.model.norm(attn_output)
-
-                for i in range(self.target_layer_inference, 0, -1):
-                    self.model.layers[-i].self_attn.layer_idx = len(self.model.layers) - i
-
-            logits = self.lm_head(attn_output)
+            logits = self.lm_head(hidden_states)
             base_model_output["logits"] = logits
-            base_model_output["small_model_features"] = attn_output
             base_model_output["last_hidden_state"] = last_hidden_state
-            base_model_output["next_pred_feat"] = attn_output
             base_model_output["past_key_values2"] = past_key_values2
 
             return base_model_output
@@ -547,33 +512,13 @@ def create_class(baseclass, baselayer):
                         outputs["past_key_values"].crop(input_ids.shape[-1])
                         outputs["past_key_values2"].crop(valid_tokens + 1)
 
-                        shapes = outputs["past_key_values"][0][0].shape
                         seq_len = outputs["hidden_states"][0].shape[2]
-                        KV = torch.stack(
-                            [torch.cat(kv, dim=-1)[:, :, seq_len:].permute(
-                                0, 2, 1, 3
-                            ).reshape(shapes[0], shapes[2] - seq_len, -1)
-                             for kv in outputs['past_key_values']], 2)
-                        KV = KV.reshape(-1, nb_layers, KV.shape[-1])
-                        (KV,) = self.layer_self_attention(
-                            hidden_states=KV,
-                            attention_mask=torch.zeros((1, 1, nb_layers, nb_layers), device=self.device, dtype=self.dtype),
-                            position_ids=torch.arange(nb_layers, device=KV.device, dtype=torch.long)[None],
-                            use_cache=False,
-                        )
-                        KV = KV.mean(1).reshape(shapes[0], shapes[2] - seq_len, -1)
-                        KV = self.Ekv2E(KV)
+                        KV = (outputs['past_key_values'][-1][0][:, :, seq_len:],
+                              outputs['past_key_values'][-1][1][:, :, seq_len:])
                         key_states, value_states = self.cross_attention.process_kv(KV, seq_len)
 
                         outputs["hidden_states"] = [torch.cat((outputs["hidden_states"][0], key_states), 2),
                                                     torch.cat((outputs["hidden_states"][1], value_states), 2)]
-
-                        if self.target_layer_inference > 0:
-                            outputs["past_key_values3"] = DynamicCache()
-                            outputs["past_key_values3"].key_cache = [copy.deepcopy(outputs['past_key_values'][-i][0])
-                                                                     for i in range(self.target_layer_inference, 0, -1)]
-                            outputs["past_key_values3"].value_cache = [copy.deepcopy(outputs['past_key_values'][-i][1])
-                                                                     for i in range(self.target_layer_inference, 0, -1)]
 
                         model_kwargs['attention_mask'] = model_kwargs['attention_mask'][:, :input_ids.shape[1]]
                         model_kwargs['cache_position'][-1:] = input_ids.shape[1] - 1
@@ -709,7 +654,7 @@ def create_class(baseclass, baselayer):
                     )
             else:
                 return input_ids
-    return MOASpec
+    return Glide
 
-MOASpecLlamaForCausalLM = create_class(LlamaForCausalLM, LlamaDecoderLayer)
-MOASpecQwen2ForCausalLM = create_class(Qwen2ForCausalLM, Qwen2DecoderLayer)
+GlideLlamaForCausalLM = create_class(LlamaForCausalLM, LlamaDecoderLayer)
+GlideQwen2ForCausalLM = create_class(Qwen2ForCausalLM, Qwen2DecoderLayer)

@@ -24,9 +24,9 @@ from typing import Optional, Tuple
 
 import torch
 from torch import nn
-from transformers import Cache
+from transformers import Cache, LlamaConfig
 from transformers.models.llama.modeling_llama import LlamaAttention, LlamaMLP, LlamaRMSNorm, repeat_kv, \
-    apply_rotary_pos_emb
+    apply_rotary_pos_emb, LlamaRotaryEmbedding
 
 
 class LlamaCrossAttention(LlamaAttention):
@@ -158,3 +158,69 @@ class LlamaDecoderLayerCrossAttention(nn.Module):
 
     def process_kv(self, kv, seq_len):
         return self.self_attn.process_kv(self.input_layernorm(kv), seq_len)
+
+
+class GlideCrossAttention(nn.Module):
+
+    def __init__(self, config: LlamaConfig, layer_idx: Optional[int] = None):
+        super().__init__()
+        self.config = config
+        self.layer_idx = layer_idx
+        self.attention_dropout = config.attention_dropout
+        self.hidden_size = config.hidden_size
+        self.num_heads = config.num_attention_heads
+        self.head_dim = getattr(config, "head_dim", self.hidden_size // self.num_heads)
+        self.num_key_value_heads = config.num_key_value_heads
+        self.num_key_value_groups = self.num_heads // self.num_key_value_heads
+        self.max_position_embeddings = config.max_position_embeddings
+        self.rope_theta = config.rope_theta
+
+        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=config.attention_bias)
+        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=config.attention_bias)
+
+        self.rotary_emb = LlamaRotaryEmbedding(config=self.config)
+
+    def forward(self, hidden_states: torch.Tensor, hidden_states2: torch.Tensor,
+                attention_mask: Optional[torch.Tensor] = None,
+                position_ids: Optional[torch.LongTensor] = None, past_key_value: Optional[Tuple[torch.Tensor]] = None,
+                output_attentions: bool = False, use_cache: bool = False, **kwargs) -> Tuple[
+        torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+        bsz, q_len, _ = hidden_states.size()
+
+        query_states = self.q_proj(hidden_states)
+        key_states = hidden_states2[0]
+        value_states = hidden_states2[1]
+
+        query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+
+        past_key_value = getattr(self, "past_key_value", past_key_value)
+
+        cos, sin = self.rotary_emb(value_states, position_ids)
+        query_states, _ = apply_rotary_pos_emb(query_states, query_states, cos, sin)
+
+        key_states = repeat_kv(key_states, self.num_key_value_groups)
+        value_states = repeat_kv(value_states, self.num_key_value_groups)
+
+        attn_output = torch.nn.functional.scaled_dot_product_attention(
+            query_states,
+            key_states,
+            value_states,
+            attn_mask=attention_mask,
+            dropout_p=self.attention_dropout if self.training else 0.0,
+            is_causal=False,
+        )
+        attn_output = attn_output.transpose(1, 2).contiguous()
+
+        attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
+        attn_output = self.o_proj(attn_output)
+
+        return attn_output, None, past_key_value
+
+    def process_kv(self, kv, seq_len):
+        key_states = kv[0]
+        value_states = kv[1]
+
+        position_ids = torch.arange(seq_len, seq_len + value_states.shape[2], device=value_states.device)[None]
+        cos, sin = self.rotary_emb(value_states, position_ids)
+        _, key_states = apply_rotary_pos_emb(key_states, key_states, cos, sin)
+        return key_states, value_states
