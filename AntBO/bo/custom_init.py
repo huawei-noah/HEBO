@@ -19,22 +19,22 @@ def get_top_cut_ratio_per_cat(top_cut_ratio_loosers: int, top_cut_ratio_mascotte
 
 class InitialBODataset:
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame) -> None:
         self.data = data
 
-    def get_categories(self):
+    def get_categories(self) -> np.ndarray:
         return self.data['Type'].values
 
-    def get_index_encoded_x(self):
+    def get_index_encoded_x(self) -> np.ndarray:
         return np.vstack(self.data['AA to ind'].values)
 
-    def get_protein_names(self):
+    def get_protein_names(self) -> pd.Series:
         return self.data['Protein']
 
-    def get_protein_binding_energy(self):
+    def get_protein_binding_energy(self) -> pd.Series:
         return self.data['Binding Energy']
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
 

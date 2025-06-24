@@ -1,8 +1,8 @@
+import os
 import pickle
 from typing import Any, Optional
 
 import numpy as np
-import os
 
 
 def spearman(pred, target) -> float:
@@ -21,7 +21,6 @@ def pearson(pred, target) -> float:
 def negative_log_likelihood(pred, pred_std, target) -> float:
     """Compute the negative log-likelihood on the validation dataset"""
     from scipy.stats import norm
-    import numpy as np
     n = pred.shape[0]
     res = 0.
     for i in range(n):
@@ -74,9 +73,6 @@ def get_config(config):
         return yaml.safe_load(f)
 
 
-from einops import rearrange
-
-
 def batch_iterator(data1, step=8):
     size = len(data1)
     for i in range(0, size, step):
@@ -97,14 +93,66 @@ class BERTFeatures:
         self.tokeniser = tokeniser
 
     def compute_features(self, x1):
+        assert x1.ndim == 2
         inp_device = x1.device
+        self.model = self.model.to(inp_device)
         with torch.no_grad():
             x1 = [" ".join(self.idx_to_AA[i.item()] for i in x_i) for x_i in x1]
             ids1 = self.tokeniser.batch_encode_plus(x1, add_special_tokens=False, padding=True)
-            input_ids1 = torch.tensor(ids1['input_ids']).to(self.model.device)
-            attention_mask1 = torch.tensor(ids1['attention_mask']).to(self.model.device)
-            reprsn1 = self.model(input_ids=input_ids1, attention_mask=attention_mask1)[0]
-        return reprsn1.to(inp_device)
+            input_ids1 = torch.tensor(ids1['input_ids']).to(inp_device)
+            attention_mask1 = torch.tensor(ids1['attention_mask']).to(inp_device)
+            reprsn1 = self.model.to(inp_device)(input_ids=input_ids1, attention_mask=attention_mask1)[0]
+        return reprsn1.mean(1)
+
+
+def update_table_of_candidates(
+        original_table: np.ndarray,
+        observed_candidates: np.ndarray, check_candidates_in_table: bool,
+        table_of_candidate_embeddings: Optional[np.ndarray]
+) -> tuple[np.ndarray, Optional[np.ndarray]]:
+    """ Update the table of candidates, removing the newly observed candidates from the table
+
+    Args:
+        original_table: table of candidates before observation
+        observed_candidates: new observed points
+        check_candidates_in_table: whether the observed candidates should be in the original_table or not
+        table_of_candidate_embeddings: if not None, the embeddings of the candidates should be used to build the
+            surrogate model
+    Returns:
+          Updated original_table and embeddings
+    """
+    if observed_candidates.ndim == 1:
+        observed_candidates = observed_candidates.reshape(1, -1)
+    for candidate in observed_candidates:
+        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
+        if not np.any(filtr) and check_candidates_in_table:
+            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
+        original_table = original_table[~filtr]
+        if table_of_candidate_embeddings is not None:
+            table_of_candidate_embeddings = table_of_candidate_embeddings[~filtr]
+    return original_table, table_of_candidate_embeddings
+
+
+def update_table_of_candidates_array(original_table: np.ndarray, observed_candidates: np.ndarray,
+                                     check_candidates_in_table: bool) -> np.ndarray:
+    """ Update the table of candidates, removing the newly observed candidates from the table
+
+    Args:
+        original_table: table of candidates before observation
+        observed_candidates: new observed points
+        check_candidates_in_table: whether the observed candidates should be in the original_table or not
+
+    Returns:
+          Updated table
+    """
+    if observed_candidates.ndim == 1:
+        observed_candidates = observed_candidates.reshape(1, -1)
+    for candidate in observed_candidates:
+        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
+        if not np.any(filtr) and check_candidates_in_table:
+            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
+        original_table = original_table[~filtr]
+    return original_table
 
 
 if __name__ == '__main__':
@@ -115,11 +163,10 @@ if __name__ == '__main__':
                    'batch_size': 256
                    }
     device_ids = [2, 3]
-    import os
     import glob
     import numpy as np
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(str(id) for id in device_ids)
+    os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(str(id_) for id_ in device_ids)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     from transformers import AutoTokenizer, \
         AutoModel
@@ -131,7 +178,6 @@ if __name__ == '__main__':
 
     antigens = ['1ADQ_A', '1FBI_X', '1H0D_C', '1NSN_S', '1OB1_C', '1WEJ_F', '2YPV_A', '3RAJ_A', '3VRL_C', '2DD8_S',
                 '1S78_B', '2JEL_P']
-    # antigens = [antigen.strip().split()[1] for antigen in open(f"/nfs/aiml/asif/CDRdata/antigens.txt", 'r') if antigen != '\n']
 
     from sklearn.preprocessing import StandardScaler
     from sklearn.decomposition import PCA
@@ -162,7 +208,6 @@ if __name__ == '__main__':
             for seq_batch in batch_iterator(sequences, bert_config['batch_size']):
                 seq_batch = torch.tensor([[bert_features.AA_to_idx[aa] for aa in seq] for seq in seq_batch]).to(device)
                 seq_reprsn = bert_features.compute_features(seq_batch)
-                seq_reprsn = rearrange(seq_reprsn, 'b l d -> b (l d)')
                 reprsns.append(seq_reprsn.cpu().numpy())
                 if len(reprsns) == 1000:
                     break
@@ -177,47 +222,3 @@ if __name__ == '__main__':
                 os.makedirs(results_path)
             dump(pca, f"{results_path}/{antigen}_pca.joblib")
             dump(scaler, f"{results_path}/{antigen}_scaler.joblib")
-
-
-def update_table_of_candidates(original_table: np.ndarray, observed_candidates: np.ndarray,
-                               check_candidates_in_table: bool) -> np.ndarray:
-    """ Update the table of candidates, removing the newly observed candidates from the table
-
-    Args:
-        original_table: table of candidates before observation
-        observed_candidates: new observed points
-        check_candidates_in_table: whether the observed candidates should be in the original_table or not
-
-    Returns:
-          Updated original_table
-    """
-    if observed_candidates.ndim == 1:
-        observed_candidates = observed_candidates.reshape(1, -1)
-    for candidate in observed_candidates:
-        filtr = np.all(original_table == candidate.reshape(1, -1), axis=1)
-        if not np.any(filtr) and check_candidates_in_table:
-            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
-        original_table = original_table[~filtr]
-    return original_table
-
-
-def update_table_of_candidates_torch(original_table: torch.Tensor, observed_candidates: torch.Tensor,
-                               check_candidates_in_table: bool) -> np.ndarray:
-    """ Update the table of candidates, removing the newly observed candidates from the table
-
-    Args:
-        original_table: table of candidates before observation
-        observed_candidates: new observed points
-        check_candidates_in_table: whether the observed candidates should be in the original_table or not
-
-    Returns:
-          Updated table
-    """
-    if observed_candidates.ndim == 1:
-        observed_candidates = observed_candidates.reshape(1, -1)
-    for candidate in observed_candidates:
-        filtr = torch.all(original_table == candidate.reshape(1, -1), axis=1)
-        if not torch.any(filtr) and check_candidates_in_table:
-            raise RuntimeError(f"New point {candidate} is not in the table of candidates.")
-        original_table = original_table[~filtr]
-    return original_table

@@ -1,3 +1,5 @@
+import numpy as np
+
 from task.base import BaseTask
 from task.utils import plot_mean_std
 from task.tools import Absolut, Visualisation
@@ -24,13 +26,13 @@ class Task(BaseTask):
         else:
             assert 0,f"{self.config['method']} Not Implemented"
 
-    def energy(self, x):
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
         '''
         x: categorical vector
         '''
-        return self.Binding.Energy(x)
+        return self.Binding.energy(x)
 
-    def plotEnergy(self, x):
+    def plot_energy(self, x):
         '''
         x: (seeds x trials) numpy array of energy
 
@@ -39,7 +41,7 @@ class Task(BaseTask):
         '''
         return plot_mean_std(x)
 
-    def visualiseBinding(self, x, y=None):
+    def visualise_binding(self, x, y=None):
         '''
         x: CDR3 sequence to visualise
         y: Antibody identifier

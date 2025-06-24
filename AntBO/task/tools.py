@@ -30,26 +30,25 @@ def custom_input(message: str, default: str) -> str:
 ############################
 
 class Absolut(BaseTool):
-    def __init__(self,
-                 config):
+    def __init__(self, config) -> None:
         BaseTool.__init__(self)
-        '''
+        """
         config: dictionary of parameters for BO
             antigen: PDB ID of antigen
             path: path to Absolut installation
             process: Number of CPU processes
             expid: experiment ID
-        '''
+        """
         for key in ['antigen', 'path', 'process']:
             assert key in config, f"\"{key}\" is not defined in config"
         self.config = config
         assert self.config['startTask'] >= 0 and (self.config['startTask'] + self.config['process'] < os.cpu_count()), \
             f"{self.config['startTask']} is not a valid cpu"
 
-    def Energy(self, x):
-        '''
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
+        """
         x: categorical vector (num_Seq x Length)
-        '''
+        """
         x = x.astype('int32')
         if len(x.shape) == 1:
             x = x.reshape(1, -1)
@@ -94,15 +93,15 @@ class Absolut(BaseTool):
 
 
 class AbsolutVisualisation:
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         self.config = config
 
         assert 'AbsolutPath' in config, "\"AbsolutPath\" is not defined in config"
 
-    def visualise(self, antigen, CDR3):
+    def visualise(self, antigen: str, cdr3: str) -> None:
         """
         antigen: PDB ID of antigen
-        CDR3: String that specifies the CDR3
+        cdr3: String that specifies the CDR3
         """
         current_dir = os.getcwd()
         os.chdir(f"{self.config['AbsolutPath']}")
@@ -120,13 +119,12 @@ class AbsolutVisualisation:
                 capture_output=True, text=True)
             # After downloading the files have to run the command below to generate some additional files. This can
             # Take some time
-            output = subprocess.run(["./src/bin/Absolut", "singleBinding", antigen, CDR3], capture_output=True,
-                                    text=False)
+            _ = subprocess.run(["./src/bin/Absolut", "singleBinding", antigen, cdr3], capture_output=True, text=False)
 
         # Get the antibody-antigen complex of the CDR3 sequence to an antigen
         print('Predicting CDR3 docking...')
         with open(f"TempCDR3_{antigen}.txt", "w") as f:
-            line = f"{0 + 1}\t{CDR3}\n"
+            line = f"{0 + 1}\t{cdr3}\n"
             f.write(line)
         output = subprocess.run(["./src/bin/Absolut", "repertoire", antigen, f"TempCDR3_{antigen}.txt"],
                                 capture_output=True, text=False)
@@ -203,21 +201,21 @@ class PyMolVisualisation:
 class Manual(BaseTool):
     def __init__(self, config):
         BaseTool.__init__(self)
-        '''
+        """
         config: dictionary of parameters for BO
             antigen: PDB ID of antigen
             process: Number of CPU processes
             expid: experiment ID
-        '''
+        """
         for key in ['antigen']:
             assert key in config, f"\"{key}\" is not defined in config"
         self.config = config
         self.antigen = self.config["antigen"]
 
-    def Energy(self, x):
-        '''
+    def energy(self, x) -> tuple[np.ndarray, list[str]]:
+        """
         x: categorical vector (num_Seq x Length)
-        '''
+        """
         x = x.astype('int32')
         if len(x.shape) == 1:
             x = x.reshape(1, -1)
@@ -229,6 +227,11 @@ class Manual(BaseTool):
             sequences.append(seq2char)
             print(seq2char)
 
+        energies = self.get_energies(sequences=sequences)
+
+        return np.array(energies), sequences
+
+    def get_energies(self, sequences) -> list[float]:
         energies = []
         for i in range(len(sequences)):
             default = np.random.randn()
@@ -242,8 +245,14 @@ class Manual(BaseTool):
                 energy2 = float(custom_input(message=f"[{self.antigen}] Confirm energy for {sequences[i]}:",
                                              default=default))
             energies.append(energy1)
+        return energies
 
-        return np.array(energies), sequences
+
+class RandomBlackBox(Manual):
+    """ Suitable for quick debugging """
+
+    def get_energies(self, sequences) -> list[float]:
+        return [np.random.random() for _ in range(len(sequences))]
 
 
 class TableFilling(BaseTool):
@@ -251,21 +260,21 @@ class TableFilling(BaseTool):
 
     def __init__(self, config):
         BaseTool.__init__(self)
-        '''
+        """
         config: dictionary of parameters for BO that includes:
                     - antigen: PDB ID of antigen
                     - path_to_eval_csv: str
-        '''
+        """
         for key in ['antigen']:
             assert key in config, f"\"{key}\" is not defined in config"
         self.config = config
         self.antigen = self.config["antigen"]
         self.path_to_eval_csv = os.path.abspath(self.config["path_to_eval_csv"])
 
-    def Energy(self, x):
-        '''
+    def energy(self, x):
+        """
         x: categorical vector (num_Seq x Length)
-        '''
+        """
         x = x.astype('int32')
         if len(x.shape) == 1:
             x = x.reshape(1, -1)
@@ -278,10 +287,21 @@ class TableFilling(BaseTool):
         # save sequences
         dirname = os.path.dirname(self.path_to_eval_csv)
         os.makedirs(dirname, exist_ok=True)
-        to_eval = pd.DataFrame([[self.antigen, seq, None, 0] for i, seq in enumerate(sequences)],
-                               columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
+        if os.getenv("ANTBO_DEBUG", False):
+            values = np.random.randint(0, 100, len(sequences)) + np.random.randn(len(sequences))
+            validations = np.ones(len(sequences))
+        else:
+            print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
+            values = [None for _ in range(len(sequences))]
+            validations = np.zeros(len(sequences))
+
+        to_eval = pd.DataFrame(
+            [[self.antigen, seq, value, validation] for i, seq, value, validation in
+             zip(range(len(sequences)), sequences, values, validations
+                 )],
+            columns=["Antigen", "Antibody", "Eval", "Validate (0/1)"])
+
         to_eval.to_csv(self.path_to_eval_csv, index=False)
-        print(f"Saved candidates to evaluate in {self.path_to_eval_csv}")
 
         # Try to read the evaluations
 
@@ -312,43 +332,43 @@ class Visualisation:
                  antigen,
                  docktool='ClusPro',
                  vistool='PyMol'):
-        '''
+        """
         antigen: PDB ID of an antigen
-        '''
+        """
         self.antigen = antigen
         self.docktool = docktool
         self.vistool = vistool
 
     def replace_CDR3(self, antiseq, x, y):
-        '''
+        """
 
         :antiseq: Antibody as a sequence of Amino Acids
         :x: CDR3 of an antibody
         :y: new CDR3
         :return:
-        '''
+        """
         raise NotImplementedError
 
     def load_fasta(self, y):
-        '''
+        """
         y: pdb id
         return:
             FASTA Sequence
-        '''
+        """
         raise NotImplementedError
 
     def dockAntibody(self, x):
-        '''
+        """
         x: pdb file name of antibody
-        '''
+        """
         raise NotImplementedError
 
     def visualise(self, x, y):
-        '''
+        """
         x: CDR3  Sequence
         y: Antibody ID
         visualise binding
-        '''
+        """
         z = self.getAntibody(x, y)
         w = self.dockAntibody(z)
         self.vistool.visualise(w)

@@ -7,7 +7,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE. See the MIT License for more details.
 
-import sys, os
+import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 import pytest
 
@@ -17,13 +19,13 @@ from sklearn.metrics import r2_score
 from hebo.sklearn_tuner import sklearn_tuner
 
 
-@pytest.mark.parametrize('report', [True, False], ids = ['report', 'no-report'])
-def test_sklearn_tuner(report):
+@pytest.mark.parametrize('report', [True, False], ids=['report', 'no-report'])
+def test_sklearn_tuner(report) -> None:
     space_cfg = [
-            {'name' : 'max_depth',        'type' : 'int', 'lb' : 1, 'ub' : 20},
-            {'name' : 'min_samples_leaf', 'type' : 'num', 'lb' : 1e-4, 'ub' : 0.5},
-            {'name' : 'bootstrap',        'type' : 'bool'},
-            {'name' : 'min_impurity_decrease', 'type' : 'pow', 'lb' : 1e-4, 'ub' : 1.0},
-            ]
-    X, y = load_diabetes(return_X_y = True)
-    _    = sklearn_tuner(RandomForestRegressor, space_cfg, X, y, metric = r2_score, max_iter = 1, report = report)
+        {'name': 'max_depth', 'type': 'int', 'lb': 1, 'ub': 20},
+        {'name': 'min_samples_leaf', 'type': 'num', 'lb': 1e-4, 'ub': 0.5},
+        {'name': 'bootstrap', 'type': 'cat', 'categories': [True, False]},
+        {'name': 'min_impurity_decrease', 'type': 'pow', 'lb': 1e-4, 'ub': 1.0},
+    ]
+    x, y = load_diabetes(return_X_y=True)
+    _ = sklearn_tuner(RandomForestRegressor, space_cfg, x, y, metric=r2_score, max_iter=1, report=report)

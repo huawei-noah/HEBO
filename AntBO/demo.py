@@ -3,13 +3,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
-
-ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent)
-sys.path.insert(0, ROOT_PROJECT)
-
 import warnings
-from gpytorch.utils.warnings import NumericalWarning
-from bo.main import BOExperiments
 import time
 
 import pandas as pd
@@ -27,7 +21,9 @@ if __name__ == "__main__":
                         help='Path to csv file containing the binding energy of already evaluated antibody sequences.')
     parser.add_argument('--tabular_search_csv', type=str,
                         help='Path to csv file containing the set of eligible antibodies with their pre-computed '
-                             'binding energy (to test optimisation in a controlled scenario).')
+                             'binding energy (to test optimisation in a controlled scenario). '
+                             'This table can also have extra columns d1,... dk corresponding '
+                             'to vector representation of the antibody')
     parser.add_argument('--path_to_eval_csv', type=str, default="./eval.csv",
                         help='If the black-box evaluations are provided by filling a table, path to this table.')
     parser.add_argument('--cuda_id', type=int, default=0, help='ID of the cuda device to use.')
@@ -37,7 +33,7 @@ if __name__ == "__main__":
                         help='Whether to resume from an existing run.')
     args = parser.parse_args()
 
-    # TOFILL
+    # TO FILL
     save_path = './results/'
     n_init = 20
     max_iters = 400
@@ -57,7 +53,9 @@ if __name__ == "__main__":
         'normalise': True,
         'batch_size': args.batch_size,
         'save_path': save_path,
-        'kernel_type': 'transformed_overlap',
+        # 'kernel_type': 'mat52',
+        # 'kernel_type': 'transformed_overlap',
+        'kernel_type': 'rbfBERT',
         'noise_variance': '1e-6',
         'search_strategy': 'local',
         'resume': args.resume,
@@ -70,6 +68,7 @@ if __name__ == "__main__":
         # },
         'bbox': {
             'tool': 'table_filling',
+            # 'tool': 'manual',
             'antigen': args.antigen,
             'path_to_eval_csv': args.path_to_eval_csv
         },

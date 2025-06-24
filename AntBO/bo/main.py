@@ -1,8 +1,15 @@
+import argparse
 import os
 import random
 import sys
+import time
 from pathlib import Path
-from typing import Optional, Set, Any, Dict
+from typing import Optional, Any, Dict, get_args
+
+import numpy as np
+import pandas as pd
+import torch
+from tqdm import tqdm
 
 ROOT_PROJECT = str(Path(os.path.realpath(__file__)).parent.parent)
 sys.path.insert(0, ROOT_PROJECT)
@@ -11,20 +18,13 @@ from task import TableFilling
 from task import BaseTool
 from utilities.misc_utils import log
 from bo.custom_init import get_initial_dataset_path, InitialBODataset, get_top_cut_ratio_per_cat, get_n_per_cat
-from bo.botask import BOTask as CDRBO
+from bo.botask import BOTask
+from bo.localbo_utils import ACQ_FUNCTIONS, SEARCH_STRATS, AA
 from bo.optimizer import Optimizer
-import os
-import time
-import torch
-import pandas as pd
-import numpy as np
 from bo.utils import save_w_pickle, load_w_pickle
-import argparse
-
-SEARCH_STRATEGIES: Set[str] = {'glocal', 'local', 'local-no-hamming', 'batch_local', 'global'}
 
 
-def get_x_y_from_csv(csv_path):
+def get_x_y_from_csv(csv_path: str) -> tuple[np.ndarray, torch.tensor]:
     data = pd.read_csv(csv_path)
     x = data["x"].values
     from bo.localbo_utils import AA_to_idx
@@ -34,45 +34,45 @@ def get_x_y_from_csv(csv_path):
 
 
 class BOExperiments:
-    def __init__(self, config: Dict[str, Any], cdr_constraints: bool, seed: int):
+    def __init__(self, config: Dict[str, Any], cdr_constraints: bool, seed: int) -> None:
+        """
+        Args:
+             config: dictionary of parameters for BO
+                 acq: choice of the acquisition function
+                 ard: whether to enable automatic relevance determination
+                 save_path: path to save model and results
+                 kernel_type: choice of kernel
+                 normalise: normalise the target for the GP
+                 batch_size: batch size for BO
+                 max_iters: maximum evaluations for BO
+                 n_init: number of initialising random points
+                 min_cuda: number of initialisation points to use CUDA
+                 device: default 'cpu' if GPU specify the id
+                 seq_len: length of seqence for BO
+                 bbox: dictionary of parameters of blackbox
+                     antigen: antigen to use for BO
+                 vector_representation_table_csv: vector re
+             seed: random seed
         """
 
-        :param config: dictionary of parameters for BO
-                acq: choice of the acquisition function
-                ard: whether to enable automatic relevance determination
-                save_path: path to save model and results
-                kernel_type: choice of kernel
-                normalise: normalise the target for the GP
-                batch_size: batch size for BO
-                max_iters: maximum evaluations for BO
-                n_init: number of initialising random points
-                min_cuda: number of initialisation points to use CUDA
-                device: default 'cpu' if GPU specify the id
-                seq_len: length of seqence for BO
-                bbox: dictionary of parameters of blackbox
-                    antigen: antigen to use for BO
-                seed: random seed
-
-        """
         self.config = config
+        self.table_of_antibodies_as_inds = None
+        self.table_of_embeddings = None
         if self.config["tabular_search_csv"] is not None:
-            print(
-                f"Tabular BO setting: will select antibodies among available ones from: {config['tabular_search_csv']}"
-            )
-            self.table_of_aas_inds = self.get_table_of_aas_inds(tabular_search_csv=self.config["tabular_search_csv"])
+            print(f"Tab. BO setting: will select antibodies among available ones from: {config['tabular_search_csv']}")
+            aux_tab = self.get_table_of_antibodies(tabular_search_csv=self.config["tabular_search_csv"])
+            self.table_of_antibodies_as_inds, self.table_of_embeddings, self.embedding_from_array_dict = aux_tab
+            if self.table_of_embeddings is not None:
+                print("Will use pre-computing embeddings provided in the csv.")
         self.seed = seed
         self.cdr_constraints = cdr_constraints
         # Sanity checks
-        assert self.config['acq'] in ['ucb', 'ei', 'thompson', 'eiucb', 'mace',
-                                      'imace'], f"Unknown acquisition function choice {self.config['acq']}"
-        if 'search_strategy' in self.config:
-            self.search_strategy = self.config['search_strategy']
-            assert self.search_strategy in SEARCH_STRATEGIES, print(
-                f"{self.search_strategy} not in {SEARCH_STRATEGIES}")
-        else:
-            self.search_strategy = 'local'
+        if self.config['acq'] not in get_args(ACQ_FUNCTIONS):
+            raise ValueError(f"Unknown acquisition function choice {self.config['acq']} (not in {ACQ_FUNCTIONS})")
+        self.search_strat = self.config.get('search_strategy', 'local')
+        assert self.search_strat in get_args(SEARCH_STRATS), print(f"{self.search_strat} not in {SEARCH_STRATS}")
 
-        print(f"Search Strategy {self.search_strategy}")
+        print(f"Search Strategy {self.search_strat}")
 
         self.custom_initial_dataset: Optional[InitialBODataset] = None
         if self.custom_initial_dataset_path:
@@ -80,12 +80,13 @@ class BOExperiments:
             self.custom_initial_dataset = load_w_pickle(self.custom_initial_dataset_path)
             if not os.path.exists(self.custom_initial_dataset_path + '.pkl'):
                 raise ValueError(self.custom_initial_dataset_path + '.pkl')
-            assert self.config['n_init'] == len(self.custom_initial_dataset), (
-                self.config['n_init'], len(self.custom_initial_dataset))
+            if self.config['n_init'] != len(self.custom_initial_dataset):
+                raise ValueError(f"{self.config['n_init']} != {len(self.custom_initial_dataset)}")
 
         if self.config['kernel_type'] is None:
-            self.config['kernel_type'] = 'transformed_overlap'
-            print(f"Kernel Not Specified Using Default {self.config['kernel_type']}")
+            default_kernel = 'transformed_overlap'
+            self.config['kernel_type'] = default_kernel
+            print(f"Kernel Not Specified Using Default {default_kernel}")
 
         if not os.path.exists(self.path):
             os.makedirs(self.path)
@@ -95,10 +96,10 @@ class BOExperiments:
         self.res = pd.DataFrame(np.nan, index=np.arange(int(self.config['max_iters'] * self.config['batch_size'])),
                                 columns=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein'])
 
-        self.nm_AAs = 20
-        self.n_categories = np.array([self.nm_AAs] * self.config['seq_len'])
+        self.nb_aas = len(AA)
+        self.n_categories = np.array([self.nb_aas] * self.config['seq_len'])
         self.start_itern = 0
-        self.f_obj = CDRBO(
+        self.f_obj = BOTask(
             device=self.config['device'], n_categories=self.n_categories,
             seq_len=self.config['seq_len'], bbox=self.config['bbox'], normalise=False
         )
@@ -138,13 +139,16 @@ class BOExperiments:
             return None
         return get_initial_dataset_path(
             antigen_name=self.config['bbox']['antigen'],
-            n_per_cat=get_n_per_cat(n_loosers=self.config['custom_init_n_loosers'],
-                                    n_mascottes=self.config['custom_init_n_mascottes'],
-                                    n_heroes=self.config['custom_init_n_heroes']),
+            n_per_cat=get_n_per_cat(
+                n_loosers=self.config['custom_init_n_loosers'],
+                n_mascottes=self.config['custom_init_n_mascottes'],
+                n_heroes=self.config['custom_init_n_heroes']
+            ),
             top_cut_ratio_per_cat=get_top_cut_ratio_per_cat(
                 top_cut_ratio_loosers=self.config['custom_init_top_cut_loosers'],
                 top_cut_ratio_mascottes=self.config['custom_init_top_cut_mascottes'],
-                top_cut_ratio_heroes=self.config['custom_init_top_cut_heroes']),
+                top_cut_ratio_heroes=self.config['custom_init_top_cut_heroes']
+            ),
             seed=self.config['custom_init_seed']
         )
 
@@ -160,7 +164,7 @@ class BOExperiments:
     def random_rd_state_path(self) -> str:
         return os.path.join(self.path, "random_rd_state.pkl")
 
-    def load(self):
+    def load(self) -> Optimizer:
         res_path = os.path.join(self.path, 'results.csv')
         optim_path = os.path.join(self.path, 'optim.pkl')
         if os.path.exists(optim_path):
@@ -175,46 +179,38 @@ class BOExperiments:
                 rd_state = load_w_pickle(self.random_rd_state_path)
                 random.setstate(rd_state)
             if os.path.exists(res_path):
-                self.res = pd.read_csv(res_path,
-                                       usecols=['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein',
-                                                'BestProtein'])
+                columns = ['Index', 'LastValue', 'BestValue', 'Time', 'LastProtein', 'BestProtein']
+                self.res = pd.read_csv(res_path, usecols=columns)
                 self.start_itern = (len(self.res) - self.res['Index'].isna().sum()) // self.config['batch_size']
             print(f"-- Resume -- Already observed {optim.casmopolitan.n_evals}")
             return optim
 
-    def save(self, optim) -> None:
+    def save(self, optim: Optimizer) -> None:
         optim_path = os.path.join(self.path, 'optim.pkl')
         res_path = os.path.join(self.path, 'results.csv')
-        save_w_pickle(optim, optim_path)
+        save_w_pickle(obj=optim, path=optim_path)
         self.res.to_csv(res_path)
         # save random states
         torch.save(torch.get_rng_state(), self.torch_rd_state_path)
-        save_w_pickle(np.random.get_state(), self.np_rd_state_path)
-        save_w_pickle(random.getstate(), self.random_rd_state_path)
+        save_w_pickle(obj=np.random.get_state(), path=self.np_rd_state_path)
+        save_w_pickle(obj=random.getstate(), path=self.random_rd_state_path)
 
-    def results(self, optim, x, itern, rtime):
-        Y = np.array(optim.casmopolitan.fX)
-        if Y[:(itern + 1)].shape[0]:
+    def results(self, optim: Optimizer, x: np.ndarray, itern: int, rtime: float) -> None:
+        y = np.array(optim.casmopolitan.fx)
+        if y[:itern + 1].shape[0] == 0:
+            return
 
-            # sequential
-            if self.config['batch_size'] == 1:
-                argmin = np.argmin(Y[:(itern + 1) * self.config['batch_size']])
-                x_best = ''.join([self.f_obj.fbox.idx_to_AA[j] for j in
-                                  optim.casmopolitan.X[:(itern + 1) * self.config['batch_size']][argmin].flatten()])
-                self.res.iloc[itern, :] = [itern, float(Y[-1]), float(np.min(Y[:(itern + 1)])), rtime,
-                                           self.f_obj.idx_to_seq(x)[0], x_best]
-            # batch
-            else:
-                for idx, j in enumerate(
-                        range(itern * self.config['batch_size'], (itern + 1) * self.config['batch_size'])):
-                    argmin = np.argmin(Y[:(j + 1) * self.config['batch_size']])
-                    x_best = ''.join([self.f_obj.fbox.idx_to_AA[ind] for ind in
-                                      optim.casmopolitan.X[:(j + 1) * self.config['batch_size']][argmin].flatten()])
-                    self.res.iloc[j, :] = [j, float(Y[-idx]), float(np.min(Y[:(j + 1) * self.config['batch_size']])),
-                                           rtime,
-                                           self.f_obj.idx_to_seq(x)[idx], x_best]
+        antibodies = self.f_obj.idx_to_seq(x)
 
-    def run(self):
+        def add_res(step: int, y_val: float, protein: str) -> None:
+            argmin = np.argmin(y[:step + 1])
+            x_best = ''.join([self.f_obj.fbox.idx_to_AA[ind] for ind in optim.casmopolitan.x[argmin].flatten()])
+            self.res.iloc[step, :] = [step, y_val, float(np.min(y[:(step + 1)])), rtime, protein, x_best]
+
+        for idx, j in enumerate(range(itern * self.config['batch_size'], (itern + 1) * self.config['batch_size'])):
+            add_res(step=j, y_val=float(y[j]), protein=antibodies[idx])
+
+    def run(self) -> None:
         random.seed(self.seed)
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
@@ -223,7 +219,10 @@ class BOExperiments:
             'length_max_discrete': self.config['seq_len'],
             'device': self.config['device'],
             'seed': self.seed,
-            'search_strategy': self.search_strategy
+            'search_strategy': self.search_strat,
+            'BERT_model_path': self.config.get('BERT_model_path', 'Rostlab/prot_bert_bfd'),
+            'BERT_tokeniser_path': self.config.get('BERT_tokenizer_path', 'Rostlab/prot_bert_bfd'),
+            'BERT_batchsize': self.config.get('BERT_batchsize', 128),
         }
 
         if self.config['resume']:
@@ -233,15 +232,17 @@ class BOExperiments:
 
         if not optim:
             optim = Optimizer(
-                self.n_categories, min_cuda=self.config['min_cuda'],
+                config=self.n_categories, min_cuda=self.config['min_cuda'],
                 n_init=self.config['n_init'], use_ard=self.config['ard'],
                 acq=self.config['acq'],
                 cdr_constraints=self.cdr_constraints,
                 normalise=self.config['normalise'],
                 kernel_type=self.config['kernel_type'],
                 noise_variance=float(self.config['noise_variance']),
-                alphabet_size=self.nm_AAs,
-                table_of_candidates=self.table_of_aas_inds,
+                alphabet_size=self.nb_aas,
+                table_of_candidates=self.table_of_antibodies_as_inds,
+                table_of_candidate_embeddings=self.table_of_embeddings,
+                embedding_from_array_dict=self.embedding_from_array_dict,
                 **kwargs
             )
 
@@ -251,7 +252,7 @@ class BOExperiments:
                 optim.batch_size = self.config['batch_size']
                 optim.casmopolitan.batch_size = optim.batch_size
                 optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
-                optim.observe(pre_eval_x, pre_eval_y)
+                optim.observe(x=pre_eval_x, y=pre_eval_y)
                 print(f"Observed {len(pre_eval_y)} already evaluated points")
 
         # check if there are points that have been suggested and evaluated since the last antbo call
@@ -270,50 +271,75 @@ class BOExperiments:
                     optim.casmopolitan.batch_size = len(x_seqs)
                     optim.casmopolitan.n_init = max([optim.casmopolitan.n_init, optim.batch_size])
                     optim.restart()
-                optim.observe(X=x_seqs_ind, y=y)
-                self.results(optim, x_seqs_ind, self.start_itern, rtime=0)
+                optim.observe(x=x_seqs_ind, y=y)
+                self.results(optim=optim, x=x_seqs_ind, itern=self.start_itern, rtime=0)
                 self.start_itern += 1
-                self.save(optim)
+                self.save(optim=optim)
                 self.f_obj.fbox.make_copy_eval_table()
-
 
         for itern in range(self.start_itern, self.config['max_iters']):
             start = time.time()
             x_next = optim.suggest(n_suggestions=self.config['batch_size'])
-            if self.custom_initial_dataset and len(optim.casmopolitan.fX) < self.config['n_init']:
+            if self.custom_initial_dataset and len(optim.casmopolitan.fx) < self.config['n_init']:
                 # observe the custom initial points instead of the suggested ones
-                n_random = min(x_next.shape[0], self.config['n_init'] - len(optim.casmopolitan.fX))
+                n_random = min(x_next.shape[0], self.config['n_init'] - len(optim.casmopolitan.fx))
                 x_next[:n_random] = self.custom_initial_dataset.get_index_encoded_x()[
-                                    len(optim.casmopolitan.fX):len(optim.casmopolitan.fX) + n_random]
-            y_next = self.f_obj.compute(x_next)
-            optim.observe(x_next, y_next)
+                                    len(optim.casmopolitan.fx):len(optim.casmopolitan.fx) + n_random]
+            y_next = self.f_obj.compute(x=x_next)
+            optim.observe(x=x_next, y=y_next)
             end = time.time()
-            self.results(optim, x_next, itern, rtime=end - start)
+            self.results(optim=optim, x=x_next, itern=itern, rtime=end - start)
             if itern % 5 == 0:
                 self.log(f"Iter {itern + 1} / {self.config['max_iters']} in {end - start:.2f} s "
                          f"- {''.join(['ACDEFGHIKLMNPQRSTVWY'[int(x)] for x in x_next[0]])}"
                          f" ({y_next[0].item():.2f})")
-            self.save(optim)
+            self.save(optim=optim)
 
-    def log(self, message: str, end: Optional[str] = None):
-        log(message=message,
-            header=f"BOExp - {self.config['bbox']['antigen']} - {self.config['kernel_type']} - seed {self.seed}",
-            end=end)
+    def log(self, message: str, end: Optional[str] = None) -> None:
+        header = f"BOExp - {self.config['bbox']['antigen']} - {self.config['kernel_type']} - seed {self.seed}"
+        log(message=message, header=header, end=end)
 
-    def get_table_of_aas_inds(self, tabular_search_csv: str) -> np.ndarray:
-        """ Return array of antigens where each row corresponds to an antigen given by the index of its AA """
-        data = pd.read_csv(tabular_search_csv, index_col=None).values
-        assert data.shape[-1] == 1
-        arr = np.array([list(c for c in x) for x in data.flatten()])
-        return BaseTool().convert_array_aas_to_idx(arr)
+    @staticmethod
+    def get_table_of_antibodies(tabular_search_csv: str, normalize_embeddings: bool = True) \
+            -> tuple[np.ndarray, Optional[np.ndarray], dict[str, np.ndarray]]:
+        """ Return array of antigens where each row corresponds to an antibody given by the index of its AA
 
+        Args:
+            - tabular_search_csv: path to the csv file containing the AAs (and optionally vector representations)
+            - normalize_embeddings: whether to min-max normalize the embeddings
 
-from bo.utils import get_config
+        Returns:
+            - aas_as_inds: array of aas (each entry is an array of AA indices)
+            - embeddings: array of shape (n_antibodies, embedding size)
+            - embedding_from_aas_as_inds_dict: dictionary mapping the antibody arrays to their embeddings
+        """
+        data = pd.read_csv(tabular_search_csv, index_col=None)
+        if data.shape[-1] == 1:
+            aas = data.values.flatten()
+            embeddings = None
+        else:
+            assert np.all(data.columns[1:] == [f"d{i}" for i in range(1, data.shape[1])]), data.columns[1:]
+            aas = data.values[:, 0]
+            embeddings = data.values[:, 1:].astype(float)
+            if normalize_embeddings:
+                min_embeddings = embeddings.min(0)
+                max_embeddings = embeddings.max(0)
+                embeddings = (embeddings - min_embeddings) / (max_embeddings - min_embeddings)
+        arr = np.array([list(c for c in x) for x in aas])
+        aas_as_inds = BaseTool().convert_array_aas_to_idx(arr)
+        if embeddings is not None:
+            embedding_from_aas_as_inds_dict = {
+                str(aas_as_inds[i].astype(int)): embeddings[i] for i in tqdm(range(len(aas_as_inds)))
+            }
+        else:
+            embedding_from_aas_as_inds_dict = None
+        return aas_as_inds, embeddings, embedding_from_aas_as_inds_dict
+
 
 if __name__ == '__main__':
+    from bo.utils import get_config
 
-    parser = argparse.ArgumentParser(add_help=True,
-                                     description='Antigen-CDR3 binding prediction using high dimensional BO')
+    parser = argparse.ArgumentParser(add_help=True, description='Antigen-CDR3 binding prediction using BO')
     parser.add_argument('--antigens_file', type=str, default='./dataloader/all_antigens.txt',
                         help='List of Antigen to perform BO')
     parser.add_argument('--seed', type=int, default=42, help='initial seed setting')
@@ -332,13 +358,14 @@ if __name__ == '__main__':
         antigens = [antigen.rstrip() for antigen in antigens]
 
     print(f'Iterating Over All Antigens In File {args.antigens_file} \n {antigens}')
-    # antigens = ['1ADQ_A', '1FBI_X', '1HOD_C', '1NSN_S', '1OB1_C', '1WEJ_F', '2YPV_A', '3RAJ_A', '3VRL_C', '2DD8_S', '1S78_B', '2JEL_P']
+    # antigens = ['1ADQ_A', '1FBI_X', '1HOD_C', '1NSN_S', '1OB1_C', '1WEJ_F',
+    # '2YPV_A', '3RAJ_A', '3VRL_C', '2DD8_S', '1S78_B', '2JEL_P']
 
     for antigen in antigens:
         start_antigen = time.time()
         seeds = list(range(args.seed, args.seed + args.n_trials))
         t = args.resume_trial
-        while (t < args.n_trials):
+        while t < args.n_trials:
             print(f"Starting Trial {t + 1} for antigen {antigen}")
             config_['bbox']['antigen'] = antigen
 

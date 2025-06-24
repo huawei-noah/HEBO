@@ -1,5 +1,9 @@
 from abc import abstractmethod
+from typing import Optional
+
 import numpy as np
+import torch
+
 
 class TestFunction:
     """
@@ -10,7 +14,7 @@ class TestFunction:
     # this should be changed if we are tackling a mixed, or continuous problem, for e.g.
     problem_type = 'categorical'
 
-    def __init__(self, normalise=True, **kwargs):
+    def __init__(self, normalise: bool = True, **kwargs) -> None:
         self.normalise = normalise
         self.n_vertices = None
         self.config = None
@@ -19,7 +23,7 @@ class TestFunction:
         self.categorical_dims = None
         self.int_constrained_dims = None
 
-    def _check_int_constrained_dims(self):
+    def _check_int_constrained_dims(self) -> None:
         if self.int_constrained_dims is None:
             return
         assert self.continuous_dims is not None, 'int_constrained_dims must be a subset of the continuous_dims, ' \
@@ -29,9 +33,10 @@ class TestFunction:
         assert np.all(np.in1d(int_dims_np, cont_dims_np)), "all continuous dimensions with integer " \
                                                            "constraint must be themselves contained in the " \
                                                            "continuous_dimensions!"
+
     @abstractmethod
-    def compute(self, x, normalise=None):
+    def compute(self, x: np.ndarray, normalise: Optional[bool] = None) -> torch.tensor:
         raise NotImplementedError()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> torch.tensor:
         return self.compute(*args, **kwargs)

@@ -20,7 +20,7 @@ def get_config(config):
 
 def plot_mean_std(*args, n_std: Optional[int] = 1,
                   ax: Optional[Axes] = None, alpha: float = .3,
-                  **plot_mean_kwargs):
+                  **plot_mean_kwargs) -> Axes:
     """ Plot mean and std (with fill between) of sequentiql data Y of shape (n_trials, lenght_of_a_trial)
 
     Args:

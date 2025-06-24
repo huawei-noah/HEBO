@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
         def function(x):
             x = x.astype(int)
-            return absolut_binding_energy.Energy(x)
+            return absolut_binding_energy.energy(x)
 
 
         environment_config = {'n_sequences': config['genetic_algorithm_config']['population_size'],

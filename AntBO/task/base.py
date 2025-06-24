@@ -2,39 +2,40 @@ from abc import ABC
 from typing import Any, Dict, Optional
 
 import numpy as np
+from matplotlib.axes import Axes
 
 
 class BaseTask(ABC):
-    def __init__(self):
-        AA = 'ACDEFGHIKLMNPQRSTVWY'
-        self.AA_to_idx = {aa: i for i, aa in enumerate(AA)}
+    def __init__(self) -> None:
+        amino_acids = 'ACDEFGHIKLMNPQRSTVWY'
+        self.AA_to_idx = {aa: i for i, aa in enumerate(amino_acids)}
         self.idx_to_AA = {value: key for key, value in self.AA_to_idx.items()}
 
-    def energy(self, x):
-        '''
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
+        """
         x: categorical vector
-        '''
+        """
         raise NotImplementedError
 
-    def plotEnergy(self, x):
-        '''
+    def plot_energy(self, x: np.ndarray) -> Axes:
+        """
         x: (seeds x trials) numpy array of energy
-        '''
+        """
         raise NotImplementedError
 
-    def visualiseBinding(self, x, y=None):
-        '''
+    def visualise_binding(self, x: list[str], y: Optional[str] = None):
+        """
         x: CDR3 sequence to visualise
         y: Antibody identifier
         antibody:
-        '''
+        """
         raise NotImplementedError
 
 
 class BaseTool(ABC):
-    def __init__(self):
-        AA = 'ACDEFGHIKLMNPQRSTVWY'
-        self.AA_to_idx = {aa: i for i, aa in enumerate(AA)}
+    def __init__(self) -> None:
+        aa = 'ACDEFGHIKLMNPQRSTVWY'
+        self.AA_to_idx = {aa: i for i, aa in enumerate(aa)}
         self.idx_to_AA = {value: key for key, value in self.AA_to_idx.items()}
 
     @staticmethod
@@ -52,8 +53,8 @@ class BaseTool(ABC):
     def convert_array_aas_to_idx(self, aas: np.ndarray) -> np.ndarray:
         return self.convert_array(arr=aas, conversion_dic=self.AA_to_idx, end_type=int)
 
-    def Energy(self, x):
-        '''
+    def energy(self, x: np.ndarray) -> tuple[np.ndarray, list[str]]:
+        """
         x: categorical vector
-        '''
+        """
         raise NotImplementedError

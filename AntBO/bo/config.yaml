@@ -7,8 +7,8 @@ device: 'cuda'
 seq_len: 11
 normalise: True
 batch_size: 1
-save_path: './results/BO_transformed_overlap/'  # Put path where you want results to be stored '/ABS/PATH/TO/results/'
-kernel_type: 'transformed_overlap'
+save_path: './results'  # Put path where you want results to be stored '/ABS/PATH/TO/results/'
+kernel_type: 'transformed_overlap'  # mat52
 noise_variance: 1e-6
 resume: ???
 search_strategy: 'local' # local (CASMO), 'batch_local' (CASMO with NSGA con), 'global' (NSGA), or glocal (HEBO variant)

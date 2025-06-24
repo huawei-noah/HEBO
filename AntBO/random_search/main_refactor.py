@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     def black_box(x):
         x = x.astype(int)
-        return absolut_binding_energy.Energy(x)
+        return absolut_binding_energy.energy(x)
 
 
     optim = Optimizer(config)

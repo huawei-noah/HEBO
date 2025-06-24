@@ -9,28 +9,28 @@
 
 import numpy as np
 import pandas as pd
+import warnings
+from hebo.design_space.design_space import DesignSpace
+from hebo.optimizers.hebo import HEBO
 from sklearn.model_selection import cross_val_predict, KFold
 from typing import Callable
 
-from hebo.design_space.design_space import DesignSpace
-from hebo.optimizers.hebo import HEBO
-
-import warnings
 warnings.filterwarnings('ignore')
 
+
 def sklearn_tuner(
-        model_class, 
-        space_config : [dict], 
-        X : np.ndarray,
-        y : np.ndarray,
-        metric : Callable, 
-        greater_is_better : bool = True, 
-        cv       = None,
-        max_iter = 16, 
-        report   = False,
-        hebo_cfg = None, 
-        verbose  = True, 
-        ) -> (dict, pd.DataFrame):
+        model_class,
+        space_config: [dict],
+        X: np.ndarray,
+        y: np.ndarray,
+        metric: Callable,
+        greater_is_better: bool = True,
+        cv=None,
+        max_iter=16,
+        report=False,
+        hebo_cfg=None,
+        verbose=True,
+) -> (dict, pd.DataFrame):
     """Tuning sklearn estimator
 
     Parameters:
@@ -68,24 +68,24 @@ def sklearn_tuner(
     if hebo_cfg is None:
         hebo_cfg = {}
     space = DesignSpace().parse(space_config)
-    opt   = HEBO(space, **hebo_cfg)
+    opt = HEBO(space, **hebo_cfg)
     if cv is None:
-        cv = KFold(n_splits = 5, shuffle = True, random_state = 42)
+        cv = KFold(n_splits=5, shuffle=True, random_state=42)
     for i in range(max_iter):
-        rec     = opt.suggest()
-        hyp     = rec.iloc[0].to_dict()
+        rec = opt.suggest()
+        hyp = rec.iloc[0].to_dict()
         for k in hyp:
             if space.paras[k].is_numeric and space.paras[k].is_discrete:
                 hyp[k] = int(hyp[k])
-        model   = model_class(**hyp)
-        pred    = cross_val_predict(model, X, y, cv = cv)
+        model = model_class(**hyp)
+        pred = cross_val_predict(model, X, y, cv=cv)
         score_v = metric(y, pred)
-        sign    = -1. if greater_is_better else 1.0
+        sign = -1. if greater_is_better else 1.0
         opt.observe(rec, np.array([sign * score_v]))
         if verbose:
-            print('Iter %d, best metric: %g' % (i, sign * opt.y.min()), flush = True)
-    best_id   = np.argmin(opt.y.reshape(-1))
-    best_hyp  = opt.X.iloc[best_id]
+            print('Iter %d, best metric: %g' % (i, sign * opt.y.min()), flush=True)
+    best_id = np.argmin(opt.y.reshape(-1))
+    best_hyp = opt.X.iloc[best_id]
     df_report = opt.X.copy()
     df_report['metric'] = sign * opt.y
     if report:

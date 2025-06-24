@@ -10,16 +10,14 @@
 import numpy as np
 import pandas as pd
 import torch
-
+from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
+from hebo.acquisitions.acq import GeneralAcq
 from hebo.design_space.design_space import DesignSpace
 from hebo.models.model_factory import get_model, get_model_class
-from hebo.acquisitions.acq import GeneralAcq
-from hebo.acq_optimizers.evolution_optimizer import EvolutionOpt
-
-from .abstract_optimizer import AbstractOptimizer
-
 from pymoo.indicators.hv import HV
 from pymoo.util.dominator import Dominator
+
+from .abstract_optimizer import AbstractOptimizer
 
 
 class GeneralBO(AbstractOptimizer):
@@ -28,19 +26,19 @@ class GeneralBO(AbstractOptimizer):
     """
 
     def __init__(
-        self,
-        space: DesignSpace,
-        num_obj: int = 1,
-        num_constr: int = 0,
-        rand_sample: int = None,
-        model_name: str = "multi_task",
-        model_config: dict = None,
-        kappa: float = 2.0,
-        c_kappa: float = 0.0,
-        use_noise: bool = False,
-        evo_pop: int = 100,
-        evo_iters: int = 200,
-        ref_point: np.ndarray = None,
+            self,
+            space: DesignSpace,
+            num_obj: int = 1,
+            num_constr: int = 0,
+            rand_sample: int = None,
+            model_name: str = "multi_task",
+            model_config: dict = None,
+            kappa: float = 2.0,
+            c_kappa: float = 0.0,
+            use_noise: bool = False,
+            evo_pop: int = 100,
+            evo_iters: int = 200,
+            ref_point: np.ndarray = None,
     ):
         super().__init__(space)
         self.space = space
@@ -79,9 +77,9 @@ class GeneralBO(AbstractOptimizer):
             if Xe.shape[1] == 0:
                 num_uniqs = None
             else:
-                _num = lambda n: len(self.space.paras[name].categories)
+                _num = lambda name: len(self.space.paras[name].categories)
                 num_uniqs = [_num(name) for name in self.space.enum_names]
-                
+
             self.model = get_model(
                 self.model_name,
                 X.shape[1],
@@ -96,9 +94,11 @@ class GeneralBO(AbstractOptimizer):
             upsi = 0.1
             delta = 0.01
             if kappa is None:
-                kappa = np.sqrt(upsi * 2 * ((2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi**2 / (3 * delta))))
+                kappa = np.sqrt(upsi * 2 * (
+                            (2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi ** 2 / (3 * delta))))
             if c_kappa is None:
-                c_kappa = np.sqrt(upsi * 2 * ((2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi**2 / (3 * delta))))
+                c_kappa = np.sqrt(upsi * 2 * (
+                            (2.0 + self.X.shape[1] / 2.0) * np.log(self.iter) + np.log(3 * np.pi ** 2 / (3 * delta))))
             acq = GeneralAcq(
                 self.model,
                 self.num_obj,
@@ -147,7 +147,7 @@ class GeneralBO(AbstractOptimizer):
                         best_id = np.argmax(ehvi_lst)
                     else:
                         best_id = np.random.choice(suggest.shape[0])
-    
+
                     y_curr = np.vstack([y_curr, y_samp[:, best_id].min(axis=0, keepdims=True)])
                     select_id.append(best_id)
 
@@ -180,7 +180,7 @@ class GeneralBO(AbstractOptimizer):
         pass
 
     def get_pf(self, y: np.ndarray, return_optimal=False) -> pd.DataFrame:
-        feasible = (y[:, self.num_obj :] <= 0).all(axis=1)
+        feasible = (y[:, self.num_obj:] <= 0).all(axis=1)
         y = y[feasible].copy()
         y_obj = y[:, : self.num_obj]
         if feasible.any():

@@ -1,7 +1,7 @@
 numpy>=1.16,<1.25
 pandas>=1.0.1
 torch>=1.9.0
-pymoo>=0.6.0
+pymoo==0.6.0
 scikit-learn>=0.22
 gpytorch>=1.4.0
 GPy>=1.9.9
