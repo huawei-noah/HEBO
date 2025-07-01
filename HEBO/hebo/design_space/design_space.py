@@ -94,6 +94,11 @@ class DesignSpace:
             xe[:, i] = self.paras[name].transform(xe[:, i])
         return torch.FloatTensor(xc), torch.LongTensor(xe.astype(int))
 
+    def transform_random_uniform(self, samp : Tensor) -> (Tensor, Tensor):
+        xc = [[self.paras[name].transform_random_uniform(s) for name, s in zip(self.numeric_names, samp[0, :len(self.numeric_names)])]]
+        xe = [[int(self.paras[name].transform_random_uniform(s)) for name, s in zip(self.enum_names, samp[0, len(self.numeric_names):])]]
+        return torch.FloatTensor(xc), torch.LongTensor(xe)
+
     def inverse_transform(self, x : Tensor, xe : Tensor) -> pd.DataFrame:
         """
         input: x and xe

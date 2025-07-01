@@ -10,6 +10,7 @@
 import pandas as pd
 import numpy  as np
 from abc import ABC, abstractmethod
+from torch import Tensor
 
 class Parameter(ABC):
     def __init__(self, param_dict):
@@ -61,3 +62,9 @@ class Parameter(ABC):
     @abstractmethod
     def opt_ub(self) -> float:
         pass
+
+    def transform_random_uniform(self, s : Tensor) -> Tensor:
+        if self.is_discrete_after_transform:
+            return (s * (self.opt_ub + 1 - self.opt_lb) + self.opt_lb - 0.5).round()
+        else:
+            return s * (self.opt_ub - self.opt_lb) + self.opt_lb
