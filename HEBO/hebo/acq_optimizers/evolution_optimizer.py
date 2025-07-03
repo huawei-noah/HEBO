@@ -18,9 +18,11 @@ from pymoo.core.population import Population
 from pymoo.optimize import minimize
 from pymoo.core.problem import Problem
 from pymoo.config import Config
+from pymoo.core.repair import Repair
+
 Config.show_compile_hint = False
 
-from ..design_space.design_space import DesignSpace
+from ..design_space.design_space import DesignSpace, SparseGridPara
 from ..acquisitions.acq import Acquisition
 
 def space_to_pymoo_vars(space):
@@ -37,7 +39,7 @@ def space_to_pymoo_vars(space):
         elif p.is_categorical:
             vars[p_name] = Choice(options = list(range(int(lb), int(ub + 1))))
         else:
-            raise ValueError('Un recognoized parameter type {p_name}')
+            raise ValueError('Unrecognized parameter type {p_name}')
     return vars
 
 def get_init_pop(space, pop, initial_suggest : pd.DataFrame = None, sobol_init = False) -> Population:
@@ -46,12 +48,7 @@ def get_init_pop(space, pop, initial_suggest : pd.DataFrame = None, sobol_init =
     else:
         eng        = SobolEngine(space.num_paras, scramble = True)
         sobol_samp = eng.draw(pop)
-        sobol_samp = sobol_samp * (space.opt_ub - space.opt_lb) + space.opt_lb
-        x          = sobol_samp[:, :space.num_numeric]
-        xe         = sobol_samp[:, space.num_numeric:].round().long()
-        for i, n in enumerate(space.numeric_names):
-            if space.paras[n].is_discrete_after_transform:
-                x[:, i] = x[:, i].round()
+        x, xe = self.space.transform_random_uniform(sobol_samp)
         init_pop = space.inverse_transform(x, xe)
     if initial_suggest is not None:
         init_pop = pd.concat([initial_suggest, init_pop], axis = 0).head(pop)
@@ -69,6 +66,33 @@ def get_init_pop(space, pop, initial_suggest : pd.DataFrame = None, sobol_init =
     pop = Population.new(X = pop_lst)
     return pop
 
+# Add a repair operator for sparse grid
+class SparseGridRepair(Repair):
+    def __init__(self, space):
+        self.space = space
+        # Pre-compute valid values for each sparse parameter
+        self.sparse_params = {}
+        for i, p_name in enumerate(space.para_names):
+            p = space.paras[p_name]
+            if isinstance(p, SparseGridPara):
+                self.sparse_params[p_name] = np.array(sorted(p.values))
+    
+    def repair(self, para):
+        """Repair function that works directly on parameter arrays"""
+        if not self.sparse_params:
+            return para
+        
+        para_repaired = para.copy()
+        for i in range(para.shape[0]):
+            sample = para[i]
+            for p_name, values in self.sparse_params.items():
+                if p_name in sample:
+                    current_value = sample[p_name]
+                    # Find nearest valid value
+                    idx = np.argmin(np.abs(values - current_value))
+                    para_repaired[i][p_name] = values[idx]
+        return para_repaired
+
 class BOProblem(Problem):
     def __init__(self,
             acq   : Acquisition,
@@ -78,10 +102,12 @@ class BOProblem(Problem):
         self.acq   = acq
         self.space = space
         self.fix   = fix # NOTE: use self.fix to enable contextual BO
+        self.repair_helper = SparseGridRepair(self.space)
         vars       = space_to_pymoo_vars(self.space)
         super().__init__(vars = vars, n_obj = acq.num_obj, n_constr = acq.num_constr)
 
     def _evaluate(self, para : np.ndarray, out : dict, *args, **kwargs):
+        para = self.repair_helper.repair(para)
         ## TODO: Use the repair operator to handle fix_input
         num_x = para.shape[0]
         x  = []
@@ -125,8 +151,6 @@ class EvolutionOpt:
 
 
     def optimize(self, initial_suggest : pd.DataFrame = None, fix_input : dict = None, return_pop = False) -> pd.DataFrame:
-        lb        = self.space.opt_lb.numpy()
-        ub        = self.space.opt_ub.numpy()
         prob      = BOProblem(self.acq, self.space, fix_input)
         init_pop  = get_init_pop(self.space, self.pop, initial_suggest, self.sobol_init)
         if self.acq.num_obj == 1:
