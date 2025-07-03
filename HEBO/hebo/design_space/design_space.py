@@ -19,6 +19,7 @@ from .bool_param        import BoolPara
 from .pow_integer_param import PowIntegerPara
 from .int_exponent_param import IntExponentPara
 from .step_int import StepIntPara
+from .sparse_grid_param import SparseGridPara
 
 class DesignSpace:
     def __init__(self):
@@ -31,6 +32,7 @@ class DesignSpace:
         self.register_para_type('step_int', StepIntPara)
         self.register_para_type('cat', CategoricalPara)
         self.register_para_type('bool', BoolPara)
+        self.register_para_type('sparse_grid', SparseGridPara)
         self.paras         = {}
         self.para_names    = []
         self.numeric_names = []

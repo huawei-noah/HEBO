@@ -63,7 +63,11 @@ class Parameter(ABC):
     def opt_ub(self) -> float:
         pass
 
-    def transform_random_uniform(self, s : Tensor) -> Tensor:
+    def transform_random_uniform(self, s : Tensor) -> float:
+        """Take a random uniform s in [0, 1] and return a random value from the space.
+
+        Can be overridden by speciality spaces.
+        """
         if self.is_discrete_after_transform:
             return (s * (self.opt_ub + 1 - self.opt_lb) + self.opt_lb - 0.5).round()
         else:
