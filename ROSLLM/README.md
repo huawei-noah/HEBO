@@ -28,7 +28,8 @@ Then step through the following steps:
 5. Clone HEBO:
   * **IMPORTANT**: make sure you *do not* clone the `HEBO` package in the `src` directory. It should be cloned into the `rosllm_ws/` directory.
   * **IMPORTANT**: also make sure to include the `--recursive` flag when cloning.
-  * Clone via ssh: `git clone --recursive git@github.com:huawei-noah/HEBO.git`
+  * Currently, make sure to checkout onto the `rosllm` branch, this won't be required after merging `rosllm` into the main branch.
+  * Clone via ssh: `git clone --recursive git@github.com:huawei-noah/HEBO.git` 
   * Clone via https: `git clone --recursive https://github.com/huawei-noah/HEBO.git`
 6. Change directory: `cd src`
 7. Create a symbolic link: `ln -s ../HEBO/ROSLLM/`
