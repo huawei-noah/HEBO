@@ -1,54 +1,118 @@
 #!/usr/bin/env python3
-import os, threading, rospy, gradio as gr
+import inspect
+import os
+import threading
+import warnings
+from pathlib import Path
+
+import gradio as gr
+import rospy
+import whisper
 from rosllm_srvs.srv import GetUserInput, GetUserInputResponse
 
 # ─────────────── shared flags / data ────────────────
 latest_prompt   = ""
 user_input      = ""
-prompt_evt      = threading.Event()      # “new prompt ready for UI”
-user_ready_evt  = threading.Event()      # “operator replied”
+prompt_evt      = threading.Event()
+user_ready_evt  = threading.Event()
 
-# ─────────────── ROS service handler ────────────────
+# ─────────────── Whisper model (loaded once) ───────
+warnings.filterwarnings("ignore", category=UserWarning,
+                        message="FP16 is not supported on CPU")
+whisper_model = whisper.load_model("base", device="cpu")
+
+# ─────────────── ROS service handler ───────────────
+
 def srv_callback(req):
     global latest_prompt, user_input
     latest_prompt = req.prompt
     user_input = ""
     user_ready_evt.clear()
-    prompt_evt.set()                     # wake the UI poller
+    prompt_evt.set()
     rospy.loginfo(f"[UI] Prompt received: {latest_prompt}")
 
-    user_ready_evt.wait()                # block until operator answers
+    user_ready_evt.wait()
     return GetUserInputResponse(user_input)
+
 
 def ros_service_thread():
     rospy.Service("get_user_input", GetUserInput, srv_callback)
     rospy.loginfo("Gradio‑input service ready.")
     rospy.spin()
 
+# ─────────────── helpers ───────────────────────────
+
+def get_audio_path(val):
+    """Return a local filepath from the Gradio Audio value (str or dict)."""
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return val.get("path") or val.get("name")
+    return None
+
 # ─────────────── GUI callbacks ──────────────────────
+
 def poll_for_prompt(history):
-    """Called every 0.5 s. Append a prompt once, nothing else."""
     if prompt_evt.is_set():
-        history = history + [[latest_prompt, None]]  # bot column
+        history = history + [[latest_prompt, None]]
         prompt_evt.clear()
-        return history, history                      # update both widgets
-    return gr.update(), history                      # no UI change
+        return history, history
+    return gr.update(), history
+
 
 def on_send(msg, history):
-    """Operator pressed Send / Enter."""
-    if not history or history[-1][1] is not None:    # no pending prompt
-        return history, ""                           # ignore stray sends
-    history[-1][1] = msg                             # fill user column
+    if not history or history[-1][1] is not None:
+        return history, ""
+    history[-1][1] = msg
     global user_input
     user_input = msg
     user_ready_evt.set()
-    return history, ""                               # clear textbox
+    return history, ""
+
+
+def on_audio_upload(audio_val, history):
+    path = get_audio_path(audio_val)
+    if not path or not Path(path).is_file():
+        rospy.logwarn("No audio recorded or file not found.")
+        return gr.update(), None, history
+
+    try:
+        result = whisper_model.transcribe(path)
+        transcript = result["text"].strip()
+    except Exception as e:
+        rospy.logwarn(f"Whisper failed: {e}")
+        transcript = "[transcription‑error]"
+
+    if not history or history[-1][1] is not None:
+        return history, None, history
+
+    history[-1][1] = transcript
+    global user_input
+    user_input = transcript
+    user_ready_evt.set()
+    return history, None, history
+
 
 def quit_app():
     rospy.loginfo("Shutting down interface…")
     os._exit(0)
 
-# ─────────────── main ───────────────────────────────
+# ─────────────── Utility: make Audio component ────
+
+def make_audio_component():
+    sig = inspect.signature(gr.Audio.__init__)
+    common_kwargs = dict(type="filepath", format="wav",
+                         label="🎙️ Voice reply (click to record)")
+    if "sources" in sig.parameters:      # Gradio 4.x
+        return gr.Audio(sources=["microphone"], **common_kwargs)
+    elif "source" in sig.parameters:     # Gradio 3.x
+        return gr.Audio(source="microphone", **common_kwargs)
+    raise RuntimeError("Unsupported gr.Audio signature; please update Gradio.")
+
+# ─────────────── main ──────────────────────────────
+
 def main():
     rospy.init_node("gradio_input_server")
     threading.Thread(target=ros_service_thread, daemon=True).start()
@@ -58,29 +122,32 @@ def main():
 
         chatbot   = gr.Chatbot(height=320)
         textbox   = gr.Textbox(label="Your response",
-                               placeholder="Type and press Send / Enter…")
+                               placeholder="Type and press Send / Enter…")
+        audio_rec = make_audio_component()
         send_btn  = gr.Button("Send")
         quit_btn  = gr.Button("Quit Interface", variant="stop")
         history_state = gr.State([])
 
-        # Poll every 0.5 s, but hide progress overlay (no yellow flash)
-        demo.load(fn=poll_for_prompt,
+        demo.load(poll_for_prompt,
                   inputs=history_state,
                   outputs=[chatbot, history_state],
                   every=0.5,
                   show_progress=False)
 
-        send_btn.click(fn=on_send,
+        send_btn.click(on_send,
                        inputs=[textbox, history_state],
                        outputs=[chatbot, textbox])
 
-        textbox.submit(fn=on_send,
+        textbox.submit(on_send,
                        inputs=[textbox, history_state],
                        outputs=[chatbot, textbox])
 
-        quit_btn.click(fn=quit_app, inputs=None, outputs=None)
+        audio_rec.change(on_audio_upload,
+                         inputs=[audio_rec, history_state],
+                         outputs=[chatbot, audio_rec, history_state])
 
-    # queues are off (we never called demo.queue())
+        quit_btn.click(quit_app)
+
     demo.launch()
 
 if __name__ == "__main__":
