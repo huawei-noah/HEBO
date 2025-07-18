@@ -15,6 +15,7 @@ add_service_files(
   AtomicAction.srv
   LLM.srv
   Observation.srv
+  GetUserInput.srv
 )
 
 generate_messages(

@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""
+ROS Noetic ⇄ Gradio chat UI
+✔ No manual “Load prompt”
+✔ No yellow progress flash
+✔ No IndexError
+"""
+
+import os, threading, rospy, gradio as gr
+from rosllm_srvs.srv import GetUserInput, GetUserInputResponse
+
+# ─────────────── shared flags / data ────────────────
+latest_prompt   = ""
+user_input      = ""
+prompt_evt      = threading.Event()      # “new prompt ready for UI”
+user_ready_evt  = threading.Event()      # “operator replied”
+
+# ─────────────── ROS service handler ────────────────
+def srv_callback(req):
+    global latest_prompt, user_input
+    latest_prompt = req.prompt
+    user_input = ""
+    user_ready_evt.clear()
+    prompt_evt.set()                     # wake the UI poller
+    rospy.loginfo(f"[UI] Prompt received: {latest_prompt}")
+
+    user_ready_evt.wait()                # block until operator answers
+    return GetUserInputResponse(user_input)
+
+def ros_service_thread():
+    rospy.Service("get_user_input", GetUserInput, srv_callback)
+    rospy.loginfo("Gradio‑input service ready.")
+    rospy.spin()
+
+# ─────────────── GUI callbacks ──────────────────────
+def poll_for_prompt(history):
+    """Called every 0.5 s. Append a prompt once, nothing else."""
+    if prompt_evt.is_set():
+        history = history + [[latest_prompt, None]]  # bot column
+        prompt_evt.clear()
+        return history, history                      # update both widgets
+    return gr.update(), history                      # no UI change
+
+def on_send(msg, history):
+    """Operator pressed Send / Enter."""
+    if not history or history[-1][1] is not None:    # no pending prompt
+        return history, ""                           # ignore stray sends
+    history[-1][1] = msg                             # fill user column
+    global user_input
+    user_input = msg
+    user_ready_evt.set()
+    return history, ""                               # clear textbox
+
+def quit_app():
+    rospy.loginfo("Shutting down interface…")
+    os._exit(0)
+
+# ─────────────── main ───────────────────────────────
+def main():
+    rospy.init_node("gradio_input_server")
+    threading.Thread(target=ros_service_thread, daemon=True).start()
+
+    with gr.Blocks(title="RobotChat") as demo:
+        gr.Markdown("## Robot Chat Interface")
+
+        chatbot   = gr.Chatbot(height=320)
+        textbox   = gr.Textbox(label="Your response",
+                               placeholder="Type and press Send / Enter…")
+        send_btn  = gr.Button("Send")
+        quit_btn  = gr.Button("Quit Interface", variant="stop")
+        history_state = gr.State([])
+
+        # Poll every 0.5 s, but hide progress overlay (no yellow flash)
+        demo.load(fn=poll_for_prompt,
+                  inputs=history_state,
+                  outputs=[chatbot, history_state],
+                  every=0.5,
+                  show_progress=False)
+
+        send_btn.click(fn=on_send,
+                       inputs=[textbox, history_state],
+                       outputs=[chatbot, textbox])
+
+        textbox.submit(fn=on_send,
+                       inputs=[textbox, history_state],
+                       outputs=[chatbot, textbox])
+
+        quit_btn.click(fn=quit_app, inputs=None, outputs=None)
+
+    # queues are off (we never called demo.queue())
+    demo.launch()
+
+if __name__ == "__main__":
+    main()

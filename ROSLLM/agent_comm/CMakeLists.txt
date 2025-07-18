@@ -159,7 +159,8 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/llm_node
-  test/test_llm_node
+  scripts/user_interface_browser
+  test/test_llm_node  
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
