@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-ROS Noetic ⇄ Gradio chat UI
-✔ No manual “Load prompt”
-✔ No yellow progress flash
-✔ No IndexError
-"""
-
 import os, threading, rospy, gradio as gr
 from rosllm_srvs.srv import GetUserInput, GetUserInputResponse
 
