@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_agent</name>
+  <version>0.0.0</version>
+  <description>The ros_agent package</description>
+
+  <maintainer email="hyu@todo.todo">hyu</maintainer>
+  <maintainer email="christopher.mower@huawei.com">cmower</maintainer>
+
+  <license>TODO</license>
+
+  <author email="hyu@todo.todo">hyu</author>
+  <author email="christopher.mower@huawei.com">cmower</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+</package>
