@@ -4,7 +4,7 @@ pip install HEBO
 ```
 # README
 
-Bayesian optimsation library developed by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong> winning submission </strong> to the [NeurIPS 2020 Black-Box Optimisation Challenge](https://arxiv.org/pdf/2104.10201). 
+Bayesian optimsation library developed by Huawei Noahs Ark Decision Making and Reasoning (DMnR) lab. The <strong> winning submission </strong> to the [NeurIPS 2020 Black-Box Optimisation Challenge](https://slideslive.com/38942471/black-box-optimization-challenge). 
 
 Summary             |  Ablation
 :-------------------------:|:-------------------------:
@@ -119,4 +119,5 @@ volume = {74},
 journal = {Journal of Artificial Intelligence Research}
 }
 ```
+
 
