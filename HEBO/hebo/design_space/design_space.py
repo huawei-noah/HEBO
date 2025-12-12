@@ -19,6 +19,7 @@ from .bool_param        import BoolPara
 from .pow_integer_param import PowIntegerPara
 from .int_exponent_param import IntExponentPara
 from .step_int import StepIntPara
+from .sparse_grid_param import SparseGridPara
 
 class DesignSpace:
     def __init__(self):
@@ -31,6 +32,7 @@ class DesignSpace:
         self.register_para_type('step_int', StepIntPara)
         self.register_para_type('cat', CategoricalPara)
         self.register_para_type('bool', BoolPara)
+        self.register_para_type('sparse_grid', SparseGridPara)
         self.paras         = {}
         self.para_names    = []
         self.numeric_names = []
@@ -93,6 +95,11 @@ class DesignSpace:
         for i, name in enumerate(self.enum_names):
             xe[:, i] = self.paras[name].transform(xe[:, i])
         return torch.FloatTensor(xc), torch.LongTensor(xe.astype(int))
+
+    def transform_random_uniform(self, samp : Tensor) -> (Tensor, Tensor):
+        xc = [[self.paras[name].transform_random_uniform(s) for name, s in zip(self.numeric_names, samp[0, :len(self.numeric_names)])]]
+        xe = [[int(self.paras[name].transform_random_uniform(s)) for name, s in zip(self.enum_names, samp[0, len(self.numeric_names):])]]
+        return torch.FloatTensor(xc), torch.LongTensor(xe)
 
     def inverse_transform(self, x : Tensor, xe : Tensor) -> pd.DataFrame:
         """

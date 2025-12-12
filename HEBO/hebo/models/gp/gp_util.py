@@ -14,6 +14,7 @@ from gpytorch.kernels import (AdditiveKernel, MaternKernel, ProductKernel,
                               ScaleKernel)
 from gpytorch.priors import GammaPrior
 from torch import FloatTensor, LongTensor
+from gpytorch.constraints.constraints import Interval
 
 from ..layers import EmbTransform
 from ..util import get_random_graph
@@ -43,23 +44,26 @@ def default_kern(x, xe, y, total_dim = None, ard_kernel = True, fe = None, max_x
         kerns    = []
         if has_num:
             ard_num_dims = x.shape[1] if ard_kernel else None
-            kernel       = MaternKernel(nu = 1.5, ard_num_dims = ard_num_dims, active_dims = torch.arange(x.shape[1]))
+            kernel       = MaternKernel(nu = 1.5, ard_num_dims = ard_num_dims, active_dims = torch.arange(x.shape[1]),
+                                        lengthscale_constraint=Interval(1e-1, 5))
             if ard_kernel:
                 lscales = kernel.lengthscale.detach().clone().view(1, -1)
                 for i in range(x.shape[1]):
                     idx = np.random.choice(x.shape[0], min(x.shape[0], max_x), replace = False)
-                    lscales[0, i] = torch.pdist(x[idx, i].view(-1, 1)).median().clamp(min = 0.02)
+                    lscales[0, i] = torch.pdist(x[idx, i].view(-1, 1)).median().clamp(min = 0.1)
                 kernel.lengthscale = lscales
             kerns.append(kernel)
         if has_enum:
-            kernel = MaternKernel(nu = 1.5, active_dims = torch.arange(x.shape[1], total_dim))
+            kernel = MaternKernel(nu = 1.5, active_dims = torch.arange(x.shape[1], total_dim),
+                                  lengthscale_constraint=Interval(1e-1, 5))
             kerns.append(kernel)
         final_kern = ScaleKernel(ProductKernel(*kerns), outputscale_prior = GammaPrior(0.5, 0.5))
         final_kern.outputscale = y[torch.isfinite(y)].var()
         return final_kern
     else:
         if ard_kernel:
-            kernel = ScaleKernel(MaternKernel(nu = 1.5, ard_num_dims = total_dim))
+            kernel = ScaleKernel(MaternKernel(nu = 1.5, ard_num_dims = total_dim),
+                                 lengthscale_constraint=Interval(1e-1, 5))
         else:
             kernel = ScaleKernel(MaternKernel(nu = 1.5))
         kernel.outputscale = y[torch.isfinite(y)].var()

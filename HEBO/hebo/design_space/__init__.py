@@ -16,4 +16,5 @@ from . import numeric_param
 from . import pow_param
 from . import pow_integer_param
 from . import step_int
+from . import sparse_grid_param
 from .design_space import DesignSpace

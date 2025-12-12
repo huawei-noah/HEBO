@@ -62,12 +62,7 @@ class HEBO(AbstractOptimizer):
 
     def quasi_sample(self, n, fix_input=None):
         samp = self.sobol.draw(n)
-        samp = samp * (self.space.opt_ub - self.space.opt_lb) + self.space.opt_lb
-        x = samp[:, : self.space.num_numeric]
-        xe = samp[:, self.space.num_numeric :]
-        for i, n in enumerate(self.space.numeric_names):
-            if self.space.paras[n].is_discrete_after_transform:
-                x[:, i] = x[:, i].round()
+        x, xe = self.space.transform_random_uniform(samp)
         df_samp = self.space.inverse_transform(x, xe)
         if fix_input is not None:
             for k, v in fix_input.items():
