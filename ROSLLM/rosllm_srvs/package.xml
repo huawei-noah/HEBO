@@ -20,4 +20,9 @@
   <build_export_depend>sensor_msgs</build_export_depend>
   <exec_depend>sensor_msgs</exec_depend>
 
+  <build_depend>rosllm_msgs</build_depend>
+  <build_export_depend>rosllm_msgs</build_export_depend>
+  <exec_depend>rosllm_msgs</exec_depend>
+
+
 </package>
