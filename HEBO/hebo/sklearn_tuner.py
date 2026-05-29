@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import warnings
 from hebo.design_space.design_space import DesignSpace
+from hebo.design_space.bool_param   import BoolPara
 from hebo.optimizers.hebo import HEBO
 from sklearn.model_selection import cross_val_predict, KFold
 from typing import Callable
@@ -75,7 +76,10 @@ def sklearn_tuner(
         rec = opt.suggest()
         hyp = rec.iloc[0].to_dict()
         for k in hyp:
-            if space.paras[k].is_numeric and space.paras[k].is_discrete:
+            para = space.paras[k]
+            if isinstance(para, BoolPara):
+                hyp[k] = bool(hyp[k])
+            elif para.is_numeric and para.is_discrete:
                 hyp[k] = int(hyp[k])
         model = model_class(**hyp)
         pred = cross_val_predict(model, X, y, cv=cv)
