@@ -95,12 +95,12 @@ if __name__ == '__main__':
 
                 for decay_parameter in decay_parameter_list:
 
-                    # to avoid unecessary runs
+                    # to avoid unnecessary runs
                     config['decay_parameter'] = decay_parameter
                     if decay_parameter:
                         agent_name_to_show = 'Decreased' + agent_name_to_show
                     else:
-                        # to avoid unecessary runs
+                        # to avoid unnecessary runs
                         config['delta'] = [1]
 
                     # ray preparation
