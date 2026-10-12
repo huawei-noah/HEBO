@@ -39,6 +39,20 @@ python eval.py --dataset HUMANEVAL --input results/humaneval_qwen_7b.jsonl
 
 HumanEval uses the bundled `data/HumanEval.jsonl`. Run its evaluator in an isolated environment because it executes generated code.
 
+## Citation
+
+If you use this code in your research, please cite the paper:
+
+```bibtex
+@inproceedings{ji2026scalable,
+      title={Scalable power sampling: Unlocking efficient, training-free reasoning for llms via distribution sharpening}, 
+      author={Ji, Xiaotong and Tutunov, Rasul and Zimmer, Matthieu and Ammar, Haitham Bou},
+      booktitle={Proceedings of the International Conference on Machine Learning (ICML)},
+      year={2026},
+      url={https://arxiv.org/abs/2601.21590}, 
+}
+```
+
 ## Acknowledgements
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for third-party code and dataset attribution.
