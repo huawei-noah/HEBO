@@ -1,0 +1,16 @@
+vllm_engine: V1
+model_name: Qwen/Qwen2.5-Math-7B
+model_alias: qwen_math
+dataset:
+  name: MATH
+  split: test
+alpha: 4.0
+l_t: 8
+k_t: 8
+m_t: 8
+temperature: 0.25
+block_size: 192
+lookahead_size: 192
+max_new_tokens: 3072
+seed: 0
+output_file: results/math500_qwen_math_7b.jsonl
