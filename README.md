@@ -23,6 +23,7 @@ Huawei, Noah's Ark Lab.
 - Generative Model Research
     - [EM-LLM: Human-like Episodic Memory for Infinite Context LLMs](./EM-LLM)
     - [Mixture of Attentions For Speculative Decoding](https://github.com/huawei-noah/HEBO/tree/mixture-of-attentions/)
+    - [Scalable Power Sampling: Unlocking Efficient, Training-Free Reasoning for LLMs via Distribution Sharpening](https://github.com/huawei-noah/HEBO/tree/scalable_power_sampling/)
 
 Further instructions are provided in the README files associated to each project.
 
