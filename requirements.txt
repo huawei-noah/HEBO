@@ -1,0 +1,10 @@
+numpy
+PyYAML
+torch
+vllm==0.8.3
+datasets
+transformers==4.51.3
+tqdm
+sympy
+pylatexenc
+matplotlib
